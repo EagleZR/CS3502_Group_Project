@@ -1,4 +1,4 @@
-public class Instruction {
+public class Instruction extends Word {
 
-	private byte[] data = new byte[4];
+
 }
