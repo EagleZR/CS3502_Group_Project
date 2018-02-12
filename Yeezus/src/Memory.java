@@ -1,12 +1,17 @@
+/**
+ * The collective memory system of the OS, including the registers, RAM, and disk storage space.
+ *
+ * @version 0.1
+ */
 public class Memory {
 
-	public static Memory registers = new Memory( 64 );
+	public static Memory registers = new Memory( 16 );
 	public static Memory RAM = new Memory( 1024 );
 	public static Memory disk = new Memory( 2048 );
 
 	Word[] storage;
 
-	public Memory( int capacity ) {
+	private Memory( int capacity ) {
 		this.storage = new Instruction[capacity];
 	}
 
