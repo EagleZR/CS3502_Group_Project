@@ -5,7 +5,8 @@
  */
 public class Instruction extends Word {
 
-	public Instruction () {
+	public Instruction() {
+
 	}
 
 }

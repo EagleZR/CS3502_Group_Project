@@ -5,24 +5,59 @@
  */
 public class Memory {
 
+	/**
+	 * Pre-made storage for the registers to be used by the OS.
+	 */
 	public static Memory registers = new Memory( 16 );
+	/**
+	 * Pre-made storage for the RAM to be used by the OS.
+	 */
 	public static Memory RAM = new Memory( 1024 );
+	/**
+	 * Pre-made storage for the disk to be used by the OS.
+	 */
 	public static Memory disk = new Memory( 2048 );
 
-	Word[] storage;
+	private Word[] storage;
 
+	// Constructs a new Memory device with the given capacity.
 	private Memory( int capacity ) {
-		this.storage = new Instruction[capacity];
+		this.storage = new Word[capacity];
 	}
 
-	public Word read( int address ) {
-		//		if( address > storage.length) {
-		//			throw  new InvalidAddressException("Can't go that high!");
-		//		}
+	/**
+	 * Retrieves the data from the given address as a {@link Word}.
+	 *
+	 * @param address The address of the location to be read.
+	 * @return The {@link Word} stored at the given address.
+	 * @throws InvalidAddressException Thrown if the address given is outside of the scope of this Memory.
+	 */
+	public Word read( int address ) throws InvalidAddressException {
+		if ( address > storage.length ) {
+			throw new InvalidAddressException(
+					"Address: " + address + " is too high. The capacity is: " + storage.length );
+		}
+		if ( address < 0 ) {
+			throw new InvalidAddressException( "Can't have a negative address" );
+		}
 		return storage[address];
 	}
 
-	public void write( int address, Word word ) {
+	/**
+	 * Writes the given {@link Word} to the given address.
+	 *
+	 * @param address The location where the {@link Word} should be written.
+	 * @param word    The {@link Word} to be stored at the address.
+	 * @throws InvalidAddressException Thrown if the address given is outside of the scope of this Memory.
+	 */
+	public void write( int address, Word word ) throws InvalidAddressException {
+		if ( address > storage.length ) {
+			throw new InvalidAddressException(
+					"Address: " + address + " is too high. The capacity is: " + storage.length );
+		}
+		if ( address < 0 ) {
+			throw new InvalidAddressException( "Can't have a negative address" );
+		}
 		storage[address] = word;
 	}
 

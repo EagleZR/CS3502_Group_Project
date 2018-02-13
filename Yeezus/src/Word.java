@@ -8,7 +8,7 @@ public class Word {
 	/**
 	 * Each Word is 4 {@link Byte}s long.
 	 */
-	private int data;
+	private final int data;
 
 	/**
 	 * Constructs a new Word with value set to '0x00000000'.
@@ -27,15 +27,6 @@ public class Word {
 	}
 
 	/**
-	 * Assigns a new value to this Word.
-	 *
-	 * @param data The new value to be assigned to this Word. Can be written like {@code new Data(0x020231A9)} for easy hex conversion.
-	 */
-	public void setData( int data ) {
-		this.data = data;
-	}
-
-	/**
 	 * Retrieves the stored value of this Word as an {@code int}. For the hexadecimal representation, use {@link Word#toString()}.
 	 *
 	 * @return The stored value of this Word represented as an {@code int}.
@@ -45,9 +36,9 @@ public class Word {
 	}
 
 	/**
-	 * Returns a {@link String} containing the hexadecimal value of this Word.
+	 * Returns a {@link String} containing the hexadecimal value of this Word.<p>NOTE: Just use this for printing/displaying the data, don't store it this way.</p>
 	 *
-	 * @return A {@link String} representaion of the hexadecimal value of this Word.
+	 * @return A {@link String} representation of the hexadecimal value of this Word.
 	 */
 	@Override public String toString() {
 		return IntToHex.convert( data );
