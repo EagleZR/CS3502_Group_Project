@@ -1,3 +1,5 @@
+package Memory;
+
 /**
  * The collective memory system of the OS, including the registers, RAM, and disk storage space.
  *
@@ -20,7 +22,7 @@ public class Memory {
 
 	private Word[] storage;
 
-	// Constructs a new Memory device with the given capacity.
+	// Constructs a new Memory.Memory device with the given capacity.
 	private Memory( int capacity ) {
 		this.storage = new Word[capacity];
 	}
@@ -30,7 +32,7 @@ public class Memory {
 	 *
 	 * @param address The address of the location to be read.
 	 * @return The {@link Word} stored at the given address.
-	 * @throws InvalidAddressException Thrown if the address given is outside of the scope of this Memory.
+	 * @throws InvalidAddressException Thrown if the address given is outside of the scope of this Memory.Memory.
 	 */
 	public Word read( int address ) throws InvalidAddressException {
 		if ( address > storage.length ) {
@@ -48,7 +50,7 @@ public class Memory {
 	 *
 	 * @param address The location where the {@link Word} should be written.
 	 * @param word    The {@link Word} to be stored at the address.
-	 * @throws InvalidAddressException Thrown if the address given is outside of the scope of this Memory.
+	 * @throws InvalidAddressException Thrown if the address given is outside of the scope of this Memory.Memory.
 	 */
 	public void write( int address, Word word ) throws InvalidAddressException {
 		if ( address > storage.length ) {
