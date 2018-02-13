@@ -26,3 +26,5 @@ hs_err_pid*
 
 # Microsoft Word Temporary Files
 ~$*.doc*
+
+~*.tmp
