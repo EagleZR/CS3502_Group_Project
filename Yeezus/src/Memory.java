@@ -16,9 +16,9 @@ public class Memory {
 	}
 
 	public Word read( int address ) {
-//		if( address > storage.length) {
-//			throw  new InvalidAddressException("Can't go that high!");
-//		}
+		//		if( address > storage.length) {
+		//			throw  new InvalidAddressException("Can't go that high!");
+		//		}
 		return storage[address];
 	}
 
@@ -26,4 +26,16 @@ public class Memory {
 		storage[address] = word;
 	}
 
+	/**
+	 * Provides the memory as a list of words written in hex. Each hex code is on its own line.
+	 *
+	 * @return The memory as a list of Words written in hex.
+	 */
+	@Override public String toString() {
+		StringBuilder string = new StringBuilder();
+		for ( Word word : this.storage ) {
+			string.append( word.toString() + "\n" );
+		}
+		return string.toString();
+	}
 }
