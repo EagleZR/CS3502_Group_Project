@@ -1,5 +1,3 @@
-package Instructions;
-
 public enum InstructionSet {
 
 	// https://docs.oracle.com/javase/tutorial/java/nutsandbolts/datatypes.html

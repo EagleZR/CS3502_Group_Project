@@ -1,5 +1,3 @@
-package Memory;
-
 public class InvalidAddressException extends Exception {
 
 	public InvalidAddressException() {

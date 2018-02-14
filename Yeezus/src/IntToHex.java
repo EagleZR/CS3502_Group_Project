@@ -1,5 +1,3 @@
-package Support;
-
 /**
  * Converts an {@link Integer} to its hex value.
  *
