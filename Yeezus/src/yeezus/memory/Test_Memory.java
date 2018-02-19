@@ -19,17 +19,17 @@ public class Test_Memory {
 	@Test public void testCapacities() throws InvalidAddressException {
 		// Registers
 		for ( int i = 0; i < REGISTER_CAPACITY; i++ ) {
-			this.registers.write( i, new Word( Integer.decode( "0x00000000" ) ) );
+			this.registers.write( i, new Word( "0x00000000" ) );
 		}
 
 		// RAM
 		for ( int i = 0; i < RAM_CAPACITY; i++ ) {
-			this.RAM.write( i, new Word( Integer.decode( "0x00000000" ) ) );
+			this.RAM.write( i, new Word( "0x00000000" ) );
 		}
 
 		// Storage
 		for ( int i = 0; i < DISK_CAPACITY; i++ ) {
-			this.disk.write( i, new Word( Integer.decode( "0x00000000" ) ) );
+			this.disk.write( i, new Word( "0x00000000" ) );
 		}
 	}
 
@@ -64,13 +64,13 @@ public class Test_Memory {
 	}
 
 	@Test public void testRead() throws InvalidAddressException {
-		this.registers.write( 0, new Word( Integer.decode( "0x00003123" ) ) );
+		this.registers.write( 0, new Word( "0x00003123" ) );
 		assertEquals( 0x00003123, this.registers.read( 0 ).getData() );
 
 		ArrayList<Word> array = new ArrayList<>();
 
 		for ( int i = 0; i < REGISTER_CAPACITY; i++ ) {
-			Word word = new Word( i );
+			Word word = new Word( "" + i );
 			this.registers.write( i, word );
 			array.add( word );
 		}
