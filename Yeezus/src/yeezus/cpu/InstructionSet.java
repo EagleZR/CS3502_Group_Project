@@ -1,3 +1,5 @@
+package yeezus.cpu;
+
 public enum InstructionSet {
 
 	// https://docs.oracle.com/javase/tutorial/java/nutsandbolts/datatypes.html
@@ -84,7 +86,6 @@ public enum InstructionSet {
 	 */
 	BLZ( 0x1A );
 
-	// TODO Not sure if we should keep this as int or convert it to byte...
 	private int code;
 
 	InstructionSet( int code ) {

@@ -1,3 +1,5 @@
+package yeezus.memory;
+
 /**
  * Converts an {@link Integer} to its hex value.
  *
