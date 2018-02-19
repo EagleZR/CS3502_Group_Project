@@ -22,7 +22,9 @@ public class Memory {
 
 	private Word[] storage;
 
-	// Constructs a new memory.memory device with the given capacity.
+	/**
+	 * Constructs a new memory.memory device with the given capacity.
+	 */
 	public Memory( int capacity ) {
 		this.storage = new Word[capacity];
 	}

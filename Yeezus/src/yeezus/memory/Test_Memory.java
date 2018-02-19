@@ -48,18 +48,7 @@ public class Test_Memory {
 		this.registers.read( DISK_CAPACITY + 1 );
 	}
 
-	@Test( expected = InvalidAddressException.class ) public void testNegativeRegisterAddress()
-			throws InvalidAddressException {
-		this.registers.read( -1 );
-	}
-
-	@Test( expected = InvalidAddressException.class ) public void testNegativeRAMAddress()
-			throws InvalidAddressException {
-		this.registers.read( -1 );
-	}
-
-	@Test( expected = InvalidAddressException.class ) public void tesNegativeDiskAddress()
-			throws InvalidAddressException {
+	@Test( expected = InvalidAddressException.class ) public void testNegativeAddress() throws InvalidAddressException {
 		this.registers.read( -1 );
 	}
 
