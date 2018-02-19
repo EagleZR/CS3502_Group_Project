@@ -24,8 +24,8 @@ public class Word {
 	 *
 	 * @param data The value to initialize the new memory.Word with. Can be written like {@code new Data(0x020231A9)} for easy hex conversion.
 	 */
-	public Word( int data ) {
-		this.data = data;
+	public Word( String data ) {
+		this.data = Integer.decode( data );
 	}
 
 	/**
