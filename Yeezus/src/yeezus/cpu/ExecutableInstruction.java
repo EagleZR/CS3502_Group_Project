@@ -5,15 +5,15 @@ import yeezus.memory.Word;
 import static yeezus.cpu.InstructionSet.values;
 
 /**
- * A class meant to represent a single CPU Instruction in the OS.
+ * A class meant to represent a single CPU ExecutableInstruction in the OS.
  *
  * @version 0.2
  */
-abstract class Instruction implements Runnable {
+abstract class ExecutableInstruction implements Runnable {
 
 	InstructionSet type;
 
-	private Instruction( Word word ) throws InvalidInstructionException {
+	private ExecutableInstruction( Word word ) throws InvalidInstructionException {
 		this.type = getInstructionSet( word );
 	}
 
@@ -28,11 +28,11 @@ abstract class Instruction implements Runnable {
 		throw new InvalidInstructionException( "The Opcode " + opcode + " is invalid." );
 	}
 
-	static class ArithmeticInstruction extends Instruction {
+	static class ArithmeticExecutableInstruction extends ExecutableInstruction {
 
 		private int s1, s2, d;
 
-		ArithmeticInstruction( Word word ) throws InvalidInstructionException {
+		ArithmeticExecutableInstruction( Word word ) throws InvalidInstructionException {
 			super( word );
 
 			// Find s1
@@ -82,11 +82,11 @@ abstract class Instruction implements Runnable {
 		}
 	}
 
-	static class ConditionalInstruction extends Instruction {
+	static class ConditionalExecutableInstruction extends ExecutableInstruction {
 
 		private int bReg, dReg, data;
 
-		ConditionalInstruction( Word word ) throws InvalidInstructionException {
+		ConditionalExecutableInstruction( Word word ) throws InvalidInstructionException {
 			super( word );
 
 			// Find B-reg
@@ -152,11 +152,11 @@ abstract class Instruction implements Runnable {
 		}
 	}
 
-	static class UnconditionalJumpInstruction extends Instruction {
+	static class UnconditionalJumpExecutableInstruction extends ExecutableInstruction {
 
 		int address;
 
-		UnconditionalJumpInstruction( Word word ) throws InvalidInstructionException {
+		UnconditionalJumpExecutableInstruction( Word word ) throws InvalidInstructionException {
 			super( word );
 
 			// Find address
@@ -180,11 +180,11 @@ abstract class Instruction implements Runnable {
 		}
 	}
 
-	static class IOInstruction extends Instruction {
+	static class IOExecutableInstruction extends ExecutableInstruction {
 
 		int reg1, reg2, address;
 
-		IOInstruction( Word word ) throws InvalidInstructionException {
+		IOExecutableInstruction( Word word ) throws InvalidInstructionException {
 			super( word );
 
 			// Find reg1

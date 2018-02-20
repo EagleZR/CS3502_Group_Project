@@ -5,16 +5,16 @@ import yeezus.memory.Word;
 
 public class Decoder {
 
-	public static Instruction decode( Word word ) throws InvalidInstructionException, InvalidWordException {
+	public static ExecutableInstruction decode( Word word ) throws InvalidInstructionException, InvalidWordException {
 		long signature = word.getData() & new Word( "0xC0000000" ).getData();
 		if ( signature == 0x00000000 ) {
-			return new Instruction.ArithmeticInstruction( word );
+			return new ExecutableInstruction.ArithmeticExecutableInstruction( word );
 		} else if ( signature == 0x40000000 ) {
-			return new Instruction.ConditionalInstruction( word );
+			return new ExecutableInstruction.ConditionalExecutableInstruction( word );
 		} else if ( signature == 0x80000000 ) {
-			return new Instruction.UnconditionalJumpInstruction( word );
+			return new ExecutableInstruction.UnconditionalJumpExecutableInstruction( word );
 		} else {
-			return new Instruction.IOInstruction( word );
+			return new ExecutableInstruction.IOExecutableInstruction( word );
 		}
 	}
 }
