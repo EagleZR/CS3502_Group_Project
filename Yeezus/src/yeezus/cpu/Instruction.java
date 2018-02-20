@@ -7,9 +7,25 @@ import yeezus.memory.Word;
  *
  * @version 0.1
  */
-public class Instruction extends Word {
+public abstract class Instruction {
 
-	public Instruction() {
+	public Instruction( Word word ) {
+
+	}
+
+	public class ArithmaticInstruction {
+
+	}
+
+	public class ConditionalInstruction {
+
+	}
+
+	public class UnconditionalJumpInstruction {
+
+	}
+
+	public class IOInstruction {
 
 	}
 

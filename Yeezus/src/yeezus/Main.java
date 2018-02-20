@@ -20,7 +20,7 @@ public class Main {
 		thread.start();
 
 		// Start Driver
-		Driver driver = new Driver( disk, RAM, registers, new File( "src/Program-File.txt" ) );
+		Driver driver = new Driver( disk, RAM, registers, new File( "src/yeezus/Program-File.txt" ) );
 		driver.run();
 	}
 }
