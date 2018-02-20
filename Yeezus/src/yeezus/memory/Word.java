@@ -10,7 +10,7 @@ public class Word {
 	/**
 	 * Each memory.Word is 4 {@link Byte}s long.
 	 */
-	private final int data;
+	private final long data;
 
 	/**
 	 * Constructs a new memory.Word with value set to '0x00000000'.
@@ -22,27 +22,42 @@ public class Word {
 	/**
 	 * Constructs a new memory.Word with the specified value.
 	 *
-	 * @param data The value to initialize the new memory.Word with. Can be written like {@code new Data(0x020231A9)} for easy hex conversion.
+	 * @param data The value to initialize the new memory.Word with. Can be written like {@code new Data(0x020231A9)}
+	 *             for easy hex conversion.
+	 * @throws InvalidWordException Thrown if the given string is longer than 10 characters, indicating that it exceeds
+	 *                              the '0xFFFFFFFF' limit.
 	 */
-	public Word( String data ) {
-		this.data = Integer.decode( data );
+	public Word( String data ) throws InvalidWordException {
+		if ( data.length() > 10 ) {
+			throw new InvalidWordException(
+					"Argument" + data + " is too long. Please limit hex arguments to under 0xFFFFFFFF." );
+		}
+		this.data = Long.parseLong( data.substring( 2 ), 16 );
 	}
 
 	/**
-	 * Retrieves the stored value of this memory.Word as an {@code int}. For the hexadecimal representation, use {@link Word#toString()}.
+	 * Retrieves the stored value of this memory.Word as an {@code int}. For the hexadecimal representation, use {@link
+	 * Word#toString()}.
 	 *
 	 * @return The stored value of this memory.Word represented as an {@code int}.
 	 */
-	public int getData() {
+	public long getData() {
 		return this.data;
 	}
 
 	/**
-	 * Returns a {@link String} containing the hexadecimal value of this memory.Word.<p>NOTE: Just use this for printing/displaying the data, don't store it this way.</p>
+	 * Returns a {@link String} containing the hexadecimal value of this memory.Word.<p>NOTE: Just use this for
+	 * printing/displaying the data, don't store it this way.</p>
 	 *
 	 * @return A {@link String} representation of the hexadecimal value of this memory.Word.
 	 */
 	@Override public String toString() {
-		return IntToHex.convert( data );
+		String string = Long.toHexString( this.data );
+		StringBuilder stringBuilder = new StringBuilder( "0x" );
+		for ( int i = 0; i < 8 - string.length(); i++ ) {
+			stringBuilder.append( 0 );
+		}
+		stringBuilder.append( string );
+		return stringBuilder.toString();
 	}
 }
