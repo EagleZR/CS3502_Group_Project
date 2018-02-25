@@ -2,37 +2,39 @@ package yeezus.driver;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+import yeezus.memory.InvalidWordException;
 import yeezus.memory.Memory;
 import yeezus.pcb.PCB;
 import yeezus.pcb.Process;
 
 import java.io.File;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class Test_Loader {
 
-	private PCB pcb;
-	private Memory disk;
+	private static PCB pcb;
+	private static Memory disk;
 
-	@BeforeClass public void setup() {
-		this.pcb = new PCB();
-		this.disk = new Memory( 2048 );
-		new Loader( this.pcb, new File( "src/yeezus/Program-File.txt" ), this.disk ).run();
+	@BeforeClass public static void setup() throws InvalidWordException {
+		pcb = new PCB();
+		disk = new Memory( 2048 );
+		new Loader( pcb, new File( "src/yeezus/Program-File.txt" ), disk ).run();
 	}
 
 	// Test that the Disk is filled correctly by the Loader
 	@Test public void testMemory() throws Exception {
 		// Test first address
-		assertEquals( "0xC050005C", this.disk.read( 0 ).toString() );
+		assertEquals( "0xC050005C", disk.read( 0 ).toString() );
 		// Test last address of first job
-		assertEquals( "0x92000000", this.disk.read( 22 ).toString() );
+		assertEquals( "0x92000000", disk.read( 22 ).toString() );
 		// Test first address of first job's data
-		assertEquals( "0x0000000A", this.disk.read( 23 ).toString() );
+		assertEquals( "0x0000000A", disk.read( 23 ).toString() );
 		// Test last address of first job's data
-		assertEquals( "0x00000000", this.disk.read( 66 ).toString() );
+		assertEquals( "0x00000000", disk.read( 66 ).toString() );
 		// Test first first address of second job
-		assertEquals( "0xC0500070", this.disk.read( 67 ).toString() );
+		assertEquals( "0xC0500070", disk.read( 67 ).toString() );
 	}
 
 	// Test that the PCB is filled correctly by the Loader

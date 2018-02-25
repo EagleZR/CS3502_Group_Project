@@ -7,26 +7,30 @@ package yeezus.memory;
  */
 public class Memory {
 
-//	/**
-//	 * Pre-made storage for the registers to be used by the OS.
-//	 */
-//	public static memory registers = new memory( 16 );
-//	/**
-//	 * Pre-made storage for the RAM to be used by the OS.
-//	 */
-//	public static memory RAM = new memory( 1024 );
-//	/**
-//	 * Pre-made storage for the disk to be used by the OS.
-//	 */
-//	public static memory disk = new memory( 2048 );
+	//	/**
+	//	 * Pre-made storage for the registers to be used by the OS.
+	//	 */
+	//	public static memory registers = new memory( 16 );
+	//	/**
+	//	 * Pre-made storage for the RAM to be used by the OS.
+	//	 */
+	//	public static memory RAM = new memory( 1024 );
+	//	/**
+	//	 * Pre-made storage for the disk to be used by the OS.
+	//	 */
+	//	public static memory disk = new memory( 2048 );
 
 	private Word[] storage;
 
 	/**
 	 * Constructs a new memory.memory device with the given capacity.
 	 */
-	public Memory( int capacity ) {
+	public Memory( int capacity ) throws InvalidWordException {
 		this.storage = new Word[capacity];
+		for ( int i = 0; i < capacity; i++ ) {
+			String word = "0x00000000";
+			this.storage[i] = new Word( word );
+		}
 	}
 
 	/**

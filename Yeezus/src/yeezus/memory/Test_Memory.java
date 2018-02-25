@@ -16,6 +16,9 @@ public class Test_Memory {
 	private Memory RAM = new Memory( RAM_CAPACITY );
 	private Memory disk = new Memory( DISK_CAPACITY );
 
+	public Test_Memory() throws InvalidWordException {
+	}
+
 	@Test public void testCapacities() throws Exception {
 		// Registers
 		for ( int i = 0; i < REGISTER_CAPACITY; i++ ) {

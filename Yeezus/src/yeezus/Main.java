@@ -2,13 +2,14 @@ package yeezus;
 
 import yeezus.cpu.DMAChannel;
 import yeezus.driver.Driver;
+import yeezus.memory.InvalidWordException;
 import yeezus.memory.Memory;
 
 import java.io.File;
 
 public class Main {
 
-	public static void main( String[] args ) {
+	public static void main( String[] args ) throws InvalidWordException {
 		// Initialize memory
 		Memory disk = new Memory( 2048 );
 		Memory RAM = new Memory( 1024 );
