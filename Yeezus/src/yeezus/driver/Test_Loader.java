@@ -5,7 +5,7 @@ import org.junit.Test;
 import yeezus.memory.InvalidWordException;
 import yeezus.memory.Memory;
 import yeezus.pcb.PCB;
-import yeezus.pcb.Process;
+import yeezus.pcb.ProcessList;
 
 import java.io.File;
 
@@ -14,13 +14,13 @@ import static org.junit.Assert.assertTrue;
 
 public class Test_Loader {
 
-	private static PCB pcb;
+	private static ProcessList processList;
 	private static Memory disk;
 
 	@BeforeClass public static void setup() throws InvalidWordException {
-		pcb = new PCB();
+		processList = new ProcessList();
 		disk = new Memory( 2048 );
-		new Loader( pcb, new File( "src/yeezus/Program-File.txt" ), disk ).run();
+		new Loader( processList, new File( "src/yeezus/Program-File.txt" ), disk ).run();
 	}
 
 	// Test that the Disk is filled correctly by the Loader
@@ -37,33 +37,33 @@ public class Test_Loader {
 		assertEquals( "0xC0500070", disk.read( 67 ).toString() );
 	}
 
-	// Test that the PCB is filled correctly by the Loader
+	// Test that the ProcessList is filled correctly by the Loader
 	@Test public void testPCB() throws Exception {
-		// Ensure that the first job's PID exists in the PCB
-		assertTrue( pcb.contains( 1 ) );
-		Process process = pcb.getProcess( 1 );
+		// Ensure that the first job's PID exists in the ProcessList
+		assertTrue( processList.contains( 1 ) );
+		PCB PCB = processList.getProcess( 1 );
 		// Test the first job's start instruction address
-		assertEquals( 0, process.getStartInstructionAddress() );
+		assertEquals( 0, PCB.getStartInstructionAddress() );
 		// Test the first job's end instruction address
-		assertEquals( 22, process.getEndInstructionAddress() );
+		assertEquals( 22, PCB.getEndInstructionAddress() );
 		// Test the first job's start input buffer address
-		assertEquals( 23, process.getStartInputBufferAddress() );
+		assertEquals( 23, PCB.getStartInputBufferAddress() );
 		// Test the first job's end input buffer address
-		assertEquals( 42, process.getEndInputBufferAddress() );
+		assertEquals( 42, PCB.getEndInputBufferAddress() );
 		// Test the first job's start output buffer address
-		assertEquals( 43, process.getStartOutputBufferAddress() );
+		assertEquals( 43, PCB.getStartOutputBufferAddress() );
 		// Test the first job's end output buffer address
-		assertEquals( 54, process.getEndOutputBufferAddress() );
+		assertEquals( 54, PCB.getEndOutputBufferAddress() );
 		// Test the first job's start temp buffer address
-		assertEquals( 55, process.getStartTempBufferAddress() );
+		assertEquals( 55, PCB.getStartTempBufferAddress() );
 		// Test the first job's end temp buffer address
-		assertEquals( 66, process.getEndTempBufferAddress() );
+		assertEquals( 66, PCB.getEndTempBufferAddress() );
 		// Test the first job's priority
-		assertEquals( 2, process.getPriority() );
+		assertEquals( 2, PCB.getPriority() );
 
 		// Test that all jobs have been loaded
 		for ( int i = 1; i <= 30; i++ ) {
-			assertTrue( pcb.contains( i ) );
+			assertTrue( processList.contains( i ) );
 		}
 	}
 

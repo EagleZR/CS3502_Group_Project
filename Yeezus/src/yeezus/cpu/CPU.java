@@ -1,13 +1,13 @@
 package yeezus.cpu;
 
 import yeezus.memory.Memory;
-import yeezus.pcb.PCB;
+import yeezus.pcb.ProcessList;
 
 public class CPU implements Runnable {
 
 	private Memory registers;
 
-	public CPU( PCB pcb, Memory registers ) {
+	public CPU( ProcessList processList, Memory registers ) {
 
 	}
 

@@ -1,11 +1,11 @@
 package yeezus.driver;
 
 import yeezus.memory.Memory;
-import yeezus.pcb.PCB;
+import yeezus.pcb.ProcessList;
 
 public class Dispatcher implements Runnable {
 
-	Dispatcher( PCB pcb, Memory RAM, Memory registers ) {
+	Dispatcher( ProcessList processList, Memory RAM, Memory registers ) {
 
 	}
 

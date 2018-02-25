@@ -1,11 +1,11 @@
 package yeezus.driver;
 
 import yeezus.memory.Memory;
-import yeezus.pcb.PCB;
+import yeezus.pcb.ProcessList;
 
 public class Scheduler implements Runnable {
 
-	Scheduler( PCB pcb, Memory disk, Memory RAM ) {
+	Scheduler( ProcessList processList, Memory disk, Memory RAM ) {
 
 	}
 
