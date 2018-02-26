@@ -45,19 +45,19 @@ public class Test_Loader {
 		// Test the first job's start instruction address
 		assertEquals( 0, PCB.getStartDiskInstructionAddress() );
 		// Test the first job's end instruction address
-		assertEquals( 22, PCB.getEndDiskInstructionAddress() );
+		assertEquals( 23, PCB.getInstructionsLength() );
 		// Test the first job's start input buffer address
 		assertEquals( 23, PCB.getStartDiskInputBufferAddress() );
 		// Test the first job's end input buffer address
-		assertEquals( 42, PCB.getEndInputBufferAddress() );
+		assertEquals( 20, PCB.getInputBufferLength() );
 		// Test the first job's start output buffer address
 		assertEquals( 43, PCB.getStartDiskOutputBufferAddress() );
 		// Test the first job's end output buffer address
-		assertEquals( 54, PCB.getEndOutputBufferAddress() );
+		assertEquals( 12, PCB.getOutputBufferLength() );
 		// Test the first job's start temp buffer address
 		assertEquals( 55, PCB.getStartDiskTempBufferAddress() );
 		// Test the first job's end temp buffer address
-		assertEquals( 66, PCB.getEndTempBufferAddress() );
+		assertEquals( 12, PCB.getOutputBufferLength() );
 		// Test the first job's priority
 		assertEquals( 2, PCB.getPriority() );
 
