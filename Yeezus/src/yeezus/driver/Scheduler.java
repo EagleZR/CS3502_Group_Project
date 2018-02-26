@@ -1,15 +1,18 @@
 package yeezus.driver;
 
-import yeezus.memory.Memory;
-import yeezus.pcb.ProcessList;
+import yeezus.pcb.PCB;
+import yeezus.pcb.TaskManager;
+
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class Scheduler implements Runnable {
 
-	Scheduler( ProcessList processList, Memory disk, Memory RAM ) {
+	Scheduler( TaskManager taskManager, ConcurrentLinkedQueue<PCB> dmaQueue, CPUSchedulingPolicy schedulingMethod ) {
 
 	}
 
 	@Override public void run() {
-
+		// TODO Read through the PCBs to find the highest priority job
+		// TODO Add the PCB with the highest priority to the dmaQueue
 	}
 }

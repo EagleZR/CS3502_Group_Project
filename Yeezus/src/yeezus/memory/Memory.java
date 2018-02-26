@@ -70,6 +70,15 @@ public class Memory {
 	}
 
 	/**
+	 * Returns the storage capacity of this memory instance.
+	 *
+	 * @return The amount of {@link Word}s this memory instance can store.
+	 */
+	public int getCapacity() {
+		return this.storage.length;
+	}
+
+	/**
 	 * Provides the memory as a list of words written in hex. Each hex code is on its own line.
 	 *
 	 * @return The memory as a list of Words written in hex.

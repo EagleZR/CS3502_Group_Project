@@ -7,7 +7,8 @@ package yeezus.pcb;
  */
 public class PCB {
 
-	private final int pid, startInstructionAddress, endInstructionAddress, startInputBufferAddress, endInputBufferAddress, startOutputBufferAddress, endOutputBufferAddress, startTempBufferAddress, endTempBufferAddress, priority;
+	private final int pid, startDiskInstructionAddress, instructionsLength, startDiskInputBufferAddress, inputBufferLength, startDiskOutputBufferAddress, outputBufferLength, startDiskTempBufferAddress, tempBufferLength, priority;
+	private int cpuid, startRAMInstructionAddress, startRAMInputBufferAddress, startRAMOutputBufferAddress, startRAMTempBufferAddress;
 	private long clock;
 	private long elapsedWaitTime;
 	private long elapsedRunTime;
@@ -16,34 +17,110 @@ public class PCB {
 	/**
 	 * Constructs a PCB with the given characteristics.
 	 *
-	 * @param pid                      The PCB ID of the new PCB.
-	 * @param startInstructionAddress  The start address of the Instructions on the disk.
-	 * @param endInstructionAddress    The end address of the Instructions on the disk.
-	 * @param startInputBufferAddress  The start address of the Input Buffer on the disk.
-	 * @param endInputBufferAddress    The end address of the Input Buffer on the disk.
-	 * @param startOutputBufferAddress The start address of the Output Buffer on the disk.
-	 * @param endOutputBufferAddress   The end address of the Output Buffer on the disk.
-	 * @param startTempBufferAddress   The start address of the Temp Buffer on the disk.
-	 * @param endTempBufferAddress     The end address of the Temp Buffer on the disk.
-	 * @param priority                 The given priority of the PCB.
+	 * @param pid                          The PCB ID of the new PCB.
+	 * @param startDiskInstructionAddress  The start address of the Instructions on the disk.
+	 * @param instructionsLength           The the amount of Instructions on the disk.
+	 * @param startDiskInputBufferAddress  The start address of the Input Buffer on the disk.
+	 * @param inputBufferLength            The size of the Input Buffer on the disk.
+	 * @param startDiskOutputBufferAddress The start address of the Output Buffer on the disk.
+	 * @param outputBufferLength           The size of the Output Buffer on the disk.
+	 * @param startDiskTempBufferAddress   The start address of the Temp Buffer on the disk.
+	 * @param tempBufferLength             The size of the Temp Buffer on the disk.
+	 * @param priority                     The given priority of the PCB.
 	 */
-	PCB( int pid, int startInstructionAddress, int endInstructionAddress, int startInputBufferAddress,
-			int endInputBufferAddress, int startOutputBufferAddress, int endOutputBufferAddress,
-			int startTempBufferAddress, int endTempBufferAddress, int priority ) {
+	PCB( int pid, int startDiskInstructionAddress, int instructionsLength, int startDiskInputBufferAddress,
+			int inputBufferLength, int startDiskOutputBufferAddress, int outputBufferLength,
+			int startDiskTempBufferAddress, int tempBufferLength, int priority ) {
 		this.clock = System.currentTimeMillis();
 		this.elapsedWaitTime = 0;
 		this.elapsedRunTime = 0;
 		this.status = Status.WAITING;
 		this.pid = pid;
-		this.startInstructionAddress = startInstructionAddress;
-		this.endInstructionAddress = endInstructionAddress;
-		this.startInputBufferAddress = startInputBufferAddress;
-		this.endInputBufferAddress = endInputBufferAddress;
-		this.startOutputBufferAddress = startOutputBufferAddress;
-		this.endOutputBufferAddress = endOutputBufferAddress;
-		this.startTempBufferAddress = startTempBufferAddress;
-		this.endTempBufferAddress = endTempBufferAddress;
+		this.startDiskInstructionAddress = startDiskInstructionAddress;
+		this.instructionsLength = instructionsLength;
+		this.startDiskInputBufferAddress = startDiskInputBufferAddress;
+		this.inputBufferLength = inputBufferLength;
+		this.startDiskOutputBufferAddress = startDiskOutputBufferAddress;
+		this.outputBufferLength = outputBufferLength;
+		this.startDiskTempBufferAddress = startDiskTempBufferAddress;
+		this.tempBufferLength = tempBufferLength;
 		this.priority = priority;
+	}
+
+	public int getCPUID() {
+		return cpuid;
+	}
+
+	public void setCPUID( int cpuid ) {
+		this.cpuid = cpuid;
+	}
+
+	public int getStartRAMInstructionAddress() {
+		return startRAMInstructionAddress;
+	}
+
+	public void setStartRAMInstructionAddress( int startRAMInstructionAddress ) {
+		this.startRAMInstructionAddress = startRAMInstructionAddress;
+	}
+
+	public int getStartRAMInputBufferAddress() {
+		return startRAMInputBufferAddress;
+	}
+
+	public void setStartRAMInputBufferAddress( int startRAMInputBufferAddress ) {
+		this.startRAMInputBufferAddress = startRAMInputBufferAddress;
+	}
+
+	public int getStartRAMOutputBufferAddress() {
+		return startRAMOutputBufferAddress;
+	}
+
+	public void setStartRAMOutputBufferAddress( int startRAMOutputBufferAddress ) {
+		this.startRAMOutputBufferAddress = startRAMOutputBufferAddress;
+	}
+
+	public int getStartRAMTempBufferAddress() {
+		return startRAMTempBufferAddress;
+	}
+
+	public void setStartRAMTempBufferAddress( int startRAMTempBufferAddress ) {
+		this.startRAMTempBufferAddress = startRAMTempBufferAddress;
+	}
+
+	/**
+	 * The amount of instructions for this process.
+	 *
+	 * @return The number of instructions in this process.
+	 */
+	public int getInstructionsLength() {
+		return instructionsLength;
+	}
+
+	/**
+	 * The size of the input buffer for this process.
+	 *
+	 * @return The size of the input buffer for this process.
+	 */
+	public int getInputBufferLength() {
+		return inputBufferLength;
+	}
+
+	/**
+	 * The size of the output buffer for this process.
+	 *
+	 * @return The size of the output buffer for this process.
+	 */
+	public int getOutputBufferLength() {
+		return outputBufferLength;
+	}
+
+	/**
+	 * The size of the temp buffer for this process.
+	 *
+	 * @return The size of the temp buffer for this process.
+	 */
+	public int getTempBufferLength() {
+		return tempBufferLength;
 	}
 
 	/**
@@ -60,17 +137,8 @@ public class PCB {
 	 *
 	 * @return The start address of this PCB's instructions on the disk.
 	 */
-	public int getStartInstructionAddress() {
-		return startInstructionAddress;
-	}
-
-	/**
-	 * Retrieves the end address of this PCB's instructions on the disk.
-	 *
-	 * @return The end address of this PCB's instructions on the disk.
-	 */
-	public int getEndInstructionAddress() {
-		return endInstructionAddress;
+	public int getStartDiskInstructionAddress() {
+		return startDiskInstructionAddress;
 	}
 
 	/**
@@ -78,17 +146,8 @@ public class PCB {
 	 *
 	 * @return The start address of this PCB's input buffer on the disk.
 	 */
-	public int getStartInputBufferAddress() {
-		return startInputBufferAddress;
-	}
-
-	/**
-	 * Retrieves the end address of this PCB's input buffer on the disk.
-	 *
-	 * @return The end address of this PCB's input buffer on the disk.
-	 */
-	public int getEndInputBufferAddress() {
-		return endInputBufferAddress;
+	public int getStartDiskInputBufferAddress() {
+		return startDiskInputBufferAddress;
 	}
 
 	/**
@@ -96,17 +155,8 @@ public class PCB {
 	 *
 	 * @return The start address of this PCB's output buffer on the disk.
 	 */
-	public int getStartOutputBufferAddress() {
-		return startOutputBufferAddress;
-	}
-
-	/**
-	 * Retrieves the end address of this PCB's output buffer on the disk.
-	 *
-	 * @return The end address of this PCB's output buffer  on the disk.
-	 */
-	public int getEndOutputBufferAddress() {
-		return endOutputBufferAddress;
+	public int getStartDiskOutputBufferAddress() {
+		return startDiskOutputBufferAddress;
 	}
 
 	/**
@@ -114,17 +164,8 @@ public class PCB {
 	 *
 	 * @return The start address of this PCB's temp buffer  on the disk.
 	 */
-	public int getStartTempBufferAddress() {
-		return startTempBufferAddress;
-	}
-
-	/**
-	 * Retrieves the end address of this PCB's temp buffer on the disk.
-	 *
-	 * @return The end address of this PCB's temp buffer  on the disk.
-	 */
-	public int getEndTempBufferAddress() {
-		return endTempBufferAddress;
+	public int getStartDiskTempBufferAddress() {
+		return startDiskTempBufferAddress;
 	}
 
 	/**
@@ -185,5 +226,5 @@ public class PCB {
 		return elapsedRunTime + ( this.status == Status.RUNNING ? System.currentTimeMillis() - this.clock : 0 );
 	}
 
-	public enum Status {NEW, RUNNING, WAITING, READY, TERMINATED} // TODO Make sure these are updated appropriately later
+	public enum Status {NEW, RUNNING, WAITING, READY, TERMINATED}
 }

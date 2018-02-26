@@ -4,14 +4,14 @@ import java.util.ArrayList;
 
 /**
  * The PCB Control Block for the Yeezus Operating System. This implementation is little more than a Collection
- * wrapper to control access to the {@link PCB}es it contains.
+ * wrapper to control access to the {@link PCB}s it contains.
  */
-public class ProcessList {
+public class TaskManager {
 
-	private ArrayList<PCB> PCBS;
+	private ArrayList<PCB> PCBs;
 
-	public ProcessList() {
-		this.PCBS = new ArrayList<>();
+	public TaskManager() {
+		this.PCBs = new ArrayList<>();
 	}
 
 	/**
@@ -28,26 +28,26 @@ public class ProcessList {
 	 * @param endTempBufferAddress     The end address of the Temp Buffer on the disk.
 	 * @param priority                 The given priority of the PCB.
 	 */
-	public void addProcess( int pid, int startInstructionAddress, int endInstructionAddress, int startInputBufferAddress, int endInputBufferAddress,
+	public void addPCB( int pid, int startInstructionAddress, int endInstructionAddress, int startInputBufferAddress, int endInputBufferAddress,
 			int startOutputBufferAddress, int endOutputBufferAddress, int startTempBufferAddress,
 			int endTempBufferAddress, int priority ) throws DuplicatePIDException {
 		if ( this.contains( pid ) ) {
-			throw new DuplicatePIDException( "The PID " + pid + " already exists in this ProcessList." );
+			throw new DuplicatePIDException( "The PID " + pid + " already exists in this TaskManager." );
 		}
-		this.PCBS.add( new PCB( pid, startInstructionAddress, endInstructionAddress, startInputBufferAddress,
+		this.PCBs.add( new PCB( pid, startInstructionAddress, endInstructionAddress, startInputBufferAddress,
 				endInputBufferAddress, startOutputBufferAddress, endOutputBufferAddress, startTempBufferAddress,
 				endTempBufferAddress, priority ) );
 	}
 
 	/**
-	 * Checks if this ProcessList contains a {@link PCB} with the given {@code PID}.
+	 * Checks if this TaskManager contains a {@link PCB} with the given {@code PID}.
 	 *
 	 * @param pid The ID of the {@link PCB} to be checked.
-	 * @return {@code true} if the ProcessList contains a {@link PCB} with the given {@code PID}, {@code false} if it
+	 * @return {@code true} if the TaskManager contains a {@link PCB} with the given {@code PID}, {@code false} if it
 	 * doesn't.
 	 */
 	public boolean contains( int pid ) {
-		for ( PCB PCB : this.PCBS ) {
+		for ( PCB PCB : this.PCBs ) {
 			if ( PCB.getPid() == pid ) {
 				return true;
 			}
@@ -62,13 +62,13 @@ public class ProcessList {
 	 * @return The {@link PCB} with the given {@code pid}.
 	 * @throws ProcessNotFoundException
 	 */
-	public PCB getProcess( int pid ) throws ProcessNotFoundException {
-		for ( PCB PCB : this.PCBS ) {
+	public PCB getPCB( int pid ) throws ProcessNotFoundException {
+		for ( PCB PCB : this.PCBs ) {
 			if ( PCB.getPid() == pid ) {
 				return PCB;
 			}
 		}
-		throw new ProcessNotFoundException( "The pid " + pid + " does not exist within the ProcessList." );
+		throw new ProcessNotFoundException( "The pid " + pid + " does not exist within the TaskManager." );
 	}
 
 }

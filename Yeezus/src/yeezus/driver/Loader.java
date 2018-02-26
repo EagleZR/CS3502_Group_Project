@@ -1,13 +1,13 @@
 package yeezus.driver;
 
 import yeezus.memory.Memory;
-import yeezus.pcb.ProcessList;
+import yeezus.pcb.TaskManager;
 
 import java.io.File;
 
 public class Loader implements Runnable {
 
-	Loader( ProcessList processList, File programFile, Memory disk ) {
+	Loader( TaskManager taskManager, File programFile, Memory disk ) {
 
 	}
 
