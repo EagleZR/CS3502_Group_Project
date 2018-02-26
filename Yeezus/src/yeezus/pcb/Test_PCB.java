@@ -27,7 +27,7 @@ public class Test_PCB {
 	}
 
 	@Test public void getEndInstructionAddress() throws Exception {
-		assertEquals( 15, this.PCB.getEndDiskInstructionAddress() );
+		assertEquals( 15, this.PCB.getInstructionsLength() );
 	}
 
 	@Test public void getStartInputBufferAddress() throws Exception {
@@ -35,7 +35,7 @@ public class Test_PCB {
 	}
 
 	@Test public void getEndInputBufferAddress() throws Exception {
-		assertEquals( 25, this.PCB.getEndInputBufferAddress() );
+		assertEquals( 25, this.PCB.getInputBufferLength() );
 	}
 
 	@Test public void getStartOutputBufferAddress() throws Exception {
@@ -43,7 +43,7 @@ public class Test_PCB {
 	}
 
 	@Test public void getEndOutputBufferAddress() throws Exception {
-		assertEquals( 38, this.PCB.getEndOutputBufferAddress() );
+		assertEquals( 38, this.PCB.getOutputBufferLength() );
 	}
 
 	@Test public void getStartTempBufferAddress() throws Exception {
@@ -51,7 +51,7 @@ public class Test_PCB {
 	}
 
 	@Test public void getEndTempBufferAddress() throws Exception {
-		assertEquals( 50, this.PCB.getEndTempBufferAddress() );
+		assertEquals( 50, this.PCB.getTempBufferLength() );
 	}
 
 	@Test public void getPriority() throws Exception {

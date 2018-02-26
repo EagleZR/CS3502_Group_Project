@@ -31,13 +31,13 @@ public class Test_TaskManager {
 	@Test public void getProcess() throws Exception {
 		PCB PCB = taskManager.getPCB( 14 );
 		assertEquals( 10, PCB.getStartDiskInstructionAddress() );
-		assertEquals( 15, PCB.getEndDiskInstructionAddress() );
+		assertEquals( 15, PCB.getInstructionsLength() );
 		assertEquals( 16, PCB.getStartDiskInputBufferAddress() );
-		assertEquals( 25, PCB.getEndInputBufferAddress() );
+		assertEquals( 25, PCB.getInputBufferLength() );
 		assertEquals( 26, PCB.getStartDiskOutputBufferAddress() );
-		assertEquals( 38, PCB.getEndOutputBufferAddress() );
+		assertEquals( 38, PCB.getOutputBufferLength() );
 		assertEquals( 39, PCB.getStartDiskTempBufferAddress() );
-		assertEquals( 50, PCB.getEndTempBufferAddress() );
+		assertEquals( 50, PCB.getTempBufferLength() );
 		assertEquals( 2, PCB.getPriority() );
 	}
 
