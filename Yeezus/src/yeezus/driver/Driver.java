@@ -2,11 +2,15 @@ package yeezus.driver;
 
 import yeezus.cpu.CPU;
 import yeezus.cpu.DMAChannel;
+import yeezus.memory.InvalidAddressException;
+import yeezus.memory.InvalidWordException;
 import yeezus.memory.Memory;
+import yeezus.pcb.DuplicatePIDException;
 import yeezus.pcb.PCB;
 import yeezus.pcb.TaskManager;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -47,10 +51,9 @@ public class Driver implements Runnable {
 	 * @param disk        The disk onto which the contents of the programFile will be loaded.
 	 * @param programFile The file whose contents will be loaded onto the disk.
 	 */
-	public static void loadFile( Memory disk, File programFile ) {
+	public static void loadFile( Memory disk, File programFile ) throws InvalidAddressException, DuplicatePIDException, InvalidWordException, IOException {
 		taskManager = new TaskManager();
 		loader = new Loader( taskManager, programFile, disk );
-		loader.run();
 	}
 
 	@Override public void run() {
