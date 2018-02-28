@@ -44,25 +44,25 @@ public class Test_Loader {
 	@Test public void testPCB() throws Exception {
 		// Ensure that the first job's PID exists in the TaskManager
 		assertTrue( taskManager.contains( 1 ) );
-		PCB PCB = taskManager.getPCB( 1 );
+		PCB pcb = taskManager.getPCB( 1 );
 		// Test the first job's start instruction address
-		assertEquals( 0, PCB.getStartDiskInstructionAddress() );
+		assertEquals( 0, pcb.getStartDiskInstructionAddress() );
 		// Test the first job's end instruction address
-		assertEquals( 23, PCB.getInstructionsLength() );
+		assertEquals( 23, pcb.getInstructionsLength() );
 		// Test the first job's start input buffer address
-		assertEquals( 23, PCB.getStartDiskInputBufferAddress() );
+		assertEquals( 23, pcb.getStartDiskInputBufferAddress() );
 		// Test the first job's end input buffer address
-		assertEquals( 20, PCB.getInputBufferLength() );
+		assertEquals( 20, pcb.getInputBufferLength() );
 		// Test the first job's start output buffer address
-		assertEquals( 43, PCB.getStartDiskOutputBufferAddress() );
+		assertEquals( 43, pcb.getStartDiskOutputBufferAddress() );
 		// Test the first job's end output buffer address
-		assertEquals( 12, PCB.getOutputBufferLength() );
+		assertEquals( 12, pcb.getOutputBufferLength() );
 		// Test the first job's start temp buffer address
-		assertEquals( 55, PCB.getStartDiskTempBufferAddress() );
+		assertEquals( 55, pcb.getStartDiskTempBufferAddress() );
 		// Test the first job's end temp buffer address
-		assertEquals( 12, PCB.getOutputBufferLength() );
+		assertEquals( 12, pcb.getOutputBufferLength() );
 		// Test the first job's priority
-		assertEquals( 2, PCB.getPriority() );
+		assertEquals( 2, pcb.getPriority() );
 
 		// Test that all jobs have been loaded
 		for ( int i = 1; i <= 30; i++ ) {
