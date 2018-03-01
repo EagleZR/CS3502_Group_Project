@@ -13,7 +13,7 @@ public class MMU {
 		this.physicalAddresses = new ArrayList<>();
 	}
 
-	public void recordAddress( int pid, int logicalAddress, int physicalAddress ) {
+	public void mapAddress( int pid, int logicalAddress, int physicalAddress ) {
 		ArrayList<Integer> processAddresses;
 		try {
 			processAddresses = this.physicalAddresses.get( pid );
