@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class TaskManager {
 
 	private ArrayList<PCB> PCBs;
+	private ArrayList<PCB> jobQueue;
 	private ConcurrentLinkedQueue<PCB> readyQueue;
 
 	/**
@@ -47,9 +48,10 @@ public class TaskManager {
 		if ( this.contains( pid ) ) {
 			throw new DuplicatePIDException( "The PID " + pid + " already exists in this TaskManager." );
 		}
-		this.PCBs.add( new PCB( pid, startInstructionAddress, instructionsLength, startInputBufferAddress,
-				inputBufferLength, startOutputBufferAddress, outputBufferLength, startTempBufferAddress,
-				tempBufferLength, priority ) );
+		PCB pcb = new PCB( pid, startInstructionAddress, instructionsLength, startInputBufferAddress, inputBufferLength,
+				startOutputBufferAddress, outputBufferLength, startTempBufferAddress, tempBufferLength, priority );
+		this.PCBs.add( pcb );
+		this.jobQueue.add( pcb );
 	}
 
 	/**
@@ -84,4 +86,7 @@ public class TaskManager {
 		throw new ProcessNotFoundException( "The pid " + pid + " does not exist within the TaskManager." );
 	}
 
+	public ArrayList<PCB> getJobQueue() {
+		return jobQueue;
+	}
 }
