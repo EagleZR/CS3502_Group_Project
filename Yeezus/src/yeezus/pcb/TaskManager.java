@@ -19,6 +19,7 @@ public class TaskManager {
 	public TaskManager() {
 		this.PCBs = new ArrayList<>();
 		this.readyQueue = new ConcurrentLinkedQueue<>();
+		this.jobQueue = new ArrayList<>();
 	}
 
 	/**

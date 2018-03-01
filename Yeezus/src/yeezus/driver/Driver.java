@@ -1,32 +1,31 @@
 package yeezus.driver;
 
 import yeezus.cpu.CPU;
-import yeezus.cpu.DMAChannel;
+import yeezus.cpu.ExecutionException;
+import yeezus.cpu.InvalidInstructionException;
 import yeezus.memory.InvalidAddressException;
 import yeezus.memory.InvalidWordException;
+import yeezus.memory.MMU;
 import yeezus.memory.Memory;
 import yeezus.pcb.DuplicatePIDException;
-import yeezus.pcb.PCB;
 import yeezus.pcb.TaskManager;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * This class represents the CPU Driver within the {@link yeezus} operating system. Multiple instances of this class
  * indicate the presence of multiple logical CPUs.
  */
-public class Driver implements Runnable {
+public class Driver {
 
 	private static Loader loader; // TODO Create as static variable? Throw exception if the Driver constructor is called while this is null?
 	private static TaskManager taskManager;
-	private ConcurrentLinkedQueue<PCB> dmaQueue;
 	private Scheduler scheduler;
 	private Dispatcher dispatcher;
 	private CPU cpu;
 
-	public Driver( Memory disk, Memory RAM, Memory registers, CPUSchedulingPolicy schedulingMethod )
+	public Driver( Memory disk, MMU mmu, Memory registers, CPUSchedulingPolicy schedulingMethod )
 			throws UninitializedDriverException {
 		if ( loader == null ) {
 			// This makes sure that the loader has already been run. This allows us to easily create multiple Drivers for multi-threading
@@ -38,9 +37,6 @@ public class Driver implements Runnable {
 
 		this.scheduler = new Scheduler( taskManager, schedulingMethod );
 		this.dispatcher = new Dispatcher( taskManager, this.cpu );
-
-		this.dmaQueue = new ConcurrentLinkedQueue<>();
-		DMAChannel dmaChannel = new DMAChannel( RAM, registers );
 	}
 
 	/**
@@ -56,12 +52,13 @@ public class Driver implements Runnable {
 		loader = new Loader( taskManager, programFile, disk );
 	}
 
-	@Override public void run() {
-		while ( true ) { // TODO Exit on interrupt, or when everything is finished
+	public void run() throws InvalidInstructionException, ExecutionException, InvalidWordException {
+		while ( !taskManager.getJobQueue().isEmpty() ) {
 			scheduler.run();
 			dispatcher.run();
 			cpu.run();
 			// TODO Handle interrupts
 		}
 	}
+
 }
