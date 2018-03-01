@@ -2,22 +2,20 @@ package yeezus.driver;
 
 import yeezus.cpu.CPU;
 import yeezus.pcb.PCB;
-
-import java.util.concurrent.ConcurrentLinkedQueue;
+import yeezus.pcb.TaskManager;
 
 public class Dispatcher implements Runnable {
 
-	ConcurrentLinkedQueue<PCB> readyQueue;
+	TaskManager taskManager;
 	CPU cpu;
 
-	Dispatcher( ConcurrentLinkedQueue<PCB> readyQueue, CPU cpu ) {
-		this.readyQueue = readyQueue;
+	Dispatcher( TaskManager taskManager, CPU cpu ) {
 		this.cpu = cpu;
 	}
 
 	@Override public void run() {
-		if ( this.readyQueue.peek() != null ) {
-			PCB next = this.readyQueue.remove();
+		if ( this.taskManager.getReadyQueue().peek() != null ) {
+			PCB next = this.taskManager.getReadyQueue().remove();
 		} else {
 			// TODO Sleep until something else is added to the ready queue?
 		}

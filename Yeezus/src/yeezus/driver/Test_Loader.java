@@ -20,7 +20,8 @@ public class Test_Loader {
 	private static TaskManager taskManager;
 	private static Memory disk;
 
-	@BeforeClass public static void setup() throws InvalidWordException, DuplicatePIDException, IOException, InvalidAddressException {
+	@BeforeClass public static void setup()
+			throws InvalidWordException, DuplicatePIDException, IOException, InvalidAddressException {
 		taskManager = new TaskManager();
 		disk = new Memory( 2048 );
 		new Loader( taskManager, new File( "src/yeezus/Program-File.txt" ), disk );
@@ -67,6 +68,7 @@ public class Test_Loader {
 		// Test that all jobs have been loaded
 		for ( int i = 1; i <= 30; i++ ) {
 			assertTrue( taskManager.contains( i ) );
+			assertEquals( PCB.Status.NEW, taskManager.getPCB( i ).getStatus() );
 		}
 	}
 

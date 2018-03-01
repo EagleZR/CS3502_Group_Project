@@ -7,10 +7,13 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class Scheduler implements Runnable {
 
-	Scheduler( TaskManager taskManager, ConcurrentLinkedQueue<PCB> dmaQueue, CPUSchedulingPolicy schedulingMethod ) {
+	Scheduler( TaskManager taskManager, CPUSchedulingPolicy schedulingMethod ) {
 
 	}
 
+	/**
+	 * Loads one process into RAM on each iteration. Iterations are called externally.
+	 */
 	@Override public void run() {
 		// TODO Read through the PCBs to find the highest priority job
 		// TODO Add the PCB with the highest priority to the dmaQueue

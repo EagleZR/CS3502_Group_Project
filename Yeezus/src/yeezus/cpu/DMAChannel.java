@@ -8,8 +8,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 public class DMAChannel implements Runnable {
 
 	Memory RAM;
+	Memory registers;
 
-	public DMAChannel( Memory Disk, Memory RAM, ConcurrentLinkedQueue<PCB> dmaQueue ) {
+	public DMAChannel( Memory RAM, Memory registers ) {
 
 	}
 

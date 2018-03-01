@@ -47,10 +47,19 @@ public class PCB {
 		this.priority = priority;
 	}
 
+	/**
+	 * @return
+	 */
 	public int getCPUID() {
 		return cpuid;
 	}
 
+	/**
+	 * Sets the CPU ID to the given value to indicate that the process is running on that CPU. A negative value
+	 * indicates that the process is not on the CPU.
+	 *
+	 * @param cpuid The CPU that the process is running on.
+	 */
 	public void setCPUID( int cpuid ) {
 		this.cpuid = cpuid;
 	}

@@ -36,11 +36,11 @@ public class Driver implements Runnable {
 
 		this.cpu = new CPU( taskManager, registers );
 
-		this.scheduler = new Scheduler( taskManager, this.dmaQueue, schedulingMethod );
-		this.dispatcher = new Dispatcher( taskManager.getReadyQueue(), this.cpu );
+		this.scheduler = new Scheduler( taskManager, schedulingMethod );
+		this.dispatcher = new Dispatcher( taskManager, this.cpu );
 
 		this.dmaQueue = new ConcurrentLinkedQueue<>();
-		DMAChannel dmaChannel = new DMAChannel( disk, RAM, this.dmaQueue );
+		DMAChannel dmaChannel = new DMAChannel( RAM, registers );
 	}
 
 	/**
