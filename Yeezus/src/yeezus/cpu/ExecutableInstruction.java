@@ -1,5 +1,7 @@
 package yeezus.cpu;
 
+import yeezus.memory.InvalidAddressException;
+import yeezus.memory.InvalidWordException;
 import yeezus.memory.Memory;
 import yeezus.memory.Word;
 
@@ -13,14 +15,16 @@ import static yeezus.cpu.InstructionSet.values;
 abstract class ExecutableInstruction implements Executable {
 
 	InstructionSet type;
+	Memory registers;
 
 	private ExecutableInstruction( Word word, Memory registers ) throws InvalidInstructionException {
 		this.type = getInstructionSet( word );
+		this.registers = registers;
 	}
 
 	private InstructionSet getInstructionSet( Word word ) throws InvalidInstructionException {
-		int mask = 0x3F000000;
-		long opcode = mask & word.getData();
+		long mask = 0x3F000000;
+		long opcode = ( mask & word.getData() ) >> 24;
 		for ( InstructionSet instructionSet : values() ) {
 			if ( instructionSet.getCode() == opcode ) {
 				return instructionSet;
@@ -36,42 +40,49 @@ abstract class ExecutableInstruction implements Executable {
 		ArithmeticExecutableInstruction( Word word, Memory registers ) throws InvalidInstructionException {
 			super( word, registers );
 
+			// TODO This can probably be done more efficiently, but I'm afraid I'd lose my mind
 			// Find s1
 			int s1Mask = 0x00F00000;
-			// TODO Find s
+			s1 = (int) ( ( word.getData() & s1Mask ) >> 20 );
 
 			// Find s2
 			int s2Mask = 0x000F0000;
-			// TODO Find s2
+			s2 = (int) ( ( word.getData() & s2Mask ) >> 16 );
 
 			// Find d
 			int dMask = 0x0000F000;
-			// TODO Find d
-
+			d = (int) ( ( word.getData() & dMask ) >> 12 );
 		}
 
-		@Override public void execute() {
+		@Override public void execute() throws InvalidAddressException, InvalidWordException {
 			switch ( this.type ) {
 				case MOV:
-					// TODO MOV
+					// TODO Move s1 into d?
+					super.registers.write( d, super.registers.read( s1 ) );
 					break;
 				case ADD:
-					// TODO ADD
+					super.registers.write( d,
+							new Word( super.registers.read( s1 ).getData() + super.registers.read( s2 ).getData() ) );
 					break;
 				case SUB:
-					// TODO SUB
+					super.registers.write( d,
+							new Word( super.registers.read( s1 ).getData() - super.registers.read( s2 ).getData() ) );
 					break;
 				case MUL:
-					// TODO MUL
+					super.registers.write( d,
+							new Word( super.registers.read( s1 ).getData() * super.registers.read( s2 ).getData() ) );
 					break;
 				case DIV:
-					// TODO DIV
+					super.registers.write( d,
+							new Word( super.registers.read( s1 ).getData() + super.registers.read( s2 ).getData() ) );
 					break;
 				case AND:
-					// TODO AND
+					super.registers.write( d,
+							new Word( super.registers.read( s1 ).getData() & super.registers.read( s2 ).getData() ) );
 					break;
 				case OR:
-					// TODO OR
+					super.registers.write( d,
+							new Word( super.registers.read( s1 ).getData() | super.registers.read( s2 ).getData() ) );
 					break;
 				case SLT:
 					// TODO SLT
@@ -186,7 +197,7 @@ abstract class ExecutableInstruction implements Executable {
 		int reg1, reg2, address;
 
 		IOExecutableInstruction( Word word, Memory registers ) throws InvalidInstructionException {
-			super( word,registers );
+			super( word, registers );
 
 			// Find reg1
 			int reg1Mask = 0x00F00000;

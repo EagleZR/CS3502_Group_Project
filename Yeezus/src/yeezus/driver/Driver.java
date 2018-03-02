@@ -52,7 +52,8 @@ public class Driver {
 		loader = new Loader( taskManager, programFile, disk );
 	}
 
-	public void run() throws InvalidInstructionException, ExecutionException, InvalidWordException {
+	public void run()
+			throws InvalidInstructionException, ExecutionException, InvalidWordException, InvalidAddressException {
 		while ( !taskManager.getJobQueue().isEmpty() ) {
 			scheduler.run();
 			dispatcher.run();

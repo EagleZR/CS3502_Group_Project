@@ -4,9 +4,8 @@ import java.util.ArrayList;
 
 public class MMU {
 
-	// int addressMap[][];
-	ArrayList<ArrayList<Integer>> addressMap; // TODO Make this more efficient later
-	int[] addresses;
+	private ArrayList<ArrayList<Integer>> addressMap; // TODO Make this more efficient later
+	private int[] addresses;
 	private Memory RAM;
 
 	public MMU( Memory RAM ) {
@@ -54,5 +53,13 @@ public class MMU {
 
 	public void write( int pid, int logicalAddress, Word data ) throws InvalidAddressException {
 		this.RAM.write( this.addressMap.get( pid ).get( logicalAddress ), data );
+	}
+
+	public void terminatePID( int pid ) {
+		try {
+			this.addressMap.remove( pid );
+		} catch ( IndexOutOfBoundsException e ) {
+
+		}
 	}
 }

@@ -36,6 +36,18 @@ public class Word {
 	}
 
 	/**
+	 * @param data
+	 * @throws InvalidWordException
+	 */
+	public Word( long data ) throws InvalidWordException {
+		if ( data < 0xFFFFFFFF || data >= Long.decode( "0x100000000" ) ) {
+			throw new InvalidWordException(
+					"Argument " + data + " is too long. Please limit hex arguments to under 0xFFFFFFFF." );
+		}
+		this.data = data;
+	}
+
+	/**
 	 * Retrieves the stored value of this memory.Word as an {@code int}. For the hexadecimal representation, use {@link
 	 * Word#toString()}.
 	 *

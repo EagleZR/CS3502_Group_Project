@@ -1,5 +1,6 @@
 package yeezus.cpu;
 
+import yeezus.memory.InvalidAddressException;
 import yeezus.memory.InvalidWordException;
 import yeezus.memory.Memory;
 import yeezus.memory.Word;
@@ -12,10 +13,11 @@ public class CPU {
 	private int pc;
 
 	public CPU( TaskManager taskManager, Memory registers ) {
-
+		this.registers = registers;
 	}
 
-	public void run() throws InvalidInstructionException, InvalidWordException, ExecutionException {
+	public void run()
+			throws InvalidInstructionException, InvalidWordException, ExecutionException, InvalidAddressException {
 		while ( true ) { // Check when the process is complete
 			// TODO Fetch
 			Word instruction = null;
