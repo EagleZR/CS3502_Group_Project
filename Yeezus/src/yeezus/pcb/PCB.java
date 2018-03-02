@@ -34,7 +34,7 @@ public class PCB {
 		this.clock = System.currentTimeMillis();
 		this.elapsedWaitTime = 0;
 		this.elapsedRunTime = 0;
-		this.status = Status.WAITING;
+		this.status = Status.NEW;
 		this.pid = pid;
 		this.startDiskInstructionAddress = startDiskInstructionAddress;
 		this.instructionsLength = instructionsLength;

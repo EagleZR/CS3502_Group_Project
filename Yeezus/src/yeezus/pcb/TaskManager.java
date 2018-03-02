@@ -1,6 +1,7 @@
 package yeezus.pcb;
 
 import java.util.ArrayList;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -11,7 +12,7 @@ public class TaskManager {
 
 	private ArrayList<PCB> PCBs;
 	private ArrayList<PCB> jobQueue;
-	private ConcurrentLinkedQueue<PCB> readyQueue;
+	private Queue<PCB> readyQueue;
 
 	/**
 	 *
@@ -25,23 +26,23 @@ public class TaskManager {
 	/**
 	 * @return
 	 */
-	public ConcurrentLinkedQueue<PCB> getReadyQueue() {
+	public Queue<PCB> getReadyQueue() {
 		return readyQueue;
 	}
 
 	/**
 	 * Adds a {@link PCB} with the following attributes.
 	 *
-	 * @param pid                      The PCB ID of the new PCB.
+	 * @param pid                      The PCB ID of the new process.
 	 * @param startInstructionAddress  The start address of the Instructions on the disk.
-	 * @param instructionsLength       The end address of the Instructions on the disk.
+	 * @param instructionsLength       The amount of the Instructions on the disk.
 	 * @param startInputBufferAddress  The start address of the Input Buffer on the disk.
-	 * @param inputBufferLength        The end address of the Input Buffer on the disk.
+	 * @param inputBufferLength        The length of the Input Buffer on the disk.
 	 * @param startOutputBufferAddress The start address of the Output Buffer on the disk.
-	 * @param outputBufferLength       The end address of the Output Buffer on the disk.
+	 * @param outputBufferLength       The length of the Output Buffer on the disk.
 	 * @param startTempBufferAddress   The start address of the Temp Buffer on the disk.
-	 * @param tempBufferLength         The end address of the Temp Buffer on the disk.
-	 * @param priority                 The given priority of the PCB.
+	 * @param tempBufferLength         The length of the Temp Buffer on the disk.
+	 * @param priority                 The given priority of the process.
 	 */
 	public void addPCB( int pid, int startInstructionAddress, int instructionsLength, int startInputBufferAddress,
 			int inputBufferLength, int startOutputBufferAddress, int outputBufferLength, int startTempBufferAddress,
