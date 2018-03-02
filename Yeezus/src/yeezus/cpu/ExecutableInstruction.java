@@ -1,5 +1,6 @@
 package yeezus.cpu;
 
+import yeezus.memory.Memory;
 import yeezus.memory.Word;
 
 import static yeezus.cpu.InstructionSet.values;
@@ -9,15 +10,15 @@ import static yeezus.cpu.InstructionSet.values;
  *
  * @version 0.2
  */
-abstract class ExecutableInstruction implements Runnable {
+abstract class ExecutableInstruction implements Executable {
 
 	InstructionSet type;
 
-	private ExecutableInstruction( Word word ) throws InvalidInstructionException {
+	private ExecutableInstruction( Word word, Memory registers ) throws InvalidInstructionException {
 		this.type = getInstructionSet( word );
 	}
 
-	InstructionSet getInstructionSet( Word word ) throws InvalidInstructionException {
+	private InstructionSet getInstructionSet( Word word ) throws InvalidInstructionException {
 		int mask = 0x3F000000;
 		long opcode = mask & word.getData();
 		for ( InstructionSet instructionSet : values() ) {
@@ -32,8 +33,8 @@ abstract class ExecutableInstruction implements Runnable {
 
 		private int s1, s2, d;
 
-		ArithmeticExecutableInstruction( Word word ) throws InvalidInstructionException {
-			super( word );
+		ArithmeticExecutableInstruction( Word word, Memory registers ) throws InvalidInstructionException {
+			super( word, registers );
 
 			// Find s1
 			int s1Mask = 0x00F00000;
@@ -49,7 +50,7 @@ abstract class ExecutableInstruction implements Runnable {
 
 		}
 
-		@Override public void run() {
+		@Override public void execute() {
 			switch ( this.type ) {
 				case MOV:
 					// TODO MOV
@@ -86,8 +87,8 @@ abstract class ExecutableInstruction implements Runnable {
 
 		private int bReg, dReg, data;
 
-		ConditionalExecutableInstruction( Word word ) throws InvalidInstructionException {
-			super( word );
+		ConditionalExecutableInstruction( Word word, Memory registers ) throws InvalidInstructionException {
+			super( word, registers );
 
 			// Find B-reg
 			int bRegMask = 0x00F00000;
@@ -103,7 +104,7 @@ abstract class ExecutableInstruction implements Runnable {
 
 		}
 
-		@Override public void run() {
+		@Override public void execute() {
 			switch ( this.type ) {
 				case ST:
 					// TODO ST
@@ -156,15 +157,15 @@ abstract class ExecutableInstruction implements Runnable {
 
 		int address;
 
-		UnconditionalJumpExecutableInstruction( Word word ) throws InvalidInstructionException {
-			super( word );
+		UnconditionalJumpExecutableInstruction( Word word, Memory registers ) throws InvalidInstructionException {
+			super( word, registers );
 
 			// Find address
 			int addressMask = 0x00FFFFFF;
 			// TODO Find address
 		}
 
-		@Override public void run() {
+		@Override public void execute() {
 			switch ( this.type ) {
 				case HLT: // Logical end of program
 					// TODO HLT
@@ -184,8 +185,8 @@ abstract class ExecutableInstruction implements Runnable {
 
 		int reg1, reg2, address;
 
-		IOExecutableInstruction( Word word ) throws InvalidInstructionException {
-			super( word );
+		IOExecutableInstruction( Word word, Memory registers ) throws InvalidInstructionException {
+			super( word,registers );
 
 			// Find reg1
 			int reg1Mask = 0x00F00000;
@@ -201,18 +202,19 @@ abstract class ExecutableInstruction implements Runnable {
 
 		}
 
-		@Override public void run() {
-			switch ( this.type ) {
-				case RD: // Reads content of I/P buffer into a accumulator
-					// TODO RD
-					break;
-				case WR: // Writes the content of accumulator into O/P buffer
-					// TODO WR
-					break;
-				case NOP: // Does nothing and moves to next instruction
-					// Do nothing
-					break;
-			}
+		@Override public void execute() throws ExecutionException {
+			throw new ExecutionException( "Send this to the DMA-Channel for processing, don't execute." );
+			//			switch ( this.type ) {
+			//				case RD: // Reads content of I/P buffer into a accumulator
+			//					// TODO RD
+			//					break;
+			//				case WR: // Writes the content of accumulator into O/P buffer
+			//					// TODO WR
+			//					break;
+			//				case NOP: // Does nothing and moves to next instruction
+			//					// Do nothing
+			//					break;
+			//			}
 		}
 	}
 
