@@ -33,7 +33,7 @@ public class Driver {
 					"Please use the loadFile static method before creating an instance of this class." );
 		}
 
-		this.cpu = new CPU( taskManager, registers );
+		this.cpu = new CPU( mmu, registers );
 
 		this.scheduler = new Scheduler( taskManager, schedulingMethod );
 		this.dispatcher = new Dispatcher( taskManager, this.cpu );
