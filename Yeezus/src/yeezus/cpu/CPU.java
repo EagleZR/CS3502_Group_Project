@@ -1,38 +1,47 @@
 package yeezus.cpu;
 
-import yeezus.memory.InvalidAddressException;
-import yeezus.memory.InvalidWordException;
-import yeezus.memory.Memory;
-import yeezus.memory.Word;
-import yeezus.pcb.TaskManager;
+import yeezus.memory.*;
 
 public class CPU {
 
+	private MMU mmu;
 	private Memory registers;
-	private int pid;
+	private int pid = 0;
 	private int pc;
 
-	public CPU( TaskManager taskManager, Memory registers ) {
+	public CPU( MMU mmu, Memory registers ) {
+		this.mmu = mmu;
 		this.registers = registers;
+	}
+
+	public void setProcess( int pid ) {
+		this.pid = pid;
+		pc = 0;
 	}
 
 	public void run()
 			throws InvalidInstructionException, InvalidWordException, ExecutionException, InvalidAddressException {
-		while ( true ) { // Check when the process is complete
+		if ( pid == 0 ) {
+			// TODO Throw an invalid PID exception or something
+		}
+		while ( true ) {
 			// TODO Fetch
-			Word instruction = null;
+			Word instruction = mmu.read( this.pid, this.pc++ );
 
 			// Decode
 			ExecutableInstruction executableInstruction = decode( instruction );
 
 			// Execute
+			if ( executableInstruction.type == InstructionSet.HLT ) {
+				this.pid = 0;
+				return;
+			}
+
 			if ( executableInstruction.getClass() == ExecutableInstruction.IOExecutableInstruction.class ) {
 				// TODO Use DMA-Channel
 			} else {
 				executableInstruction.execute();
 			}
-
-			this.pc++;
 		}
 	}
 
