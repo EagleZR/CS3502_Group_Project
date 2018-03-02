@@ -48,16 +48,16 @@ public class Driver {
 	 */
 	public static void loadFile( Memory disk, File programFile )
 			throws InvalidAddressException, DuplicatePIDException, InvalidWordException, IOException {
-		taskManager = new TaskManager();
+		taskManager = TaskManager.INSTANCE;
 		loader = new Loader( taskManager, programFile, disk );
 	}
 
 	public void run()
 			throws InvalidInstructionException, ExecutionException, InvalidWordException, InvalidAddressException {
 		while ( !taskManager.getJobQueue().isEmpty() ) {
-			scheduler.run();
-			dispatcher.run();
-			cpu.run();
+			this.scheduler.run();
+			this.dispatcher.run();
+			this.cpu.run();
 			// TODO Handle interrupts
 		}
 	}

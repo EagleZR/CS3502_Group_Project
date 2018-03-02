@@ -11,10 +11,10 @@ import static org.junit.Assert.*;
  */
 public class Test_TaskManager {
 
-	TaskManager taskManager;
+	private TaskManager taskManager;
 
 	@Before public void setUp() throws Exception {
-		this.taskManager = new TaskManager();
+		this.taskManager = TaskManager.INSTANCE;
 		this.taskManager.addPCB( 14, 10, 15, 16, 25, 26, 38, 39, 50, 2 );
 	}
 
@@ -29,7 +29,7 @@ public class Test_TaskManager {
 	}
 
 	@Test public void getProcess() throws Exception {
-		PCB PCB = taskManager.getPCB( 14 );
+		PCB PCB = this.taskManager.getPCB( 14 );
 		assertEquals( 10, PCB.getStartDiskInstructionAddress() );
 		assertEquals( 15, PCB.getInstructionsLength() );
 		assertEquals( 16, PCB.getStartDiskInputBufferAddress() );

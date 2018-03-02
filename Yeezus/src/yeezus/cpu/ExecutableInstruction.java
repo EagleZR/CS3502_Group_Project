@@ -43,49 +43,54 @@ abstract class ExecutableInstruction implements Executable {
 			// TODO This can probably be done more efficiently, but I'm afraid I'd lose my mind
 			// Find s1
 			int s1Mask = 0x00F00000;
-			s1 = (int) ( ( word.getData() & s1Mask ) >> 20 );
+			this.s1 = (int) ( ( word.getData() & s1Mask ) >> 20 );
 
 			// Find s2
 			int s2Mask = 0x000F0000;
-			s2 = (int) ( ( word.getData() & s2Mask ) >> 16 );
+			this.s2 = (int) ( ( word.getData() & s2Mask ) >> 16 );
 
 			// Find d
 			int dMask = 0x0000F000;
-			d = (int) ( ( word.getData() & dMask ) >> 12 );
+			this.d = (int) ( ( word.getData() & dMask ) >> 12 );
 		}
 
 		@Override public void execute() throws InvalidAddressException, InvalidWordException {
-			switch ( this.type ) {
+			switch ( this.type ) { // Not the most efficient, but it will work for now
+				// TODO Add behaviors into enum?
 				case MOV:
 					// TODO Move s1 into d?
-					super.registers.write( d, super.registers.read( s1 ) );
+					super.registers.write( this.d, super.registers.read( this.s1 ) );
 					break;
 				case ADD:
-					super.registers.write( d,
-							new Word( super.registers.read( s1 ).getData() + super.registers.read( s2 ).getData() ) );
+					super.registers.write( this.d, new Word(
+							super.registers.read( this.s1 ).getData() + super.registers.read( this.s2 ).getData() ) );
 					break;
 				case SUB:
-					super.registers.write( d,
-							new Word( super.registers.read( s1 ).getData() - super.registers.read( s2 ).getData() ) );
+					super.registers.write( this.d, new Word(
+							super.registers.read( this.s1 ).getData() - super.registers.read( this.s2 ).getData() ) );
 					break;
 				case MUL:
-					super.registers.write( d,
-							new Word( super.registers.read( s1 ).getData() * super.registers.read( s2 ).getData() ) );
+					super.registers.write( this.d, new Word(
+							super.registers.read( this.s1 ).getData() * super.registers.read( this.s2 ).getData() ) );
 					break;
 				case DIV:
-					super.registers.write( d,
-							new Word( super.registers.read( s1 ).getData() + super.registers.read( s2 ).getData() ) );
+					super.registers.write( this.d, new Word(
+							super.registers.read( this.s1 ).getData() + super.registers.read( this.s2 ).getData() ) );
 					break;
 				case AND:
-					super.registers.write( d,
-							new Word( super.registers.read( s1 ).getData() & super.registers.read( s2 ).getData() ) );
+					super.registers.write( this.d, new Word(
+							super.registers.read( this.s1 ).getData() & super.registers.read( this.s2 ).getData() ) );
 					break;
 				case OR:
-					super.registers.write( d,
-							new Word( super.registers.read( s1 ).getData() | super.registers.read( s2 ).getData() ) );
+					super.registers.write( this.d, new Word(
+							super.registers.read( this.s1 ).getData() | super.registers.read( this.s2 ).getData() ) );
 					break;
 				case SLT:
-					// TODO SLT
+					// TODO Verify correct
+					super.registers.write( this.d, new Word(
+							( super.registers.read( this.s1 ).getData() > super.registers.read( this.s2 ).getData() ?
+									"0xFFFFFFFF" :
+									"0x00000000" ) ) );
 					break;
 				case NOP: // Does nothing and moves to next instruction
 					// Do nothing
@@ -103,15 +108,15 @@ abstract class ExecutableInstruction implements Executable {
 
 			// Find B-reg
 			int bRegMask = 0x00F00000;
-			// TODO Find bReg
+			this.bReg = (int) ( ( word.getData() & bRegMask ) >> 20 );
 
 			// Find D-reg
 			int dRegMask = 0x000F0000;
-			// TODO Find dReg
+			this.dReg = (int) ( ( word.getData() & dRegMask ) >> 16 );
 
 			// Find data
 			int dataMask = 0x0000FFFF;
-			// TODO Find data
+			this.data = (int) ( ( word.getData() & dataMask ) );
 
 		}
 

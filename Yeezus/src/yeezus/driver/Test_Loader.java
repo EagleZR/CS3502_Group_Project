@@ -22,7 +22,7 @@ public class Test_Loader {
 
 	@BeforeClass public static void setup()
 			throws InvalidWordException, DuplicatePIDException, IOException, InvalidAddressException {
-		taskManager = new TaskManager();
+		taskManager = TaskManager.INSTANCE;
 		disk = new Memory( 2048 );
 		new Loader( taskManager, new File( "src/yeezus/Program-File.txt" ), disk );
 	}

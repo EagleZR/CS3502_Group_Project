@@ -51,7 +51,7 @@ public class PCB {
 	 * @return
 	 */
 	public int getCPUID() {
-		return cpuid;
+		return this.cpuid;
 	}
 
 	/**
@@ -65,7 +65,7 @@ public class PCB {
 	}
 
 	public int getStartRAMInstructionAddress() {
-		return startRAMInstructionAddress;
+		return this.startRAMInstructionAddress;
 	}
 
 	public void setStartRAMInstructionAddress( int startRAMInstructionAddress ) {
@@ -73,7 +73,7 @@ public class PCB {
 	}
 
 	public int getStartRAMInputBufferAddress() {
-		return startRAMInputBufferAddress;
+		return this.startRAMInputBufferAddress;
 	}
 
 	public void setStartRAMInputBufferAddress( int startRAMInputBufferAddress ) {
@@ -81,7 +81,7 @@ public class PCB {
 	}
 
 	public int getStartRAMOutputBufferAddress() {
-		return startRAMOutputBufferAddress;
+		return this.startRAMOutputBufferAddress;
 	}
 
 	public void setStartRAMOutputBufferAddress( int startRAMOutputBufferAddress ) {
@@ -89,7 +89,7 @@ public class PCB {
 	}
 
 	public int getStartRAMTempBufferAddress() {
-		return startRAMTempBufferAddress;
+		return this.startRAMTempBufferAddress;
 	}
 
 	public void setStartRAMTempBufferAddress( int startRAMTempBufferAddress ) {
@@ -102,7 +102,7 @@ public class PCB {
 	 * @return The number of instructions in this process.
 	 */
 	public int getInstructionsLength() {
-		return instructionsLength;
+		return this.instructionsLength;
 	}
 
 	/**
@@ -111,7 +111,7 @@ public class PCB {
 	 * @return The size of the input buffer for this process.
 	 */
 	public int getInputBufferLength() {
-		return inputBufferLength;
+		return this.inputBufferLength;
 	}
 
 	/**
@@ -120,7 +120,7 @@ public class PCB {
 	 * @return The size of the output buffer for this process.
 	 */
 	public int getOutputBufferLength() {
-		return outputBufferLength;
+		return this.outputBufferLength;
 	}
 
 	/**
@@ -129,7 +129,7 @@ public class PCB {
 	 * @return The size of the temp buffer for this process.
 	 */
 	public int getTempBufferLength() {
-		return tempBufferLength;
+		return this.tempBufferLength;
 	}
 
 	/**
@@ -138,7 +138,7 @@ public class PCB {
 	 * @return The PID associated with this PCB.
 	 */
 	public int getPid() {
-		return pid;
+		return this.pid;
 	}
 
 	/**
@@ -147,7 +147,7 @@ public class PCB {
 	 * @return The start address of this PCB's instructions on the disk.
 	 */
 	public int getStartDiskInstructionAddress() {
-		return startDiskInstructionAddress;
+		return this.startDiskInstructionAddress;
 	}
 
 	/**
@@ -156,7 +156,7 @@ public class PCB {
 	 * @return The start address of this PCB's input buffer on the disk.
 	 */
 	public int getStartDiskInputBufferAddress() {
-		return startDiskInputBufferAddress;
+		return this.startDiskInputBufferAddress;
 	}
 
 	/**
@@ -165,7 +165,7 @@ public class PCB {
 	 * @return The start address of this PCB's output buffer on the disk.
 	 */
 	public int getStartDiskOutputBufferAddress() {
-		return startDiskOutputBufferAddress;
+		return this.startDiskOutputBufferAddress;
 	}
 
 	/**
@@ -174,7 +174,7 @@ public class PCB {
 	 * @return The start address of this PCB's temp buffer  on the disk.
 	 */
 	public int getStartDiskTempBufferAddress() {
-		return startDiskTempBufferAddress;
+		return this.startDiskTempBufferAddress;
 	}
 
 	/**
@@ -183,7 +183,7 @@ public class PCB {
 	 * @return The priority of this PCB.
 	 */
 	public int getPriority() {
-		return priority;
+		return this.priority;
 	}
 
 	/**
@@ -192,7 +192,7 @@ public class PCB {
 	 * @return The current status of the PCB.
 	 */
 	public Status getStatus() {
-		return status;
+		return this.status;
 	}
 
 	/**
@@ -202,7 +202,7 @@ public class PCB {
 	 */
 	public void setStatus( Status status ) {
 		long timestamp = System.currentTimeMillis();
-		long elapsedTime = timestamp - clock;
+		long elapsedTime = timestamp - this.clock;
 		if ( status == Status.TERMINATED ) {
 			// TODO Throw Exception about zombies or reincarnation something
 		}
@@ -221,7 +221,7 @@ public class PCB {
 	 * @return the elapsed amount of time this PCB has been waiting on the CPU.
 	 */
 	public long getElapsedWaitTime() {
-		return elapsedWaitTime + ( this.status != Status.RUNNING && this.status != Status.TERMINATED ?
+		return this.elapsedWaitTime + ( this.status != Status.RUNNING && this.status != Status.TERMINATED ?
 				System.currentTimeMillis() - this.clock :
 				0 );
 	}
@@ -232,7 +232,7 @@ public class PCB {
 	 * @return the elapsed amount of time this PCB has been running on the CPU.
 	 */
 	public long getElapsedRunTime() {
-		return elapsedRunTime + ( this.status == Status.RUNNING ? System.currentTimeMillis() - this.clock : 0 );
+		return this.elapsedRunTime + ( this.status == Status.RUNNING ? System.currentTimeMillis() - this.clock : 0 );
 	}
 
 	public enum Status {NEW, RUNNING, WAITING, READY, TERMINATED}

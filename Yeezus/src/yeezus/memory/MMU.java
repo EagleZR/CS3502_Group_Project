@@ -15,15 +15,15 @@ public class MMU {
 	}
 
 	public void mapAddress( int pid, int logicalAddress ) throws InvalidAddressException {
-		for ( int i = 0; i < addresses.length; i++ ) {
-			if ( addresses[i] == 0 ) {
+		for ( int i = 0; i < this.addresses.length; i++ ) {
+			if ( this.addresses[i] == 0 ) {
 				mapAddress( pid, logicalAddress, i );
 			}
 		}
 		throw new InvalidAddressException( "Not really invalid, we've just run out of memory..." );
 	}
 
-	private void mapAddress( int pid, int logicalAddress, int physicalAddress ) {
+	private synchronized void mapAddress( int pid, int logicalAddress, int physicalAddress ) {
 		ArrayList<Integer> processAddresses;
 		try {
 			processAddresses = this.addressMap.get( pid );
@@ -31,15 +31,15 @@ public class MMU {
 			processAddresses = new ArrayList<>();
 			this.addressMap.add( pid, processAddresses );
 		}
-		addresses[physicalAddress] = logicalAddress;
+		this.addresses[physicalAddress] = logicalAddress;
 		processAddresses.add( logicalAddress, physicalAddress ); // TODO Unmap memory on process completion
 	}
 
-	public Word read( int physicalAddress ) throws InvalidAddressException {
+	public synchronized Word read( int physicalAddress ) throws InvalidAddressException {
 		return this.RAM.read( physicalAddress );
 	}
 
-	public Word read( int pid, int logicalAddress ) throws InvalidAddressException {
+	public synchronized Word read( int pid, int logicalAddress ) throws InvalidAddressException {
 		try {
 			return this.RAM.read( this.addressMap.get( pid ).get( logicalAddress ) );
 		} catch ( IndexOutOfBoundsException | NullPointerException e ) {
@@ -47,19 +47,19 @@ public class MMU {
 		}
 	}
 
-	public void write( int physicalAddress, Word data ) throws InvalidAddressException {
+	public synchronized void write( int physicalAddress, Word data ) throws InvalidAddressException {
 		this.RAM.write( physicalAddress, data );
 	}
 
-	public void write( int pid, int logicalAddress, Word data ) throws InvalidAddressException {
+	public synchronized void write( int pid, int logicalAddress, Word data ) throws InvalidAddressException {
 		this.RAM.write( this.addressMap.get( pid ).get( logicalAddress ), data );
 	}
 
-	public void terminatePID( int pid ) {
+	public synchronized void terminatePID( int pid ) {
 		try {
 			this.addressMap.remove( pid );
 		} catch ( IndexOutOfBoundsException e ) {
-
+			// Do nothing, it's already been removed, so we're good
 		}
 	}
 }
