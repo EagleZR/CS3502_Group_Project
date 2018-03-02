@@ -74,13 +74,16 @@ public enum TaskManager {
 	}
 
 	/**
-	 * Checks if this TaskManager contains a {@link PCB} with the given {@code PID}.
+	 * <p>Checks if this TaskManager contains a {@link PCB} with the given {@code PID}.</p><p><b>NOTE:</b> Since this
+	 * instance is being used by multiple threads concurrently, there may be a change that occurs after this method has
+	 * been run. It's best to attempt to retrieve the process directly, and handle any exceptions if it isn't
+	 * there.</p>
 	 *
 	 * @param pid The ID of the {@link PCB} to be checked.
 	 * @return {@code true} if the TaskManager contains a {@link PCB} with the given {@code PID}, {@code false} if it
 	 * doesn't.
 	 */
-	public synchronized boolean contains( int pid ) {
+	@Deprecated public synchronized boolean contains( int pid ) {
 		for ( PCB PCB : this.PCBs ) {
 			if ( PCB.getPid() == pid ) {
 				return true;
