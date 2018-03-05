@@ -1,36 +1,51 @@
 package yeezus.cpu;
 
-import yeezus.memory.InvalidWordException;
-import yeezus.memory.Memory;
-import yeezus.memory.Word;
-import yeezus.pcb.TaskManager;
+import yeezus.memory.*;
+import yeezus.pcb.PCB;
 
 public class CPU {
 
+	private MMU mmu;
 	private Memory registers;
-	private int pid;
+	private DMAChannel dmaChannel;
+	private PCB pcb;
 	private int pc;
 
-	public CPU( TaskManager taskManager, Memory registers ) {
-
+	public CPU( MMU mmu, Memory registers ) {
+		this.mmu = mmu;
+		this.registers = registers;
+		this.dmaChannel = new DMAChannel( mmu, registers );
 	}
 
-	public void run() throws InvalidInstructionException, InvalidWordException, ExecutionException {
-		while ( true ) { // Check when the process is complete
+	public void setProcess( PCB pcb ) {
+		this.pcb = pcb;
+		this.pc = 0;
+	}
+
+	public void run()
+			throws InvalidInstructionException, InvalidWordException, ExecutionException, InvalidAddressException {
+		if ( this.pcb == null ) {
+			// TODO Throw an invalid PID exception or something
+		}
+		while ( true ) {
 			// TODO Fetch
-			Word instruction = null;
+			Word instruction = this.mmu.read( this.pcb.getPid(), this.pc++ );
 
 			// Decode
 			ExecutableInstruction executableInstruction = decode( instruction );
 
 			// Execute
+			if ( executableInstruction.type == InstructionSet.HLT ) {
+				this.pcb = null;
+				return;
+			}
+
 			if ( executableInstruction.getClass() == ExecutableInstruction.IOExecutableInstruction.class ) {
-				// TODO Use DMA-Channel
+				this.dmaChannel
+						.handle( (ExecutableInstruction.IOExecutableInstruction) executableInstruction, this.pcb );
 			} else {
 				executableInstruction.execute();
 			}
-
-			this.pc++;
 		}
 	}
 
@@ -46,5 +61,4 @@ public class CPU {
 			return new ExecutableInstruction.IOExecutableInstruction( word, this.registers );
 		}
 	}
-
 }

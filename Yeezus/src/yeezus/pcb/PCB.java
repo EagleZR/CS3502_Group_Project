@@ -7,8 +7,8 @@ package yeezus.pcb;
  */
 public class PCB {
 
-	private final int pid, startDiskInstructionAddress, instructionsLength, startDiskInputBufferAddress, inputBufferLength, startDiskOutputBufferAddress, outputBufferLength, startDiskTempBufferAddress, tempBufferLength, priority;
-	private int cpuid, startRAMInstructionAddress, startRAMInputBufferAddress, startRAMOutputBufferAddress, startRAMTempBufferAddress;
+	private final int pid, startDiskAddress, instructionsLength, inputBufferLength, outputBufferLength, tempBufferLength, priority;
+	private int cpuid;
 	private long clock;
 	private long elapsedWaitTime;
 	private long elapsedRunTime;
@@ -17,41 +17,36 @@ public class PCB {
 	/**
 	 * Constructs a PCB with the given characteristics.
 	 *
-	 * @param pid                          The PCB ID of the new PCB.
-	 * @param startDiskInstructionAddress  The start address of the Instructions on the disk.
-	 * @param instructionsLength           The the amount of Instructions on the disk.
-	 * @param startDiskInputBufferAddress  The start address of the Input Buffer on the disk.
-	 * @param inputBufferLength            The size of the Input Buffer on the disk.
-	 * @param startDiskOutputBufferAddress The start address of the Output Buffer on the disk.
-	 * @param outputBufferLength           The size of the Output Buffer on the disk.
-	 * @param startDiskTempBufferAddress   The start address of the Temp Buffer on the disk.
-	 * @param tempBufferLength             The size of the Temp Buffer on the disk.
-	 * @param priority                     The given priority of the PCB.
+	 * @param pid                The PCB ID of the new PCB.
+	 * @param startDiskAddress   The start address of the Instructions on the disk.
+	 * @param instructionsLength The the amount of Instructions on the disk.
+	 * @param inputBufferLength  The size of the Input Buffer on the disk.
+	 * @param outputBufferLength The size of the Output Buffer on the disk.
+	 * @param tempBufferLength   The size of the Temp Buffer on the disk.
+	 * @param priority           The given priority of the PCB.
 	 */
-	PCB( int pid, int startDiskInstructionAddress, int instructionsLength, int startDiskInputBufferAddress,
-			int inputBufferLength, int startDiskOutputBufferAddress, int outputBufferLength,
-			int startDiskTempBufferAddress, int tempBufferLength, int priority ) {
+	PCB( int pid, int startDiskAddress, int instructionsLength, int inputBufferLength, int outputBufferLength,
+			int tempBufferLength, int priority ) {
 		this.clock = System.currentTimeMillis();
 		this.elapsedWaitTime = 0;
 		this.elapsedRunTime = 0;
-		this.status = Status.WAITING;
+		this.status = Status.NEW;
 		this.pid = pid;
-		this.startDiskInstructionAddress = startDiskInstructionAddress;
+		this.startDiskAddress = startDiskAddress;
 		this.instructionsLength = instructionsLength;
-		this.startDiskInputBufferAddress = startDiskInputBufferAddress;
 		this.inputBufferLength = inputBufferLength;
-		this.startDiskOutputBufferAddress = startDiskOutputBufferAddress;
 		this.outputBufferLength = outputBufferLength;
-		this.startDiskTempBufferAddress = startDiskTempBufferAddress;
 		this.tempBufferLength = tempBufferLength;
 		this.priority = priority;
 	}
 
 	/**
-	 * @return
+	 * Retrieves the CPUID of the CPU that this process is running on.
+	 *
+	 * @return The CPUID of the CPU that this process is running on.
 	 */
-	public int getCPUID() {
-		return cpuid;
+	public synchronized int getCPUID() {
+		return this.cpuid;
 	}
 
 	/**
@@ -60,40 +55,8 @@ public class PCB {
 	 *
 	 * @param cpuid The CPU that the process is running on.
 	 */
-	public void setCPUID( int cpuid ) {
+	public synchronized void setCPUID( int cpuid ) {
 		this.cpuid = cpuid;
-	}
-
-	public int getStartRAMInstructionAddress() {
-		return startRAMInstructionAddress;
-	}
-
-	public void setStartRAMInstructionAddress( int startRAMInstructionAddress ) {
-		this.startRAMInstructionAddress = startRAMInstructionAddress;
-	}
-
-	public int getStartRAMInputBufferAddress() {
-		return startRAMInputBufferAddress;
-	}
-
-	public void setStartRAMInputBufferAddress( int startRAMInputBufferAddress ) {
-		this.startRAMInputBufferAddress = startRAMInputBufferAddress;
-	}
-
-	public int getStartRAMOutputBufferAddress() {
-		return startRAMOutputBufferAddress;
-	}
-
-	public void setStartRAMOutputBufferAddress( int startRAMOutputBufferAddress ) {
-		this.startRAMOutputBufferAddress = startRAMOutputBufferAddress;
-	}
-
-	public int getStartRAMTempBufferAddress() {
-		return startRAMTempBufferAddress;
-	}
-
-	public void setStartRAMTempBufferAddress( int startRAMTempBufferAddress ) {
-		this.startRAMTempBufferAddress = startRAMTempBufferAddress;
 	}
 
 	/**
@@ -102,7 +65,11 @@ public class PCB {
 	 * @return The number of instructions in this process.
 	 */
 	public int getInstructionsLength() {
-		return instructionsLength;
+		return this.instructionsLength;
+	}
+
+	public int getInstructionDiskAddress() {
+		return this.startDiskAddress;
 	}
 
 	/**
@@ -111,7 +78,11 @@ public class PCB {
 	 * @return The size of the input buffer for this process.
 	 */
 	public int getInputBufferLength() {
-		return inputBufferLength;
+		return this.inputBufferLength;
+	}
+
+	public int getInputBufferDiskAddress() {
+		return this.startDiskAddress + this.instructionsLength;
 	}
 
 	/**
@@ -120,7 +91,11 @@ public class PCB {
 	 * @return The size of the output buffer for this process.
 	 */
 	public int getOutputBufferLength() {
-		return outputBufferLength;
+		return this.outputBufferLength;
+	}
+
+	public int getOutputBufferDiskAddress() {
+		return getInputBufferDiskAddress() + this.inputBufferLength;
 	}
 
 	/**
@@ -129,7 +104,21 @@ public class PCB {
 	 * @return The size of the temp buffer for this process.
 	 */
 	public int getTempBufferLength() {
-		return tempBufferLength;
+		return this.tempBufferLength;
+	}
+
+	public int getTempBufferDiskAddress() {
+		return getOutputBufferDiskAddress() + this.outputBufferLength;
+	}
+
+	/**
+	 * Retrieves the total size that this process requires in memory. This is a summation of the instruction, input
+	 * buffer, output buffer, and temp buffer lengths.
+	 *
+	 * @return The total amount of memory required for this process.
+	 */
+	public int getTotalSize() {
+		return this.instructionsLength + this.inputBufferLength + this.outputBufferLength + this.tempBufferLength;
 	}
 
 	/**
@@ -138,7 +127,7 @@ public class PCB {
 	 * @return The PID associated with this PCB.
 	 */
 	public int getPid() {
-		return pid;
+		return this.pid;
 	}
 
 	/**
@@ -146,35 +135,8 @@ public class PCB {
 	 *
 	 * @return The start address of this PCB's instructions on the disk.
 	 */
-	public int getStartDiskInstructionAddress() {
-		return startDiskInstructionAddress;
-	}
-
-	/**
-	 * Retrieves the start address of this PCB's input buffer on the disk.
-	 *
-	 * @return The start address of this PCB's input buffer on the disk.
-	 */
-	public int getStartDiskInputBufferAddress() {
-		return startDiskInputBufferAddress;
-	}
-
-	/**
-	 * Retrieves the start address of this PCB's output buffer on the disk.
-	 *
-	 * @return The start address of this PCB's output buffer on the disk.
-	 */
-	public int getStartDiskOutputBufferAddress() {
-		return startDiskOutputBufferAddress;
-	}
-
-	/**
-	 * Retrieves the start address of this PCB's temp buffer on the disk.
-	 *
-	 * @return The start address of this PCB's temp buffer  on the disk.
-	 */
-	public int getStartDiskTempBufferAddress() {
-		return startDiskTempBufferAddress;
+	public int getStartDiskAddress() {
+		return this.startDiskAddress;
 	}
 
 	/**
@@ -183,7 +145,7 @@ public class PCB {
 	 * @return The priority of this PCB.
 	 */
 	public int getPriority() {
-		return priority;
+		return this.priority;
 	}
 
 	/**
@@ -191,8 +153,8 @@ public class PCB {
 	 *
 	 * @return The current status of the PCB.
 	 */
-	public Status getStatus() {
-		return status;
+	public synchronized Status getStatus() {
+		return this.status;
 	}
 
 	/**
@@ -200,9 +162,9 @@ public class PCB {
 	 *
 	 * @param status The new status of the PCB.
 	 */
-	public void setStatus( Status status ) {
+	public synchronized void setStatus( Status status ) {
 		long timestamp = System.currentTimeMillis();
-		long elapsedTime = timestamp - clock;
+		long elapsedTime = timestamp - this.clock;
 		if ( status == Status.TERMINATED ) {
 			// TODO Throw Exception about zombies or reincarnation something
 		}
@@ -220,8 +182,8 @@ public class PCB {
 	 *
 	 * @return the elapsed amount of time this PCB has been waiting on the CPU.
 	 */
-	public long getElapsedWaitTime() {
-		return elapsedWaitTime + ( this.status != Status.RUNNING && this.status != Status.TERMINATED ?
+	public synchronized long getElapsedWaitTime() {
+		return this.elapsedWaitTime + ( this.status != Status.RUNNING && this.status != Status.TERMINATED ?
 				System.currentTimeMillis() - this.clock :
 				0 );
 	}
@@ -231,9 +193,34 @@ public class PCB {
 	 *
 	 * @return the elapsed amount of time this PCB has been running on the CPU.
 	 */
-	public long getElapsedRunTime() {
-		return elapsedRunTime + ( this.status == Status.RUNNING ? System.currentTimeMillis() - this.clock : 0 );
+	public synchronized long getElapsedRunTime() {
+		return this.elapsedRunTime + ( this.status == Status.RUNNING ? System.currentTimeMillis() - this.clock : 0 );
 	}
 
-	public enum Status {NEW, RUNNING, WAITING, READY, TERMINATED}
+	/**
+	 * <p>An enumeration of the different statuses that this process will set as. </p> <p>{@link Status#NEW}: Indicates
+	 * that the process has been created, but is not yet ready to be run.</p><p>{@link Status#READY}: Indicates that the
+	 * process has been loaded into RAM and is ready to be run.</p><p>{@link Status#RUNNING}: Indicates that the process
+	 * is being executed by a CPU.</p><p>{@link Status#WAITING}: Indicates that the process required an I/O event, and
+	 * is currently waiting on it to be completed.</p><p>{@link Status#TERMINATED}: Indicates that the process has
+	 * completed its execution.</p>
+	 */
+	public enum Status {
+		/**
+		 * Indicates that the process has been created, but is not yet ready to be run.
+		 */
+		NEW, /**
+		 * Indicates that the process is being executed by a CPU.
+		 */
+		RUNNING, /**
+		 * Indicates that the process required an I/O event, and is currently waiting on it to be completed.
+		 */
+		WAITING, /**
+		 * Indicates that the process has been loaded into RAM and is ready to be run.
+		 */
+		READY, /**
+		 * Indicates that the process has completed its execution.
+		 */
+		TERMINATED
+	}
 }

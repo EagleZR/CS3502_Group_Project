@@ -1,5 +1,6 @@
 package yeezus.driver;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import yeezus.memory.InvalidAddressException;
@@ -22,7 +23,7 @@ public class Test_Loader {
 
 	@BeforeClass public static void setup()
 			throws InvalidWordException, DuplicatePIDException, IOException, InvalidAddressException {
-		taskManager = new TaskManager();
+		taskManager = TaskManager.INSTANCE;
 		disk = new Memory( 2048 );
 		new Loader( taskManager, new File( "src/yeezus/Program-File.txt" ), disk );
 	}
@@ -47,19 +48,19 @@ public class Test_Loader {
 		assertTrue( taskManager.contains( 1 ) );
 		PCB pcb = taskManager.getPCB( 1 );
 		// Test the first job's start instruction address
-		assertEquals( 0, pcb.getStartDiskInstructionAddress() );
+		assertEquals( 0, pcb.getInstructionDiskAddress() );
 		// Test the first job's end instruction address
 		assertEquals( 23, pcb.getInstructionsLength() );
 		// Test the first job's start input buffer address
-		assertEquals( 23, pcb.getStartDiskInputBufferAddress() );
+		assertEquals( 23, pcb.getInputBufferDiskAddress() );
 		// Test the first job's end input buffer address
 		assertEquals( 20, pcb.getInputBufferLength() );
 		// Test the first job's start output buffer address
-		assertEquals( 43, pcb.getStartDiskOutputBufferAddress() );
+		assertEquals( 43, pcb.getOutputBufferDiskAddress() );
 		// Test the first job's end output buffer address
 		assertEquals( 12, pcb.getOutputBufferLength() );
 		// Test the first job's start temp buffer address
-		assertEquals( 55, pcb.getStartDiskTempBufferAddress() );
+		assertEquals( 55, pcb.getTempBufferDiskAddress() );
 		// Test the first job's end temp buffer address
 		assertEquals( 12, pcb.getOutputBufferLength() );
 		// Test the first job's priority
@@ -70,6 +71,10 @@ public class Test_Loader {
 			assertTrue( taskManager.contains( i ) );
 			assertEquals( PCB.Status.NEW, taskManager.getPCB( i ).getStatus() );
 		}
+	}
+
+	@AfterClass public static void tearDown() {
+		taskManager.reset();
 	}
 
 }

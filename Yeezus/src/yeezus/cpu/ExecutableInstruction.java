@@ -1,5 +1,7 @@
 package yeezus.cpu;
 
+import yeezus.memory.InvalidAddressException;
+import yeezus.memory.InvalidWordException;
 import yeezus.memory.Memory;
 import yeezus.memory.Word;
 
@@ -12,15 +14,20 @@ import static yeezus.cpu.InstructionSet.values;
  */
 abstract class ExecutableInstruction implements Executable {
 
+	// The data retrieved from the instruction
 	InstructionSet type;
+	Memory registers;
 
-	private ExecutableInstruction( Word word, Memory registers ) throws InvalidInstructionException {
-		this.type = getInstructionSet( word );
+	// Retrieves the type and sets the registers
+	private ExecutableInstruction( Word instruction, Memory registers ) throws InvalidInstructionException {
+		this.type = getInstructionSet( instruction );
+		this.registers = registers;
 	}
 
-	private InstructionSet getInstructionSet( Word word ) throws InvalidInstructionException {
-		int mask = 0x3F000000;
-		long opcode = mask & word.getData();
+	// Retrieves the type from the instruction set
+	private InstructionSet getInstructionSet( Word instruction ) throws InvalidInstructionException {
+		long mask = 0x3F000000;
+		long opcode = ( mask & instruction.getData() ) >> 24;
 		for ( InstructionSet instructionSet : values() ) {
 			if ( instructionSet.getCode() == opcode ) {
 				return instructionSet;
@@ -29,52 +36,70 @@ abstract class ExecutableInstruction implements Executable {
 		throw new InvalidInstructionException( "The Opcode " + opcode + " is invalid." );
 	}
 
+	/**
+	 * A class used for the interpretation and execution of Arithmetic instructions.
+	 */
 	static class ArithmeticExecutableInstruction extends ExecutableInstruction {
 
+		// The data retrieved from the instruction
 		private int s1, s2, d;
 
-		ArithmeticExecutableInstruction( Word word, Memory registers ) throws InvalidInstructionException {
-			super( word, registers );
+		// Interprets the given instruction into a form that can be executed by the system.
+		ArithmeticExecutableInstruction( Word instruction, Memory registers ) throws InvalidInstructionException {
+			super( instruction, registers );
 
+			// TODO This can probably be done more efficiently, but I'm afraid I'd lose my mind
 			// Find s1
 			int s1Mask = 0x00F00000;
-			// TODO Find s
+			this.s1 = (int) ( ( instruction.getData() & s1Mask ) >> 20 );
 
 			// Find s2
 			int s2Mask = 0x000F0000;
-			// TODO Find s2
+			this.s2 = (int) ( ( instruction.getData() & s2Mask ) >> 16 );
 
 			// Find d
 			int dMask = 0x0000F000;
-			// TODO Find d
-
+			this.d = (int) ( ( instruction.getData() & dMask ) >> 12 );
 		}
 
-		@Override public void execute() {
-			switch ( this.type ) {
+		// Executes the actions specified by this instruction
+		@Override public void execute() throws InvalidAddressException, InvalidWordException {
+			switch ( this.type ) { // Not the most efficient, but it will work for now
+				// TODO Add behaviors into enum?
 				case MOV:
-					// TODO MOV
+					// TODO Move s1 into d?
+					super.registers.write( this.d, super.registers.read( this.s1 ) );
 					break;
 				case ADD:
-					// TODO ADD
+					super.registers.write( this.d, new Word(
+							super.registers.read( this.s1 ).getData() + super.registers.read( this.s2 ).getData() ) );
 					break;
 				case SUB:
-					// TODO SUB
+					super.registers.write( this.d, new Word(
+							super.registers.read( this.s1 ).getData() - super.registers.read( this.s2 ).getData() ) );
 					break;
 				case MUL:
-					// TODO MUL
+					super.registers.write( this.d, new Word(
+							super.registers.read( this.s1 ).getData() * super.registers.read( this.s2 ).getData() ) );
 					break;
 				case DIV:
-					// TODO DIV
+					super.registers.write( this.d, new Word(
+							super.registers.read( this.s1 ).getData() + super.registers.read( this.s2 ).getData() ) );
 					break;
 				case AND:
-					// TODO AND
+					super.registers.write( this.d, new Word(
+							super.registers.read( this.s1 ).getData() & super.registers.read( this.s2 ).getData() ) );
 					break;
 				case OR:
-					// TODO OR
+					super.registers.write( this.d, new Word(
+							super.registers.read( this.s1 ).getData() | super.registers.read( this.s2 ).getData() ) );
 					break;
 				case SLT:
-					// TODO SLT
+					// TODO Verify correct
+					super.registers.write( this.d, new Word(
+							( super.registers.read( this.s1 ).getData() > super.registers.read( this.s2 ).getData() ?
+									"0xFFFFFFFF" :
+									"0x00000000" ) ) );
 					break;
 				case NOP: // Does nothing and moves to next instruction
 					// Do nothing
@@ -83,27 +108,33 @@ abstract class ExecutableInstruction implements Executable {
 		}
 	}
 
+	/**
+	 * A class used for the interpretation and execution of conditional instructions.
+	 */
 	static class ConditionalExecutableInstruction extends ExecutableInstruction {
 
+		// The data retrieved from the instruction
 		private int bReg, dReg, data;
 
-		ConditionalExecutableInstruction( Word word, Memory registers ) throws InvalidInstructionException {
-			super( word, registers );
+		// Interprets the given instruction into a form that can be executed by the system.
+		ConditionalExecutableInstruction( Word instruction, Memory registers ) throws InvalidInstructionException {
+			super( instruction, registers );
 
 			// Find B-reg
 			int bRegMask = 0x00F00000;
-			// TODO Find bReg
+			this.bReg = (int) ( ( instruction.getData() & bRegMask ) >> 20 );
 
 			// Find D-reg
 			int dRegMask = 0x000F0000;
-			// TODO Find dReg
+			this.dReg = (int) ( ( instruction.getData() & dRegMask ) >> 16 );
 
 			// Find data
 			int dataMask = 0x0000FFFF;
-			// TODO Find data
+			this.data = (int) ( ( instruction.getData() & dataMask ) );
 
 		}
 
+		// Executes the actions specified by this instruction
 		@Override public void execute() {
 			switch ( this.type ) {
 				case ST:
@@ -153,18 +184,25 @@ abstract class ExecutableInstruction implements Executable {
 		}
 	}
 
+	/**
+	 * A class used for the interpretation and execution of unconditional jump instructions.
+	 */
 	static class UnconditionalJumpExecutableInstruction extends ExecutableInstruction {
 
+		// The data retrieved from the instruction
 		int address;
 
-		UnconditionalJumpExecutableInstruction( Word word, Memory registers ) throws InvalidInstructionException {
-			super( word, registers );
+		// Interprets the given instruction into a form that can be executed by the system.
+		UnconditionalJumpExecutableInstruction( Word instruction, Memory registers )
+				throws InvalidInstructionException {
+			super( instruction, registers );
 
 			// Find address
 			int addressMask = 0x00FFFFFF;
 			// TODO Find address
 		}
 
+		// Executes the actions specified by this instruction
 		@Override public void execute() {
 			switch ( this.type ) {
 				case HLT: // Logical end of program
@@ -181,12 +219,18 @@ abstract class ExecutableInstruction implements Executable {
 		}
 	}
 
+	/**
+	 * A class used for the interpretation and execution of I/O instructions.
+	 */
 	static class IOExecutableInstruction extends ExecutableInstruction {
 
+		// The data retrieved from the instruction
 		int reg1, reg2, address;
 
-		IOExecutableInstruction( Word word, Memory registers ) throws InvalidInstructionException {
-			super( word,registers );
+		// Interprets the given instruction into a form that can be executed by the system.
+		IOExecutableInstruction( Word instruction, Memory registers ) throws InvalidInstructionException {
+
+			super( instruction, registers );
 
 			// Find reg1
 			int reg1Mask = 0x00F00000;
@@ -202,6 +246,7 @@ abstract class ExecutableInstruction implements Executable {
 
 		}
 
+		// Executes the actions specified by this instruction
 		@Override public void execute() throws ExecutionException {
 			throw new ExecutionException( "Send this to the DMA-Channel for processing, don't execute." );
 			//			switch ( this.type ) {

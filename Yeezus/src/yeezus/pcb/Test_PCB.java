@@ -15,7 +15,7 @@ public class Test_PCB {
 	PCB PCB;
 
 	@Before public void setUp() {
-		this.PCB = new PCB( 14, 10, 15, 16, 25, 26, 38, 39, 50, 2 );
+		this.PCB = new PCB( 14, 10, 6, 10, 13, 10, 2 );
 	}
 
 	@Test public void getPid() throws Exception {
@@ -23,35 +23,35 @@ public class Test_PCB {
 	}
 
 	@Test public void getStartInstructionAddress() throws Exception {
-		assertEquals( 10, this.PCB.getStartDiskInstructionAddress() );
+		assertEquals( 10, this.PCB.getStartDiskAddress() );
 	}
 
-	@Test public void getEndInstructionAddress() throws Exception {
-		assertEquals( 15, this.PCB.getInstructionsLength() );
+	@Test public void getInstructionLength() throws Exception {
+		assertEquals( 6, this.PCB.getInstructionsLength() );
 	}
 
 	@Test public void getStartInputBufferAddress() throws Exception {
-		assertEquals( 16, this.PCB.getStartDiskInputBufferAddress() );
+		assertEquals( 16, this.PCB.getInputBufferDiskAddress() );
 	}
 
-	@Test public void getEndInputBufferAddress() throws Exception {
-		assertEquals( 25, this.PCB.getInputBufferLength() );
+	@Test public void getInputBufferLength() throws Exception {
+		assertEquals( 10, this.PCB.getInputBufferLength() );
 	}
 
 	@Test public void getStartOutputBufferAddress() throws Exception {
-		assertEquals( 26, this.PCB.getStartDiskOutputBufferAddress() );
+		assertEquals( 26, this.PCB.getOutputBufferDiskAddress() );
 	}
 
-	@Test public void getEndOutputBufferAddress() throws Exception {
-		assertEquals( 38, this.PCB.getOutputBufferLength() );
+	@Test public void getOutputBufferLength() throws Exception {
+		assertEquals( 13, this.PCB.getOutputBufferLength() );
 	}
 
 	@Test public void getStartTempBufferAddress() throws Exception {
-		assertEquals( 39, this.PCB.getStartDiskTempBufferAddress() );
+		assertEquals( 39, this.PCB.getTempBufferDiskAddress() );
 	}
 
-	@Test public void getEndTempBufferAddress() throws Exception {
-		assertEquals( 50, this.PCB.getTempBufferLength() );
+	@Test public void getTempBufferLength() throws Exception {
+		assertEquals( 10, this.PCB.getTempBufferLength() );
 	}
 
 	@Test public void getPriority() throws Exception {
