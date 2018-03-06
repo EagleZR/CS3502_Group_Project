@@ -6,7 +6,7 @@ import org.junit.Test;
 import yeezus.memory.InvalidAddressException;
 import yeezus.memory.InvalidWordException;
 import yeezus.memory.Memory;
-import yeezus.pcb.DuplicatePIDException;
+import yeezus.DuplicateIDException;
 import yeezus.pcb.PCB;
 import yeezus.pcb.TaskManager;
 
@@ -22,7 +22,7 @@ public class Test_Loader {
 	private static Memory disk;
 
 	@BeforeClass public static void setup()
-			throws InvalidWordException, DuplicatePIDException, IOException, InvalidAddressException {
+			throws InvalidWordException, DuplicateIDException, IOException, InvalidAddressException {
 		taskManager = TaskManager.INSTANCE;
 		disk = new Memory( 2048 );
 		new Loader( taskManager, new File( "src/yeezus/Program-File.txt" ), disk );

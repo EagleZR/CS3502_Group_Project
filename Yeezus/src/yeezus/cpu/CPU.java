@@ -1,20 +1,39 @@
 package yeezus.cpu;
 
+import yeezus.DuplicateIDException;
 import yeezus.memory.*;
 import yeezus.pcb.PCB;
 
+import java.util.ArrayList;
+
 public class CPU {
 
+	private static final ArrayList<Integer> cpuids = new ArrayList<>();
+	private final int cpuid;
 	private MMU mmu;
 	private Memory registers;
 	private DMAChannel dmaChannel;
 	private PCB pcb;
 	private int pc;
 
-	public CPU( MMU mmu, Memory registers ) {
+	public CPU( int cpuid, MMU mmu, Memory registers ) throws DuplicateIDException {
+		if ( cpuids.contains( cpuid ) ) {
+			throw new DuplicateIDException( "The CPU ID " + cpuid + " already exists in this system." );
+		}
+		this.cpuid = cpuid;
+		cpuids.add( cpuid );
+
 		this.mmu = mmu;
 		this.registers = registers;
 		this.dmaChannel = new DMAChannel( mmu, registers );
+	}
+
+	public static void reset() {
+		cpuids.clear();
+	}
+
+	public int getCPUID() {
+		return cpuid;
 	}
 
 	public void setProcess( PCB pcb ) {

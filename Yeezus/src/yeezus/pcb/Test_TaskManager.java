@@ -1,9 +1,9 @@
 package yeezus.pcb;
 
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import yeezus.DuplicateIDException;
 
 import static org.junit.Assert.*;
 
@@ -20,7 +20,7 @@ public class Test_TaskManager {
 		taskManager.addPCB( 14, 10, 6, 10, 25, 26, 2 );
 	}
 
-	@Test( expected = DuplicatePIDException.class ) public void addProcess() throws Exception {
+	@Test( expected = DuplicateIDException.class ) public void addProcess() throws Exception {
 		taskManager.addPCB( 14, 10, 15, 10, 25, 26, 2 );
 	}
 

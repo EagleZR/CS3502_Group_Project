@@ -10,14 +10,13 @@ import yeezus.memory.InvalidAddressException;
 import yeezus.memory.InvalidWordException;
 import yeezus.memory.Memory;
 import yeezus.memory.Word;
-import yeezus.pcb.DuplicatePIDException;
+import yeezus.DuplicateIDException;
 import yeezus.pcb.PCB;
 
 import yeezus.pcb.TaskManager;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Scanner;
 
 public class Loader {
 
@@ -34,7 +33,7 @@ public class Loader {
 	TaskManager processList;
 
 	Loader( TaskManager processList, File programFile, Memory disk )
-			throws InvalidAddressException, DuplicatePIDException, InvalidWordException, IOException {
+			throws InvalidAddressException, DuplicateIDException, InvalidWordException, IOException {
 		this.programFile = programFile;
 		this.processList = processList;
 		this.disk = disk;
@@ -42,7 +41,7 @@ public class Loader {
 
 	}
 
-	public void scanFile() throws IOException, InvalidWordException, InvalidAddressException, DuplicatePIDException {
+	public void scanFile() throws IOException, InvalidWordException, InvalidAddressException, DuplicateIDException {
 
 		BufferedReader buffReader = new BufferedReader( new FileReader( programFile ) );
 		String currentLine = buffReader.readLine();
