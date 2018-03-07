@@ -10,7 +10,7 @@ import java.util.ArrayList;
 public class MMU {
 
 	private ArrayList<ArrayList<Integer>> addressMap; // TODO Make this more efficient later
-	private int[] addressRegistry;
+	private int[] addressOwnershipRegistry;
 	private Memory RAM;
 
 	/**
@@ -20,7 +20,7 @@ public class MMU {
 	 */
 	public MMU( Memory RAM ) {
 		this.RAM = RAM;
-		this.addressRegistry = new int[RAM.getCapacity()];
+		this.addressOwnershipRegistry = new int[RAM.getCapacity()];
 		this.addressMap = new ArrayList<>();
 	}
 
@@ -39,6 +39,7 @@ public class MMU {
 			return true;
 		} catch ( InvalidAddressException e ) {
 			terminatePID( pid );
+			e.printStackTrace();
 			return false;
 		}
 	}
@@ -51,10 +52,11 @@ public class MMU {
 	 * @throws InvalidAddressException Thrown if the physical memory is out of room.
 	 */
 	@Deprecated public void mapAddress( int pid, int logicalAddress ) throws InvalidAddressException {
-		for ( int i = 0; i < this.addressRegistry.length; i++ ) {
-			if ( this.addressRegistry[i] == 0 ) {
+		for ( int i = 0; i < this.addressOwnershipRegistry.length; i++ ) {
+			if ( this.addressOwnershipRegistry[i] == 0 ) {
 				mapAddress( pid, logicalAddress, i );
-				this.addressRegistry[i] = pid;
+				this.addressOwnershipRegistry[i] = pid;
+				return;
 			}
 		}
 		throw new InvalidAddressException( "Not really invalid, we've just run out of memory..." );
@@ -66,10 +68,21 @@ public class MMU {
 			processAddresses = this.addressMap.get( pid );
 		} catch ( IndexOutOfBoundsException e ) {
 			processAddresses = new ArrayList<>();
-			this.addressMap.add( pid, processAddresses );
+			if ( pid + 1 > addressMap.size() ) {
+				for ( int i = 0; i <= pid - addressMap.size() + 1; i++ ) {
+					addressMap.add( null );
+				}
+			}
+			this.addressMap.set( pid, processAddresses );
 		}
-		this.addressRegistry[physicalAddress] = logicalAddress;
-		processAddresses.add( logicalAddress, physicalAddress ); // TODO Unmap memory on process completion
+		this.addressOwnershipRegistry[physicalAddress] = pid;
+
+		if ( logicalAddress + 1 > processAddresses.size() ) {
+			for ( int i = 0; i <= logicalAddress - processAddresses.size(); i++ ) {
+				processAddresses.add( null );
+			}
+		}
+		processAddresses.set( logicalAddress, physicalAddress );
 	}
 
 	/**
@@ -131,9 +144,9 @@ public class MMU {
 	public synchronized void terminatePID( int pid ) {
 		try {
 			this.addressMap.remove( pid );
-			for ( int i = 0; i < this.addressRegistry.length; i++ ) {
-				if ( this.addressRegistry[i] == pid ) {
-					this.addressRegistry[i] = 0;
+			for ( int i = 0; i < this.addressOwnershipRegistry.length; i++ ) {
+				if ( this.addressOwnershipRegistry[i] == pid ) {
+					this.addressOwnershipRegistry[i] = 0;
 				}
 			}
 		} catch ( IndexOutOfBoundsException e ) {
