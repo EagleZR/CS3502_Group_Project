@@ -38,7 +38,7 @@ public class MMU {
 			}
 			return true;
 		} catch ( InvalidAddressException e ) {
-
+			terminatePID( pid );
 			return false;
 		}
 	}
