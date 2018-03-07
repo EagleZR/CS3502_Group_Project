@@ -32,8 +32,15 @@ public class MMU {
 	 * @return {@code true} if the memory was successfully mapped for the process.
 	 */
 	public boolean mapMemory( int pid, int size ) {
-		// TODO Map memory as a block for now
-		return false;
+		try {
+			for ( int i = 0; i < size; i++ ) {
+				mapAddress( pid, i );
+			}
+			return true;
+		} catch ( InvalidAddressException e ) {
+
+			return false;
+		}
 	}
 
 	/**
