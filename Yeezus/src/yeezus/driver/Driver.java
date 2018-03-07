@@ -2,24 +2,21 @@ package yeezus.driver;
 
 import yeezus.DuplicateIDException;
 import yeezus.cpu.CPU;
-import yeezus.cpu.ExecutionException;
-import yeezus.cpu.InvalidInstructionException;
-import yeezus.memory.InvalidAddressException;
-import yeezus.memory.InvalidWordException;
 import yeezus.memory.MMU;
 import yeezus.memory.Memory;
 import yeezus.pcb.TaskManager;
 
 import java.io.File;
-import java.io.IOException;
 
 /**
  * This class represents the CPU Driver within the {@link yeezus} operating system. Multiple instances of this class
- * indicate the presence of multiple logical CPUs.
+ * indicate the presence of multiple logical CPUs. To initialize the class, the {@link Loader} must be called using the
+ * static {@link Driver#loadFile(Memory, File)} method to load the contents of the Program-File.txt to the virtual
+ * disk.
  */
 public class Driver implements Runnable {
 
-	private static Loader loader; // TODO Create as static variable? Throw exception if the Driver constructor is called while this is null?
+	private static Loader loader;
 	private static TaskManager taskManager;
 	private Scheduler scheduler;
 	private Dispatcher dispatcher;
@@ -28,15 +25,17 @@ public class Driver implements Runnable {
 	/**
 	 * Constructs a new Driver instance from the given parameters.
 	 *
-	 * @param cpuid
-	 * @param disk
-	 * @param mmu
-	 * @param registers
-	 * @param schedulingMethod
-	 * @throws UninitializedDriverException
-	 * @throws DuplicateIDException
+	 * @param cpuid            The ID of the CPU that is to be controlled by this driver instance.
+	 * @param disk             The disk that stores all of the programs to be run by the system.
+	 * @param mmu              The Memory Management Unit that controls access to the RAM.
+	 * @param registers        The registers that are associated with this driver's CPU.
+	 * @param schedulingPolicy The process scheduling policy that this system will adhere to.
+	 * @throws UninitializedDriverException Thrown if a driver instance is created before the loader has been run. This
+	 *                                      can be fixed by running {@link Driver#loadFile(Memory, File)} prior to
+	 *                                      creating a Driver instance.
+	 * @throws DuplicateIDException         Thrown if the given CPU ID already exists with another CPU.
 	 */
-	public Driver( int cpuid, Memory disk, MMU mmu, Memory registers, CPUSchedulingPolicy schedulingMethod )
+	public Driver( int cpuid, Memory disk, MMU mmu, Memory registers, CPUSchedulingPolicy schedulingPolicy )
 			throws UninitializedDriverException, DuplicateIDException {
 		if ( loader == null ) {
 			// This makes sure that the loader has already been run. This allows us to easily create multiple Drivers for multi-threading
@@ -46,7 +45,7 @@ public class Driver implements Runnable {
 
 		this.cpu = new CPU( cpuid, mmu, registers );
 
-		this.scheduler = new Scheduler( mmu, disk, taskManager, schedulingMethod );
+		this.scheduler = new Scheduler( mmu, disk, taskManager, schedulingPolicy );
 		this.dispatcher = new Dispatcher( taskManager, this.cpu );
 	}
 
@@ -57,14 +56,14 @@ public class Driver implements Runnable {
 	 * @param disk        The disk onto which the contents of the programFile will be loaded.
 	 * @param programFile The file whose contents will be loaded onto the disk.
 	 */
-	public static void loadFile( Memory disk, File programFile )
-			throws InvalidAddressException, DuplicateIDException, InvalidWordException, IOException {
+	public static void loadFile( Memory disk, File programFile ) throws Exception {
 		taskManager = TaskManager.INSTANCE;
 		loader = new Loader( taskManager, programFile, disk );
 	}
 
 	/**
-	 * Executes the main loop of the driver.
+	 * Executes the main loop of the driver. This loop will run until all processes have been completed, and the process
+	 * data has been written back to the disk.
 	 */
 	@Override public void run() {
 		while ( !taskManager.getJobQueue().isEmpty() ) {
@@ -72,7 +71,7 @@ public class Driver implements Runnable {
 			this.dispatcher.run();
 			try {
 				this.cpu.run();
-			} catch ( InvalidInstructionException | InvalidWordException | ExecutionException | InvalidAddressException e ) {
+			} catch ( Exception e ) {
 				e.printStackTrace();
 				System.exit( 1 ); // Want to fail to indicate any error
 			}

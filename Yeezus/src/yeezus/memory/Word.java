@@ -3,7 +3,7 @@ package yeezus.memory;
 /**
  * A stand-in version of a memory.Word data type that will be the basis of the memory system in this OS.
  *
- * @version 0.2
+ * @version 1.0
  */
 public class Word {
 
@@ -36,8 +36,10 @@ public class Word {
 	}
 
 	/**
-	 * @param data
-	 * @throws InvalidWordException
+	 * Constructs a new Word from the specified value.
+	 *
+	 * @param data The data from which the Word is to be constructed from.
+	 * @throws InvalidWordException Thrown if the data is greater than (2^9)-1 or less than 0.
 	 */
 	public Word( long data ) throws InvalidWordException {
 		if ( data < 0xFFFFFFFF || data >= Long.decode( "0x100000000" ) ) {
