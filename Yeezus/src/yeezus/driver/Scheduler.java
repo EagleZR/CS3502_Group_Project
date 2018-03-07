@@ -17,7 +17,7 @@ public class Scheduler implements Runnable {
 	List<PCB> list = taskManager.getJobQueue();
 
 
-	Scheduler(TaskManager taskManager, CPUSchedulingPolicy schedulingMethod) {
+	Scheduler(MMU mmu, Memory disk, TaskManager taskManager, CPUSchedulingPolicy schedulingMethod) {
 
 	}
 
