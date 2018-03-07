@@ -19,7 +19,7 @@ public class Test_PCB {
 	}
 
 	@Test public void getPid() throws Exception {
-		assertEquals( 14, this.PCB.getPid() );
+		assertEquals( 14, this.PCB.getPID() );
 	}
 
 	@Test public void getStartInstructionAddress() throws Exception {

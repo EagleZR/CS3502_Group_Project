@@ -28,12 +28,20 @@ public class CPU {
 		this.dmaChannel = new DMAChannel( mmu, registers );
 	}
 
+	/**
+	 * Used to reset the state of the CPU in testing.
+	 */
 	public static void reset() {
 		cpuids.clear();
+		// TODO Reset everything
 	}
 
 	public int getCPUID() {
 		return cpuid;
+	}
+
+	public PCB getProcess() {
+		return this.pcb;
 	}
 
 	public void setProcess( PCB pcb ) {
@@ -48,14 +56,14 @@ public class CPU {
 		}
 		while ( true ) {
 			// TODO Fetch
-			Word instruction = this.mmu.read( this.pcb.getPid(), this.pc++ );
+			Word instruction = this.mmu.read( this.pcb.getPID(), this.pc++ );
 
 			// Decode
 			ExecutableInstruction executableInstruction = decode( instruction );
 
 			// Execute
 			if ( executableInstruction.type == InstructionSet.HLT ) {
-				this.pcb = null;
+				this.pcb.setStatus( PCB.Status.TERMINATED );
 				return;
 			}
 
@@ -73,9 +81,9 @@ public class CPU {
 		if ( signature == 0x00000000 ) {
 			return new ExecutableInstruction.ArithmeticExecutableInstruction( word, this.registers );
 		} else if ( signature == 0x40000000 ) {
-			return new ExecutableInstruction.ConditionalExecutableInstruction( word, this.registers );
+			return new ExecutableInstruction.ConditionalExecutableInstruction( word, this.registers, this.pc );
 		} else if ( signature == 0x80000000 ) {
-			return new ExecutableInstruction.UnconditionalJumpExecutableInstruction( word, this.registers );
+			return new ExecutableInstruction.UnconditionalJumpExecutableInstruction( word, this.registers, this.pc );
 		} else {
 			return new ExecutableInstruction.IOExecutableInstruction( word, this.registers );
 		}

@@ -66,40 +66,40 @@ abstract class ExecutableInstruction implements Executable {
 		@Override public void execute() throws InvalidAddressException, InvalidWordException {
 			switch ( this.type ) { // Not the most efficient, but it will work for now
 				// TODO Add behaviors into enum?
-				case MOV:
+				case MOV: // Transfers the content of one register into another
 					// TODO Move s1 into d?
 					super.registers.write( this.d, super.registers.read( this.s1 ) );
 					break;
-				case ADD:
+				case ADD: // Adds content of two S-regs into D-reg
 					super.registers.write( this.d, new Word(
 							super.registers.read( this.s1 ).getData() + super.registers.read( this.s2 ).getData() ) );
 					break;
-				case SUB:
+				case SUB: // Subtracts content of two S-regs into D-reg
 					super.registers.write( this.d, new Word(
 							super.registers.read( this.s1 ).getData() - super.registers.read( this.s2 ).getData() ) );
 					break;
-				case MUL:
+				case MUL: // Multiplies content of two S-regs into D-reg
 					super.registers.write( this.d, new Word(
 							super.registers.read( this.s1 ).getData() * super.registers.read( this.s2 ).getData() ) );
 					break;
-				case DIV:
+				case DIV: // Divides content of two S-regs into D-reg
 					super.registers.write( this.d, new Word(
 							super.registers.read( this.s1 ).getData() + super.registers.read( this.s2 ).getData() ) );
 					break;
-				case AND:
+				case AND: // Logical AND of two S-regs into D-reg
 					super.registers.write( this.d, new Word(
 							super.registers.read( this.s1 ).getData() & super.registers.read( this.s2 ).getData() ) );
 					break;
-				case OR:
+				case OR: // Logical OR of two S-regs into D-reg
 					super.registers.write( this.d, new Word(
 							super.registers.read( this.s1 ).getData() | super.registers.read( this.s2 ).getData() ) );
 					break;
-				case SLT:
+				case SLT: // Sets the D-reg to 1 if  first S-reg is less than the B-reg; 0 otherwise
 					// TODO Verify correct
 					super.registers.write( this.d, new Word(
 							( super.registers.read( this.s1 ).getData() > super.registers.read( this.s2 ).getData() ?
-									"0xFFFFFFFF" :
-									"0x00000000" ) ) );
+									1 :
+									0 ) ) );
 					break;
 				case NOP: // Does nothing and moves to next instruction
 					// Do nothing
@@ -115,10 +115,14 @@ abstract class ExecutableInstruction implements Executable {
 
 		// The data retrieved from the instruction
 		private int bReg, dReg, data;
+		private Integer programCounter;
 
 		// Interprets the given instruction into a form that can be executed by the system.
-		ConditionalExecutableInstruction( Word instruction, Memory registers ) throws InvalidInstructionException {
+		ConditionalExecutableInstruction( Word instruction, Memory registers, Integer programCounter )
+				throws InvalidInstructionException {
 			super( instruction, registers );
+
+			this.programCounter = programCounter;
 
 			// Find B-reg
 			int bRegMask = 0x00F00000;
@@ -135,52 +139,72 @@ abstract class ExecutableInstruction implements Executable {
 		}
 
 		// Executes the actions specified by this instruction
-		@Override public void execute() {
+		@Override public void execute() throws InvalidWordException, InvalidAddressException {
 			switch ( this.type ) {
-				case ST:
-					// TODO ST
+				case ST: // Stores content of a reg.  into an address
+					this.registers.write( this.dReg, this.registers.read( this.bReg ) );
 					break;
-				case LW:
-					// TODO LW
+				case LW: // Loads the content of an address into a reg.
+					this.registers.write( this.bReg, this.registers.read( this.dReg ) );
 					break;
-				case MOVI:
-					// TODO MOVI
+				case MOVI: // Transfers address/data directly into a register
+					this.registers.write( this.dReg, new Word( this.data ) );
 					break;
-				case ADDI:
-					// TODO ADDI
+				case ADDI: // Adds a data value directly to the content of a register
+					this.registers
+							.write( this.dReg, new Word( this.registers.read( this.bReg ).getData() + this.data ) );
 					break;
-				case MULI:
-					// TODO MULI
+				case MULI: // Multiplies a data value directly with the content of a register
+					this.registers
+							.write( this.dReg, new Word( this.registers.read( this.bReg ).getData() * this.data ) );
 					break;
-				case DIVI:
-					// TODO DIVI
+				case DIVI: // Divides a data directly to the content of a register
+					this.registers
+							.write( this.dReg, new Word( this.registers.read( this.bReg ).getData() / this.data ) );
 					break;
-				case LDI:
-					// TODO LDI
+				case LDI: // Loads a data/address directly to the content of a register
+					this.registers.write( this.dReg, new Word( this.data ) );
 					break;
-				case BEQ:
-					// TODO BEQ
+				case SLTI:// Sets the D-reg to 1 if  first S-reg is less than a data; 0 otherwise
+					super.registers.write( this.dReg,
+							new Word( ( super.registers.read( this.bReg ).getData() < this.data ? 1 : 0 ) ) );
 					break;
-				case BNE:
-					// TODO BNE
+				case BEQ: // Branches to an address when content of B-reg = D-reg
+					this.programCounter = (
+							this.registers.read( this.bReg ).getData() == this.registers.read( this.dReg ).getData() ?
+									this.data :
+									this.programCounter );
 					break;
-				case BEZ:
-					// TODO BEZ
+				case BNE: // Branches to an address when content of B-reg <> D-reg
+					this.programCounter = (
+							this.registers.read( this.bReg ).getData() != this.registers.read( this.dReg ).getData() ?
+									this.data :
+									this.programCounter );
 					break;
-				case BNZ:
-					// TODO BNZ
+				case BEZ: // Branches to an address when content of B-reg = 0
+					this.programCounter = ( this.registers.read( this.bReg ).getData() == 0 ?
+							this.data :
+							this.programCounter );
 					break;
-				case BGZ:
-					// TODO BGZ
+				case BNZ: // Branches to an address when content of B-reg <> 0
+					this.programCounter = ( this.registers.read( this.bReg ).getData() != 0 ?
+							this.data :
+							this.programCounter );
 					break;
-				case BLZ:
-					// TODO BLZ
+				case BGZ: // Branches to an address when content of B-reg > 0
+					this.programCounter = ( this.registers.read( this.bReg ).getData() > 0 ?
+							this.data :
+							this.programCounter );
+					break;
+				case BLZ: // Branches to an address when content of B-reg < 0
+					this.programCounter = ( this.registers.read( this.bReg ).getData() < 0 ?
+							this.data :
+							this.programCounter );
 					break;
 				case NOP: // Does nothing and moves to next instruction
 					// Do nothing
 					break;
 			}
-
 		}
 	}
 
@@ -189,27 +213,29 @@ abstract class ExecutableInstruction implements Executable {
 	 */
 	static class UnconditionalJumpExecutableInstruction extends ExecutableInstruction {
 
+		Integer programCounter;
 		// The data retrieved from the instruction
-		int address;
+		private int address;
 
 		// Interprets the given instruction into a form that can be executed by the system.
-		UnconditionalJumpExecutableInstruction( Word instruction, Memory registers )
+		UnconditionalJumpExecutableInstruction( Word instruction, Memory registers, Integer programCounter )
 				throws InvalidInstructionException {
 			super( instruction, registers );
+			this.programCounter = programCounter;
 
 			// Find address
 			int addressMask = 0x00FFFFFF;
-			// TODO Find address
+			this.address = (int) instruction.getData() & addressMask;
 		}
 
 		// Executes the actions specified by this instruction
 		@Override public void execute() {
 			switch ( this.type ) {
 				case HLT: // Logical end of program
-					// TODO HLT
+					// Handled elsewhere, don't worry about it
 					break;
 				case JMP: // Jumps to a specified location
-					// TODO JMP
+					this.programCounter = this.address;
 					break;
 				case NOP: // Does nothing and moves to next instruction
 					// Do nothing
@@ -234,16 +260,15 @@ abstract class ExecutableInstruction implements Executable {
 
 			// Find reg1
 			int reg1Mask = 0x00F00000;
-			// TODO Find reg1
+			this.reg1 = (int) ( ( instruction.getData() & reg1Mask ) >> 20 );
 
 			// Find reg2
 			int reg2Mask = 0x000F0000;
-			// TODO Find reg2
+			this.reg2 = (int) ( ( instruction.getData() & reg2Mask ) >> 16 );
 
 			// Find address
 			int addressMask = 0x0000FFFF;
-			// TODO Find address
-
+			this.address = (int) instruction.getData() & addressMask;
 		}
 
 		// Executes the actions specified by this instruction

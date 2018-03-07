@@ -82,7 +82,7 @@ public enum TaskManager {
 	 */
 	public synchronized boolean contains( int pid ) {
 		for ( PCB PCB : this.PCBs ) {
-			if ( PCB.getPid() == pid ) {
+			if ( PCB.getPID() == pid ) {
 				return true;
 			}
 		}
@@ -98,7 +98,7 @@ public enum TaskManager {
 	 */
 	public synchronized PCB getPCB( int pid ) throws ProcessNotFoundException {
 		for ( PCB PCB : this.PCBs ) {
-			if ( PCB.getPid() == pid ) {
+			if ( PCB.getPID() == pid ) {
 				return PCB;
 			}
 		}

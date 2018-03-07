@@ -78,6 +78,10 @@ public class Driver implements Runnable {
 			}
 			// TODO Handle interrupts
 		}
+
+		// Ensure that memory is written back to the source
+		this.dispatcher.run();
+		this.scheduler.run();
 	}
 
 }

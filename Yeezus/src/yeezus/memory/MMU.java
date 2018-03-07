@@ -3,7 +3,9 @@ package yeezus.memory;
 import java.util.ArrayList;
 
 /**
- * The MMU helps organize the RAM {@link Memory} in the {@link yeezus} Operating System. The MMU keeps track of which processes own which RAM addresses or blocks of addresses, and acts as the translator between logical and physical memory.
+ * The MMU helps organize the RAM {@link Memory} in the {@link yeezus} Operating System. The MMU keeps track of which
+ * processes own which RAM addresses or blocks of addresses, and acts as the translator between logical and physical
+ * memory.
  */
 public class MMU {
 
@@ -79,7 +81,8 @@ public class MMU {
 	 *
 	 * @param pid            The Process ID of the process whose memory is to be read.
 	 * @param logicalAddress The logical address for the given process.
-	 * @return The {@link Word} stored in the physical location associated with the logical address of the given process.
+	 * @return The {@link Word} stored in the physical location associated with the logical address of the given
+	 * process.
 	 * @throws InvalidAddressException Thrown if the logical address has not been mapped to a physical address.
 	 */
 	public synchronized Word read( int pid, int logicalAddress ) throws InvalidAddressException {
