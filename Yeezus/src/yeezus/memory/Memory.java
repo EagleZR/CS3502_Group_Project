@@ -3,7 +3,7 @@ package yeezus.memory;
 /**
  * The collective memory system of the OS, including the registers, RAM, and disk storage space.
  *
- * @version 0.1
+ * @version 1.0
  */
 public class Memory {
 

@@ -1,8 +1,13 @@
 package yeezus.cpu;
 
-import yeezus.memory.InvalidAddressException;
-import yeezus.memory.InvalidWordException;
-
+/**
+ * A {@link Runnable}-like interface that allows for exceptions.
+ */
 public interface Executable {
-	void execute() throws ExecutionException, InvalidAddressException, InvalidWordException;
+	/**
+	 * Executes the actions associated with an instance of this class.
+	 *
+	 * @throws Exception An exception resulting from the execution of this instance.
+	 */
+	void execute() throws Exception;
 }
