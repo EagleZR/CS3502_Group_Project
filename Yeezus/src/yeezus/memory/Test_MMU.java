@@ -37,4 +37,8 @@ public class Test_MMU {
 		}
 	}
 
+	@Test public void testReadWrite() {
+
+	}
+
 }

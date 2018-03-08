@@ -14,6 +14,7 @@ public class Scheduler implements Runnable {
 	Memory disk;
 	TaskManager taskManager;
 	CPUSchedulingPolicy schedulingMethod;
+	int counter = 0;
 
 	Scheduler( MMU mmu, Memory disk, TaskManager taskManager, CPUSchedulingPolicy schedulingMethod ) {
 		this.mmu = mmu;
@@ -26,8 +27,6 @@ public class Scheduler implements Runnable {
 	 * Loads one process into RAM on each iteration. Iterations are called externally.
 	 */
 	@Override public void run() {
-		int counter1 = 0;
-		int counter2 = 1;
 		List<PCB> list = taskManager.getJobQueue();
 		PCB next = list.get( 0 );
 		if ( schedulingMethod == CPUSchedulingPolicy.Priority ) {
@@ -38,6 +37,8 @@ public class Scheduler implements Runnable {
 					next = pcb;
 				}
 			}
+
+			System.out.println( "Next: " + next.getPID() );
 
 			int totalSize = next.getTotalSize();
 			mmu.mapMemory( next.getPID(), totalSize );
@@ -50,10 +51,7 @@ public class Scheduler implements Runnable {
 			}
 		} else if ( schedulingMethod == CPUSchedulingPolicy.FCFS ) {
 			System.out.println( "=========FCFS=========" );
-			for ( PCB pcb : list ) {
-				next = list.get( counter1 );
-				counter1++;
-			}
+			next = list.get( counter++ );
 
 			int totalSize = next.getTotalSize();
 			mmu.mapMemory( next.getPID(), totalSize );

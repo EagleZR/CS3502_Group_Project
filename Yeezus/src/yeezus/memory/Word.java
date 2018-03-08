@@ -66,7 +66,7 @@ public class Word {
 	 * @return A {@link String} representation of the hexadecimal value of this memory.Word.
 	 */
 	@Override public String toString() {
-		String string = Long.toHexString( this.data );
+		String string = Long.toHexString( this.data ).toUpperCase();
 		StringBuilder stringBuilder = new StringBuilder( "0x" );
 		for ( int i = 0; i < 8 - string.length(); i++ ) {
 			stringBuilder.append( 0 );
