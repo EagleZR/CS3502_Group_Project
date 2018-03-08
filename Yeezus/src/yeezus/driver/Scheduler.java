@@ -15,6 +15,7 @@ public class Scheduler implements Runnable {
 	Memory disk;
 	TaskManager taskManager;
 	List<PCB> list = taskManager.getJobQueue();
+    CPUSchedulingPolicy schedulingMethod;
 
 
 	Scheduler(TaskManager taskManager, CPUSchedulingPolicy schedulingMethod) {
@@ -25,46 +26,46 @@ public class Scheduler implements Runnable {
 	 * Loads one process into RAM on each iteration. Iterations are called externally.
 	 */
 	@Override
-	public void run() {
+	public void run(){
+	    int counter = 0;
+        PCB next = list.get(counter);
+        if (schedulingMethod == CPUSchedulingPolicy.Priority) {
+            //Find highest priority process
+            counter++;
+            for (PCB pcb : list) {
+                if (next.getPriority() < list.get(counter).getPriority()) {
+                    next = list.get(counter);
+                    counter++;
+                }
+            }
 
-		//Load next into RAM
+            int totalSize = next.getTotalSize();
+            for (int i = 0; i < totalSize; i++) {
+                mmu.mapMemory(next.getPID(), i);
+                try {
+                    mmu.write(next.getPID(), i,
+                            disk.read(next.getStartDiskAddress() + i));
+                } catch (InvalidAddressException e) {
+                    e.printStackTrace();
+                }
+            }
+        }else if (schedulingMethod == CPUSchedulingPolicy.FCFS){
+            for (PCB pcb : list) {
+                next = list.get(counter);
+                counter++;
+            }
 
+            int totalSize = next.getTotalSize();
+            for (int i = 0; i < totalSize; i++) {
+                mmu.mapMemory(next.getPID(),i);
+                try {
+                    mmu.write(next.getPID(), i,
+                            disk.read(next.getStartDiskAddress() + i));
+                } catch (InvalidAddressException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        }
 	}
-	//Find highest priority process
-	public void highestPriority(List<PCB> list) throws InvalidAddressException {
-		PCB next = list.get(0);
-		int counter = 1;
-		for (PCB pcb : list) {
-			if (next.getPriority() < list.get(counter).getPriority()) {
-				next = list.get(counter);
-				counter++;
-			}
-		}
-
-		int totalSize = next.getTotalSize();
-		for (int i = 0; i < totalSize; i++) {
-			mmu.mapMemory(next.getPID(),i);
-			mmu.write(next.getPID(), i,
-					disk.read(next.getStartDiskAddress() + i));
-
-		}
-	}
-
-	public void fcfs(List<PCB> list) throws InvalidAddressException {
-		int counter = 0;
-		PCB next = list.get(counter);
-		for (PCB pcb : list) {
-			next = list.get(counter);
-			counter++;
-		}
-
-		int totalSize = next.getTotalSize();
-		for (int i = 0; i < totalSize; i++) {
-			mmu.mapMemory(next.getPID(),i);
-			mmu.write(next.getPID(), i,
-					disk.read(next.getStartDiskAddress() + i));
-
-		}
-	}
-
 }
