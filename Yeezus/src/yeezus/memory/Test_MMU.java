@@ -1,14 +1,19 @@
 package yeezus.memory;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
 public class Test_MMU {
 
-	@Test public void testMapMemory() throws Exception {
-		MMU mmu = new MMU( new Memory( 1024 ) );
+	MMU mmu;
 
+	@Before public void setup() throws Exception {
+		mmu = new MMU( new Memory( 1024 ) );
+	}
+
+	@Test public void testMapMemory() throws Exception {
 		// Map 100 addresses to process 0
 		assertTrue( mmu.mapMemory( 1, 100 ) );
 
@@ -37,8 +42,19 @@ public class Test_MMU {
 		}
 	}
 
-	@Test public void testReadWrite() {
+	@Test public void testCapacity() {
+		assertTrue( mmu.mapMemory( 1, 1024 ) );
+		assertFalse( mmu.mapMemory( 2, 1024 ) );
+	}
 
+	@Test public void testTerminate() throws Exception {
+		assertTrue( mmu.mapMemory( 1, 1024 ) );
+		mmu.terminatePID( 1 );
+		assertTrue( mmu.mapMemory( 2, 200 ) );
+		assertTrue( mmu.mapMemory( 3, 200 ) );
+		mmu.write( 3, 0, new Word( 210 ) );
+		mmu.terminatePID( 2 );
+		assertEquals( 210, mmu.read( 3, 0 ).getData() );
 	}
 
 }

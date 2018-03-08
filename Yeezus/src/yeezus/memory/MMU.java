@@ -140,7 +140,7 @@ public class MMU {
 	 */
 	public synchronized void terminatePID( int pid ) {
 		try {
-			this.addressMap.remove( pid );
+			this.addressMap.set( pid, null );
 			for ( int i = 0; i < this.addressOwnershipRegistry.length; i++ ) {
 				if ( this.addressOwnershipRegistry[i] == pid ) {
 					this.addressOwnershipRegistry[i] = 0;
