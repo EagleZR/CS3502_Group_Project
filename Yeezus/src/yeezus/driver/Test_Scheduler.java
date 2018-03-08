@@ -1,9 +1,7 @@
 package yeezus.driver;
 
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
+import yeezus.memory.MMU;
 import yeezus.memory.Memory;
 import yeezus.pcb.PCB;
 import yeezus.pcb.TaskManager;
@@ -18,18 +16,21 @@ import static org.junit.Assert.assertEquals;
  */
 public class Test_Scheduler {
 
-	private static Memory RAM;
-	private static TaskManager taskManager;
+	private Memory disk;
+	private Memory RAM;
+	private MMU mmu;
+	private TaskManager taskManager;
 
-	@BeforeClass public static void setUp() throws Exception {
+	@Before public void setUp() throws Exception {
 		taskManager = TaskManager.INSTANCE;
-		Memory disk = new Memory( 2048 );
+		disk = new Memory( 2048 );
 		RAM = new Memory( 1024 );
+		mmu = new MMU(RAM);
 		new Loader( taskManager, new File( "src/yeezus/Program-File.txt" ), disk );
 	}
 
 	@Test public void testFCFS() throws Exception { // Job 1
-		Scheduler scheduler = new Scheduler( taskManager, CPUSchedulingPolicy.FCFS );
+		Scheduler scheduler = new Scheduler( mmu, disk, taskManager, CPUSchedulingPolicy.FCFS );
 		scheduler.run();
 		assertEquals( "0xC050005C", RAM.read( 0 ).toString() );
 		PCB pcb = taskManager.getPCB( 1 );
@@ -44,7 +45,7 @@ public class Test_Scheduler {
 	}
 
 	@Test public void testPriority() throws Exception { // Job 13
-		Scheduler scheduler = new Scheduler( taskManager, CPUSchedulingPolicy.Priority );
+		Scheduler scheduler = new Scheduler( mmu, disk, taskManager, CPUSchedulingPolicy.Priority );
 		scheduler.run();
 		assertEquals( "0xC0500070", RAM.read( 0 ).toString() );
 		PCB pcb = taskManager.getPCB( 1 );
@@ -58,7 +59,7 @@ public class Test_Scheduler {
 		assertEquals( PCB.Status.READY, pcb.getStatus() );
 	}
 
-	@AfterClass public static void tearDown() {
+	@After public void tearDown() {
 		taskManager.reset();
 	}
 

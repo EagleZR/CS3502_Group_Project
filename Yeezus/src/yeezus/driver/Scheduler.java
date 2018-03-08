@@ -18,7 +18,7 @@ public class Scheduler implements Runnable {
     CPUSchedulingPolicy schedulingMethod;
 
 
-	Scheduler(TaskManager taskManager, CPUSchedulingPolicy schedulingMethod) {
+	Scheduler(MMU mmu, Memory disk, TaskManager taskManager, CPUSchedulingPolicy schedulingMethod) {
 
 	}
 

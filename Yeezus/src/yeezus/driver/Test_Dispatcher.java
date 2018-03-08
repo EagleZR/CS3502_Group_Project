@@ -49,18 +49,18 @@ public class Test_Dispatcher {
 	}
 
 	// Add another process to the ready queue, and check that the two are swapped
-	@Test public void testSwap() throws Exception {
-		PCB oldProcess = taskManager.getPCB( 0 );
-		oldProcess.setStatus( PCB.Status.READY );
-		// TODO Change cache
-		taskManager.addPCB( 1, 55, 4, 9, 7, 6, 2 );
-		taskManager.getReadyQueue().add( taskManager.getPCB( 1 ) );
-		dispatcher.run();
-
-		assertEquals( 1, cpu.getProcess().getPID() );
-		assertEquals( 1, taskManager.getReadyQueue().size() );
-		assertEquals( oldProcess, taskManager.getReadyQueue().peek() );
-
-		// TODO Check that cache has been swapped, and old changes are reflected in RAM
-	}
+//	public void testSwap() throws Exception {
+//		PCB oldProcess = taskManager.getPCB( 0 );
+//		oldProcess.setStatus( PCB.Status.READY );
+//		// TODO Change cache
+//		taskManager.addPCB( 1, 55, 4, 9, 7, 6, 2 );
+//		taskManager.getReadyQueue().add( taskManager.getPCB( 1 ) );
+//		dispatcher.run();
+//
+//		assertEquals( 1, cpu.getProcess().getPID() );
+//		assertEquals( 1, taskManager.getReadyQueue().size() );
+//		assertEquals( oldProcess, taskManager.getReadyQueue().peek() );
+//
+//		// TODO Check that cache has been swapped, and old changes are reflected in RAM
+//	}
 }

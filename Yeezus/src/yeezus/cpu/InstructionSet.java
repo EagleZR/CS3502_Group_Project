@@ -1,5 +1,8 @@
 package yeezus.cpu;
 
+/**
+ * The given opcodes for the set of instructions to be performed by the {@link yeezus} Operating System.
+ */
 public enum InstructionSet {
 
 	// https://docs.oracle.com/javase/tutorial/java/nutsandbolts/datatypes.html
@@ -92,6 +95,11 @@ public enum InstructionSet {
 		this.code = code;
 	}
 
+	/**
+	 * Retrieves the opcode associated with this instruction type.
+	 *
+	 * @return The opcode associated with this instruction type.
+	 */
 	public int getCode() {
 		return this.code;
 	}

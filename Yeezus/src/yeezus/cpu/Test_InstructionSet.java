@@ -18,5 +18,4 @@ public class Test_InstructionSet {
 			}
 		}
 	}
-
 }

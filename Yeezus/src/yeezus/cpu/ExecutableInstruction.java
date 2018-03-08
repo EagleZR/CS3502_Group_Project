@@ -8,7 +8,8 @@ import yeezus.memory.Word;
 import static yeezus.cpu.InstructionSet.values;
 
 /**
- * A class meant to represent a single CPU ExecutableInstruction in the OS.
+ * A class that represents a single CPU Instruction in the OS. This takes in the data from a stored instruction and
+ * translates it into something that can be executed by the CPU via the {@link ExecutableInstruction#execute()} method.
  *
  * @version 0.2
  */
@@ -287,5 +288,4 @@ abstract class ExecutableInstruction implements Executable {
 			//			}
 		}
 	}
-
 }
