@@ -3,6 +3,7 @@ package yeezus.driver;
 import yeezus.memory.InvalidAddressException;
 import yeezus.memory.MMU;
 import yeezus.memory.Memory;
+import yeezus.memory.Word;
 import yeezus.pcb.PCB;
 import yeezus.pcb.TaskManager;
 
@@ -14,12 +15,15 @@ public class Scheduler implements Runnable {
 	MMU mmu;
 	Memory disk;
 	TaskManager taskManager;
-	List<PCB> list = taskManager.getJobQueue();
     CPUSchedulingPolicy schedulingMethod;
 
 
-	Scheduler(MMU mmu, Memory disk, TaskManager taskManager, CPUSchedulingPolicy schedulingMethod) {
 
+	Scheduler(MMU mmu, Memory disk, TaskManager taskManager, CPUSchedulingPolicy schedulingMethod) {
+        this.mmu = mmu;
+        this.taskManager = taskManager;
+        this.disk = disk;
+        this.schedulingMethod = schedulingMethod;
 	}
 
 	/**
@@ -27,21 +31,22 @@ public class Scheduler implements Runnable {
 	 */
 	@Override
 	public void run(){
-	    int counter = 0;
-        PCB next = list.get(counter);
+        int counter1 = 0;
+        int counter2 = 1;
+        List<PCB> list = taskManager.getJobQueue();
+        PCB next = list.get(0);
         if (schedulingMethod == CPUSchedulingPolicy.Priority) {
+            System.out.println("=========Priority=========");
             //Find highest priority process
-            counter++;
             for (PCB pcb : list) {
-                if (next.getPriority() < list.get(counter).getPriority()) {
-                    next = list.get(counter);
-                    counter++;
+                if (next.getPriority() < pcb.getPriority()) {
+                    next = pcb;
                 }
             }
 
             int totalSize = next.getTotalSize();
+            mmu.mapMemory(next.getPID(), totalSize);
             for (int i = 0; i < totalSize; i++) {
-                mmu.mapMemory(next.getPID(), i);
                 try {
                     mmu.write(next.getPID(), i,
                             disk.read(next.getStartDiskAddress() + i));
@@ -50,9 +55,10 @@ public class Scheduler implements Runnable {
                 }
             }
         }else if (schedulingMethod == CPUSchedulingPolicy.FCFS){
+            System.out.println("=========FCFS=========");
             for (PCB pcb : list) {
-                next = list.get(counter);
-                counter++;
+                next = list.get(counter1);
+                counter1++;
             }
 
             int totalSize = next.getTotalSize();
@@ -64,7 +70,6 @@ public class Scheduler implements Runnable {
                 } catch (InvalidAddressException e) {
                     e.printStackTrace();
                 }
-
             }
         }
 	}
