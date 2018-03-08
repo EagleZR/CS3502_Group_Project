@@ -26,7 +26,7 @@ public class Test_Scheduler {
 		disk = new Memory( 2048 );
 		RAM = new Memory( 1024 );
 		mmu = new MMU(RAM);
-		new Loader( taskManager, new File( "Yeezus/src/yeezus/Program-File.txt" ), disk );
+		new Loader( taskManager, new File( "src/yeezus/Program-File.txt" ), disk );
 	}
 
 	@Test public void testFCFS() throws Exception { // Job 1

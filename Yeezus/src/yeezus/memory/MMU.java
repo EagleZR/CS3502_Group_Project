@@ -68,20 +68,17 @@ public class MMU {
 			processAddresses = this.addressMap.get( pid );
 		} catch ( IndexOutOfBoundsException e ) {
 			processAddresses = new ArrayList<>();
-			if ( pid + 1 > addressMap.size() ) {
-				for ( int i = 0; i <= pid - addressMap.size() + 1; i++ ) {
-					addressMap.add( null );
-				}
+			while ( ( pid - addressMap.size() ) + 1 > 0 ) {
+				addressMap.add( null );
 			}
 			this.addressMap.set( pid, processAddresses );
 		}
 		this.addressOwnershipRegistry[physicalAddress] = pid;
 
-		if ( logicalAddress + 1 > processAddresses.size() ) {
-			for ( int i = 0; i <= logicalAddress - processAddresses.size(); i++ ) {
-				processAddresses.add( null );
-			}
+		while ( logicalAddress - processAddresses.size() + 1 > 0 ) {
+			processAddresses.add( null );
 		}
+
 		processAddresses.set( logicalAddress, physicalAddress );
 	}
 
