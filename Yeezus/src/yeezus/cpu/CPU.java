@@ -55,7 +55,7 @@ public class CPU {
 	 * @return The CPU ID associated with this CPU.
 	 */
 	public int getCPUID() {
-		return cpuid;
+		return this.cpuid;
 	}
 
 	/**
@@ -74,6 +74,7 @@ public class CPU {
 	 */
 	public void setProcess( PCB pcb ) {
 		this.pcb = pcb;
+		this.pcb.setStatus( PCB.Status.RUNNING );
 		this.pc = 0;
 	}
 
