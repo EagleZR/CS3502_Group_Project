@@ -44,5 +44,9 @@ public class Main {
 		for ( Thread thread : threads ) {
 			thread.join( 500 );
 		}
+
+		for ( int i = 0; i < disk.getCapacity(); i++ ) {
+			System.out.println( disk.read( i ).toString() );
+		}
 	}
 }

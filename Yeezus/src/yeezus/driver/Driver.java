@@ -62,6 +62,13 @@ public class Driver implements Runnable {
 	}
 
 	/**
+	 * Resets the Driver after testing.
+	 */
+	public static void reset() {
+		loader = null;
+	}
+
+	/**
 	 * Executes the main loop of the driver. This loop will run until all processes have been completed, and the process
 	 * data has been written back to the disk.
 	 */

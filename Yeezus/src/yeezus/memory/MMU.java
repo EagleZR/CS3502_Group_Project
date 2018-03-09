@@ -10,6 +10,7 @@ import java.util.ArrayList;
 public class MMU {
 
 	private ArrayList<ArrayList<Integer>> addressMap; // TODO Make this more efficient later
+	private ArrayList<Integer> pids;
 	private int[] addressOwnershipRegistry;
 	private Memory RAM;
 
@@ -22,6 +23,7 @@ public class MMU {
 		this.RAM = RAM;
 		this.addressOwnershipRegistry = new int[RAM.getCapacity()];
 		this.addressMap = new ArrayList<>();
+		this.pids = new ArrayList<>();
 	}
 
 	/**
@@ -36,12 +38,23 @@ public class MMU {
 			for ( int i = 0; i < size; i++ ) {
 				mapAddress( pid, i );
 			}
+			this.pids.add( pid );
 			return true;
 		} catch ( InvalidAddressException e ) {
 			terminatePID( pid );
 			e.printStackTrace();
 			return false;
 		}
+	}
+
+	/**
+	 * Checks if the given Process ID has any associated memory mappings in RAM.
+	 *
+	 * @param pid The Process ID of the memory mappings to be checked.
+	 * @return {@code true} if the Process ID is associated with any memory mappings in RAM.
+	 */
+	public boolean processMapped( int pid ) {
+		return this.pids.contains( pid );
 	}
 
 	/**
@@ -146,6 +159,7 @@ public class MMU {
 					this.addressOwnershipRegistry[i] = 0;
 				}
 			}
+			this.pids.remove( pid );
 		} catch ( IndexOutOfBoundsException e ) {
 			// Do nothing, it's already been removed, so we're good
 		}

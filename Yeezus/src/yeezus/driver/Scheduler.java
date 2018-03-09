@@ -9,12 +9,11 @@ import yeezus.pcb.TaskManager;
 import java.util.List;
 
 public class Scheduler implements Runnable {
-	PCB PCB;
-	MMU mmu;
-	Memory disk;
-	TaskManager taskManager;
-	CPUSchedulingPolicy schedulingMethod;
-	int counter = 0;
+
+	private MMU mmu;
+	private Memory disk;
+	private TaskManager taskManager;
+	private CPUSchedulingPolicy schedulingMethod;
 
 	Scheduler( MMU mmu, Memory disk, TaskManager taskManager, CPUSchedulingPolicy schedulingMethod ) {
 		this.mmu = mmu;
@@ -27,41 +26,57 @@ public class Scheduler implements Runnable {
 	 * Loads one process into RAM on each iteration. Iterations are called externally.
 	 */
 	@Override public void run() {
-		List<PCB> list = taskManager.getJobQueue();
-		PCB next = list.get( 0 );
-		if ( schedulingMethod == CPUSchedulingPolicy.Priority ) {
-			System.out.println( "=========Priority=========" );
-			//Find highest priority process
-			for ( PCB pcb : list ) {
-				if ( next.getPriority() < pcb.getPriority() ) {
-					next = pcb;
-				}
-			}
-
-			System.out.println( "Next: " + next.getPID() );
-
-			int totalSize = next.getTotalSize();
-			mmu.mapMemory( next.getPID(), totalSize );
-			for ( int i = 0; i < totalSize; i++ ) {
+		// Remove terminated processes from the RAM
+		for ( PCB pcb : taskManager.getPCBs() ) {
+			int pid = pcb.getPID();
+			if ( pcb.getStatus() == PCB.Status.TERMINATED && this.mmu.processMapped( pid ) ) {
 				try {
-					mmu.write( next.getPID(), i, disk.read( next.getStartDiskAddress() + i ) );
+					for ( int i = 0; i < pcb.getTotalSize(); i++ ) {
+						this.disk.write( pcb.getStartDiskAddress() + i, this.mmu.read( pid, i ) );
+					}
+					this.mmu.terminatePID( pid );
 				} catch ( InvalidAddressException e ) {
-					e.printStackTrace();
-				}
-			}
-		} else if ( schedulingMethod == CPUSchedulingPolicy.FCFS ) {
-			System.out.println( "=========FCFS=========" );
-			next = list.get( counter++ );
-
-			int totalSize = next.getTotalSize();
-			mmu.mapMemory( next.getPID(), totalSize );
-			for ( int i = 0; i < totalSize; i++ ) {
-				try {
-					mmu.write( next.getPID(), i, disk.read( next.getStartDiskAddress() + i ) );
-				} catch ( InvalidAddressException e ) {
-					e.printStackTrace();
+					// Do nothing, process has already been removed
 				}
 			}
 		}
+
+		// Add new process to MMU/Ready Queue
+		List<PCB> list = taskManager.getJobQueue();
+
+		// Find next process
+		if ( list.size() > 0 ) {
+			PCB next = list.get( 0 );
+			if ( schedulingMethod == CPUSchedulingPolicy.Priority ) {
+				//Find highest priority process
+				for ( PCB pcb : list ) {
+					if ( next.getPriority() < pcb.getPriority() ) {
+						next = pcb;
+					}
+				}
+				list.remove( next );
+			} else if ( schedulingMethod == CPUSchedulingPolicy.FCFS ) {
+				// Find the next loaded process
+				next = list.remove( 0 );
+			}
+
+			// Verify that the process's memory can be mapped
+			int totalSize = next.getTotalSize();
+			if ( mmu.mapMemory( next.getPID(), totalSize ) ) {
+				for ( int i = 0; i < totalSize; i++ ) {
+					try {
+						mmu.write( next.getPID(), i, disk.read( next.getStartDiskAddress() + i ) );
+					} catch ( InvalidAddressException e ) {
+						e.printStackTrace();
+						System.err.println(
+								"Fatal error. The addresses have already been mapped, so there should be no issues writing. Check the PCB.getTotalSize() method's calculation." );
+						System.exit( 1 );
+					}
+				}
+				taskManager.getReadyQueue().add( next );
+				next.setStatus( PCB.Status.READY );
+			}
+		}
+
 	}
 }

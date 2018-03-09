@@ -29,3 +29,5 @@ hs_err_pid*
 
 ~*.tmp
 Yeezus/out/production/Yeezus/Program-File.txt
+
+*Test_File.txt
