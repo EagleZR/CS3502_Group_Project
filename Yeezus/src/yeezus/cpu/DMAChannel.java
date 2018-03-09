@@ -19,7 +19,7 @@ public class DMAChannel {
 	}
 
 	public void handle( ExecutableInstruction.IOExecutableInstruction instruction, PCB pcb ) throws InvalidAddressException {
-		pid = pcb.getPid();
+		pid = pcb.getPID();
 
 		//RW operation
 		if(instruction.type == InstructionSet.RD)
