@@ -25,23 +25,30 @@ public class DMAChannel {
 		if(instruction.type == InstructionSet.RD)
 		{
 			//reading address into reg1
-		    if(instruction.reg1==0 && instruction.address!=0)
-			    registers.write(instruction.reg1, mmu.read(pid, instruction.address) );
+		    if(instruction.reg1==0 && instruction.address!=0) {
+				registers.write(instruction.reg1, mmu.read(pid, instruction.address/4));
+				System.out.println("Reading address: " + instruction.address/4 + " into reg1: " + instruction.reg1);
+			}
 			//reading reg2 into reg1
-		    else
+		    else {
 				registers.write(instruction.reg1, mmu.read(pid, instruction.reg2));
+				System.out.println("Reading reg2: " + instruction.reg2 + " into reg1: " + instruction.reg1);
+			}
 		}
 
 		//WR operation
 		if(instruction.type == InstructionSet.WR)
 		{
 			//writing register 1 to address
-			if(instruction.reg1==0 && instruction.address!=0)
-				mmu.write(pid, instruction.address, registers.read(instruction.reg1) );
+			if(instruction.reg1==0 && instruction.address!=0) {
+				mmu.write(pid, instruction.address/4, registers.read(instruction.reg1));
+				System.out.println("Writing reg1: " + instruction.reg1 + " into address: " + instruction.address/4);
+			}
 			//writing register 1 to register 2
-			else
-				mmu.write(pid, instruction.reg2, registers.read(instruction.reg1) );
-
+			else {
+				mmu.write(pid, instruction.reg2, registers.read(instruction.reg1));
+				System.out.println("Writing reg1: " + instruction.reg1 + " into reg2: " + instruction.reg2);
+			}
 		}
 	}
 }
