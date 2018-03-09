@@ -1,5 +1,6 @@
 package yeezus.pcb;
 
+import yeezus.DuplicateIDException;
 import yeezus.driver.Loader;
 
 import java.util.ArrayList;
@@ -12,8 +13,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * <p>The Task Manager for the processes within the {@link yeezus} Operating System. This implementation is little more
  * than a wrapper to control access to the {@link PCB}s it contains. To ensure that it remains a singleton, it is
  * implemented as an {@link Enum} with a single instance.</p><p>Processes are registered by the {@link Loader} at system
- * startup using the {@link TaskManager#addPCB(int, int, int, int, int, int, int, int, int, int)} process. Once a
- * process has been added, its {@code PCB} can be directly retrieved using the {@link TaskManager#getPCB(int)} method. A
+ * startup using the {@link TaskManager#addPCB(int, int, int, int, int, int, int)} process. Once a process has been added, its {@code PCB} can be directly retrieved using the {@link TaskManager#getPCB(int)} method. A
  * Job Queue that manages all un-run jobs on the system and a Ready Queue to keep track of which jobs have been loaded
  * into RAM and are ready to go are both instantiated and maintained within this Task Manager. The Job Queue can be
  * retrieved using the {@link TaskManager#getJobQueue()} method while the Ready Queue can be retrieved with the {@link
@@ -60,9 +60,9 @@ public enum TaskManager {
 	 */
 	public synchronized void addPCB( int pid, int startDiskInstructionAddress, int instructionsLength,
 			int inputBufferLength, int outputBufferLength, int tempBufferLength, int priority )
-			throws DuplicatePIDException {
+			throws DuplicateIDException {
 		if ( this.contains( pid ) ) {
-			throw new DuplicatePIDException( "The PID " + pid + " already exists in this TaskManager." );
+			throw new DuplicateIDException( "The PID " + pid + " already exists in this TaskManager." );
 		}
 		PCB pcb = new PCB( pid, startDiskInstructionAddress, instructionsLength, inputBufferLength, outputBufferLength,
 				tempBufferLength, priority );
@@ -82,7 +82,7 @@ public enum TaskManager {
 	 */
 	public synchronized boolean contains( int pid ) {
 		for ( PCB PCB : this.PCBs ) {
-			if ( PCB.getPid() == pid ) {
+			if ( PCB.getPID() == pid ) {
 				return true;
 			}
 		}
@@ -98,7 +98,7 @@ public enum TaskManager {
 	 */
 	public synchronized PCB getPCB( int pid ) throws ProcessNotFoundException {
 		for ( PCB PCB : this.PCBs ) {
-			if ( PCB.getPid() == pid ) {
+			if ( PCB.getPID() == pid ) {
 				return PCB;
 			}
 		}

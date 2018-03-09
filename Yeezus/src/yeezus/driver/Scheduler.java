@@ -1,21 +1,67 @@
 package yeezus.driver;
 
+import yeezus.memory.InvalidAddressException;
+import yeezus.memory.MMU;
+import yeezus.memory.Memory;
 import yeezus.pcb.PCB;
 import yeezus.pcb.TaskManager;
 
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.List;
 
 public class Scheduler implements Runnable {
+	PCB PCB;
+	MMU mmu;
+	Memory disk;
+	TaskManager taskManager;
+	CPUSchedulingPolicy schedulingMethod;
+	int counter = 0;
 
-	Scheduler( TaskManager taskManager, CPUSchedulingPolicy schedulingMethod ) {
-
+	Scheduler( MMU mmu, Memory disk, TaskManager taskManager, CPUSchedulingPolicy schedulingMethod ) {
+		this.mmu = mmu;
+		this.taskManager = taskManager;
+		this.disk = disk;
+		this.schedulingMethod = schedulingMethod;
 	}
 
 	/**
 	 * Loads one process into RAM on each iteration. Iterations are called externally.
 	 */
 	@Override public void run() {
-		// TODO Read through the PCBs to find the highest priority job
-		// TODO Add the PCB with the highest priority to the dmaQueue
+		List<PCB> list = taskManager.getJobQueue();
+		PCB next = list.get( 0 );
+		if ( schedulingMethod == CPUSchedulingPolicy.Priority ) {
+			System.out.println( "=========Priority=========" );
+			//Find highest priority process
+			for ( PCB pcb : list ) {
+				if ( next.getPriority() < pcb.getPriority() ) {
+					next = pcb;
+				}
+			}
+
+			System.out.println( "Next: " + next.getPID() );
+
+			int totalSize = next.getTotalSize();
+			mmu.mapMemory( next.getPID(), totalSize );
+			for ( int i = 0; i < totalSize; i++ ) {
+				try {
+					mmu.write( next.getPID(), i, disk.read( next.getStartDiskAddress() + i ) );
+				} catch ( InvalidAddressException e ) {
+					e.printStackTrace();
+				}
+			}
+		} else if ( schedulingMethod == CPUSchedulingPolicy.FCFS ) {
+			System.out.println( "=========FCFS=========" );
+			next = list.get( counter++ );
+
+			int totalSize = next.getTotalSize();
+			mmu.mapMemory( next.getPID(), totalSize );
+			for ( int i = 0; i < totalSize; i++ ) {
+				try {
+					mmu.write( next.getPID(), i, disk.read( next.getStartDiskAddress() + i ) );
+				} catch ( InvalidAddressException e ) {
+					e.printStackTrace();
+				}
+			}
+		}
 	}
 }

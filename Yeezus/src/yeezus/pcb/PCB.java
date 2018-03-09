@@ -126,7 +126,7 @@ public class PCB {
 	 *
 	 * @return The PID associated with this PCB.
 	 */
-	public int getPid() {
+	public int getPID() {
 		return this.pid;
 	}
 
