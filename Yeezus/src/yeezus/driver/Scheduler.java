@@ -15,7 +15,7 @@ public class Scheduler implements Runnable {
 	private TaskManager taskManager;
 	private CPUSchedulingPolicy schedulingMethod;
 
-	Scheduler( MMU mmu, Memory disk, TaskManager taskManager, CPUSchedulingPolicy schedulingMethod ) {
+	public Scheduler( MMU mmu, Memory disk, TaskManager taskManager, CPUSchedulingPolicy schedulingMethod ) {
 		this.mmu = mmu;
 		this.taskManager = taskManager;
 		this.disk = disk;

@@ -9,7 +9,7 @@ public class Dispatcher implements Runnable {
 	TaskManager taskManager;
 	CPU cpu;
 
-	Dispatcher( TaskManager taskManager, CPU cpu ) {
+	public Dispatcher( TaskManager taskManager, CPU cpu ) {
 		this.taskManager = taskManager;
 		this.cpu = cpu;
 	}
