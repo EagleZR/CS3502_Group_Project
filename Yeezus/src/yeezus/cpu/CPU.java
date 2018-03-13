@@ -154,7 +154,8 @@ public class CPU {
 		if ( signature == 0x00000000 ) {
 			return new ExecutableInstruction.ArithmeticExecutableInstruction( word, this.registers );
 		} else if ( signature == 0x40000000 ) {
-			return new ExecutableInstruction.ConditionalExecutableInstruction( word, this.registers, this.pc );
+			return new ExecutableInstruction.ConditionalExecutableInstruction( word, this.registers, this.mmu,
+					this.pcb.getPID(), this.pc );
 		} else if ( signature == 0x80000000 ) {
 			return new ExecutableInstruction.UnconditionalJumpExecutableInstruction( word, this.registers, this.pc );
 		} else {

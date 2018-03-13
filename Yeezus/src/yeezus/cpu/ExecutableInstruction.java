@@ -1,9 +1,6 @@
 package yeezus.cpu;
 
-import yeezus.memory.InvalidAddressException;
-import yeezus.memory.InvalidWordException;
-import yeezus.memory.Memory;
-import yeezus.memory.Word;
+import yeezus.memory.*;
 
 import static yeezus.cpu.InstructionSet.values;
 
@@ -115,15 +112,18 @@ abstract class ExecutableInstruction implements Executable {
 	static class ConditionalExecutableInstruction extends ExecutableInstruction {
 
 		// The data retrieved from the instruction
-		private int bReg, dReg, data;
+		private int bReg, dReg, data, pid;
 		private Integer programCounter;
+		private MMU mmu;
 
 		// Interprets the given instruction into a form that can be executed by the system.
-		ConditionalExecutableInstruction( Word instruction, Memory registers, Integer programCounter )
+		ConditionalExecutableInstruction( Word instruction, Memory registers, MMU mmu, int pid, Integer programCounter )
 				throws InvalidInstructionException {
 			super( instruction, registers );
 
 			this.programCounter = programCounter;
+			this.mmu = mmu;
+			this.pid = pid;
 
 			// Find B-reg
 			int bRegMask = 0x00F00000;
@@ -135,7 +135,7 @@ abstract class ExecutableInstruction implements Executable {
 
 			// Find data
 			int dataMask = 0x0000FFFF;
-			this.data = (int) ( ( instruction.getData() & dataMask ) );
+			this.data = (int) ( ( instruction.getData() & dataMask ) ) / 4;
 
 		}
 
@@ -143,7 +143,7 @@ abstract class ExecutableInstruction implements Executable {
 		@Override public void execute() throws InvalidWordException, InvalidAddressException {
 			switch ( this.type ) {
 				case ST: // Stores content of a reg.  into an address
-					this.registers.write( this.dReg, this.registers.read( this.bReg ) );
+					this.mmu.write( this.pid, this.dReg, this.registers.read( this.bReg ) );
 					break;
 				case LW: // Loads the content of an address into a reg.
 					this.registers.write( this.bReg, this.registers.read( this.dReg ) );
