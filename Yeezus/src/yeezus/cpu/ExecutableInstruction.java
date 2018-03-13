@@ -147,8 +147,8 @@ abstract class ExecutableInstruction implements Executable {
 							this.registers.read( this.bReg ) );
 					break;
 				case LW: // Loads the content of an address into a reg.
-					this.registers.write( this.dReg,
-							this.mmu.read( this.pid, (int) this.registers.read( this.bReg ).getData() / 4 ) );
+					this.registers.write( this.bReg,
+							this.mmu.read( this.pid, (int) this.registers.read( this.dReg ).getData() / 4 ) );
 					break;
 				case MOVI: // Transfers address/data directly into a register
 					this.registers.write( this.dReg, new Word( this.data ) );

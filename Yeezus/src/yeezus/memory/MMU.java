@@ -45,6 +45,7 @@ public class MMU {
 				mapAddress( pid, i );
 			}
 			this.pids.add( pid );
+			System.out.println( "The process was successfully mapped." );
 			return true;
 		} catch ( InvalidAddressException e ) {
 			terminatePID( pid );
@@ -81,8 +82,8 @@ public class MMU {
 	private void mapAddress( int pid, int logicalAddress, int physicalAddress ) {
 		ArrayList<Integer> processAddresses;
 
-		if(pid >= this.addressMap.size() || this.addressMap.get( pid ) == null ) {
-			while ( (pid - addressMap.size()) >= 0 ) { // Only executes if it's not large enough
+		if ( pid >= this.addressMap.size() || this.addressMap.get( pid ) == null ) {
+			while ( ( pid - addressMap.size() ) >= 0 ) { // Only executes if it's not large enough
 				addressMap.add( null );
 			}
 			processAddresses = new ArrayList<>();
@@ -90,15 +91,15 @@ public class MMU {
 		} else {
 			processAddresses = this.addressMap.get( pid );
 		}
-//		try {
-//			processAddresses = this.addressMap.get( pid );
-//		} catch ( IndexOutOfBoundsException e ) {
-//			processAddresses = new ArrayList<>();
-//			while ( ( pid - addressMap.size() ) + 1 > 0 ) {
-//				addressMap.add( null );
-//			}
-//			this.addressMap.set( pid, processAddresses );
-//		}
+		//		try {
+		//			processAddresses = this.addressMap.get( pid );
+		//		} catch ( IndexOutOfBoundsException e ) {
+		//			processAddresses = new ArrayList<>();
+		//			while ( ( pid - addressMap.size() ) + 1 > 0 ) {
+		//				addressMap.add( null );
+		//			}
+		//			this.addressMap.set( pid, processAddresses );
+		//		}
 
 		while ( logicalAddress - processAddresses.size() + 1 > 0 ) {
 			processAddresses.add( null );
@@ -131,7 +132,8 @@ public class MMU {
 		try {
 			return this.RAM.read( this.addressMap.get( pid ).get( logicalAddress ) );
 		} catch ( IndexOutOfBoundsException | NullPointerException e ) {
-			throw new InvalidAddressException( "The given logical address is not mapped to a physical address." );
+			throw new InvalidAddressException(
+					"The given logical address, " + logicalAddress + ", is not mapped to a physical address." );
 		}
 	}
 
