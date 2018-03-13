@@ -90,7 +90,7 @@ public class CPU {
 	 * @throws InvalidAddressException     Thrown if an instruction tries to access an invalid address in memory.
 	 */
 	public void run() throws Exception {
-		if ( this.pcb == null ) {
+		if ( this.pcb == null || !this.mmu.processMapped( this.pcb.getPID() ) ) {
 			// Do nothing
 			return;
 		}

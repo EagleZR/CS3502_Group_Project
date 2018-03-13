@@ -62,6 +62,7 @@ abstract class ExecutableInstruction implements Executable {
 
 		// Executes the actions specified by this instruction
 		@Override public void execute() throws InvalidAddressException, InvalidWordException {
+			System.out.println( "Executing: " + this.type + ", " + this.s1 + ", " + this.s2 + ", " + this.d );
 			switch ( this.type ) { // Not the most efficient, but it will work for now
 				case MOV: // Transfers the content of one register into another
 					super.registers.write( this.d, super.registers.read( this.s1 ) );
@@ -133,18 +134,21 @@ abstract class ExecutableInstruction implements Executable {
 
 			// Find data
 			int dataMask = 0x0000FFFF;
-			this.data = (int) ( ( instruction.getData() & dataMask ) ) / 4;
+			this.data = (int) ( ( instruction.getData() & dataMask ) );
 
 		}
 
 		// Executes the actions specified by this instruction
 		@Override public void execute() throws InvalidWordException, InvalidAddressException {
+			System.out.println( "Executing: " + this.type + ", " + this.bReg + ", " + this.dReg + ", " + this.data );
 			switch ( this.type ) {
 				case ST: // Stores content of a reg.  into an address
-					this.mmu.write( this.pid, this.dReg, this.registers.read( this.bReg ) );
+					this.mmu.write( this.pid, (int) this.registers.read( this.dReg ).getData() / 4,
+							this.registers.read( this.bReg ) );
 					break;
 				case LW: // Loads the content of an address into a reg.
-					this.registers.write( this.bReg, this.registers.read( this.dReg ) );
+					this.registers.write( this.dReg,
+							this.mmu.read( this.pid, (int) this.registers.read( this.bReg ).getData() / 4 ) );
 					break;
 				case MOVI: // Transfers address/data directly into a register
 					this.registers.write( this.dReg, new Word( this.data ) );
@@ -229,6 +233,7 @@ abstract class ExecutableInstruction implements Executable {
 
 		// Executes the actions specified by this instruction
 		@Override public void execute() {
+			System.out.println( "Executing: " + this.type + ", " + this.address );
 			switch ( this.type ) {
 				case HLT: // Logical end of program
 					// Handled elsewhere, don't worry about it
@@ -240,7 +245,6 @@ abstract class ExecutableInstruction implements Executable {
 					// Do nothing
 					break;
 			}
-
 		}
 	}
 

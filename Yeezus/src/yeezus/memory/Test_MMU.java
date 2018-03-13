@@ -38,7 +38,9 @@ public class Test_MMU {
 
 		// Check that they don't equal each other
 		for ( int i = 0; i < 100; i++ ) {
-			assertNotEquals( mmu.read( 1, i ), mmu.read( 2, i ) );
+			if ( i != 0 && i != 1 ) {
+				assertNotEquals( mmu.read( 1, i ), mmu.read( 2, i ) );
+			}
 		}
 	}
 
