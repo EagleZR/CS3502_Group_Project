@@ -63,9 +63,7 @@ abstract class ExecutableInstruction implements Executable {
 		// Executes the actions specified by this instruction
 		@Override public void execute() throws InvalidAddressException, InvalidWordException {
 			switch ( this.type ) { // Not the most efficient, but it will work for now
-				// TODO Add behaviors into enum?
 				case MOV: // Transfers the content of one register into another
-					// TODO Move s1 into d?
 					super.registers.write( this.d, super.registers.read( this.s1 ) );
 					break;
 				case ADD: // Adds content of two S-regs into D-reg
@@ -269,7 +267,7 @@ abstract class ExecutableInstruction implements Executable {
 
 			// Find address
 			int addressMask = 0x0000FFFF;
-			this.address = (int) (instruction.getData() & addressMask) / 4;
+			this.address = (int) ( instruction.getData() & addressMask );
 		}
 
 		// Executes the actions specified by this instruction

@@ -68,6 +68,9 @@ public class Test_Driver {
 		// Check if any of them are not equal, indicating that some change has been made
 		for ( int i = 0; i < disk.getCapacity(); i++ ) {
 			if ( !this.controlDisk.read( i ).equals( this.disk.read( i ) ) ) {
+				System.out.println(
+						"Data change at address " + i + ".\tControl: " + this.controlDisk.read( i ) + ", Disk: "
+								+ this.disk.read( i ) );
 				return;
 			}
 		}
@@ -86,6 +89,9 @@ public class Test_Driver {
 		// Check if any of them are not equal, indicating that some change has been made
 		for ( int i = 0; i < disk.getCapacity(); i++ ) {
 			if ( !this.controlDisk.read( i ).equals( this.disk.read( i ) ) ) {
+				System.out.println(
+						"Data change at address " + i + ".\tControl: " + this.controlDisk.read( i ) + ", Disk: "
+								+ this.disk.read( i ) );
 				return;
 			}
 		}

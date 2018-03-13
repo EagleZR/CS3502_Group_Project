@@ -74,4 +74,8 @@ public class Word {
 		stringBuilder.append( string );
 		return stringBuilder.toString();
 	}
+
+	@Override public boolean equals( Object obj ) {
+		return obj.getClass() == Word.class && ( (Word) obj ).data == this.data;
+	}
 }
