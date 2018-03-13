@@ -269,7 +269,7 @@ abstract class ExecutableInstruction implements Executable {
 
 			// Find address
 			int addressMask = 0x0000FFFF;
-			this.address = (int) instruction.getData() & addressMask;
+			this.address = (int) (instruction.getData() & addressMask) / 4;
 		}
 
 		// Executes the actions specified by this instruction

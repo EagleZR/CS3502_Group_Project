@@ -2,10 +2,8 @@ package yeezus;
 
 import yeezus.driver.CPUSchedulingPolicy;
 import yeezus.driver.Driver;
-import yeezus.memory.InvalidAddressException;
 import yeezus.memory.MMU;
 import yeezus.memory.Memory;
-import yeezus.memory.Word;
 
 import java.io.File;
 
@@ -18,16 +16,7 @@ public class Main {
 		// Initialize memory
 		Memory disk = new Memory( 2048 );
 		MMU mmu = new MMU( new Memory( 1024 ) );
-		Memory registers = new Memory( 16 ) {
-			// Here there be dragons
-			@Override public void write( int physicalAddress, Word word ) throws InvalidAddressException {
-				if ( physicalAddress == 1 ) {
-					// Need to keep this read-only so its value is always 0
-					throw new InvalidAddressException( "Cannot write over register 1" );
-				}
-				super.write( physicalAddress, word );
-			}
-		};
+		Memory registers = new Memory( 16 );
 
 		// Initialize Driver
 		Driver.loadFile( disk, new File( "src/yeezus/Program-File.txt" ) );

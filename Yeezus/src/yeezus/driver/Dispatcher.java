@@ -15,10 +15,9 @@ public class Dispatcher implements Runnable {
 	}
 
 	@Override public void run() {
-		if ( cpu.getProcess() == null || PCB.Status.RUNNING != cpu.getProcess().getStatus() ) {
+		if ( cpu.getProcess() == null || PCB.Status.RUNNING != cpu.getProcess().getStatus() && this.taskManager.getReadyQueue().size() > 0 ) {
 			PCB next = this.taskManager.getReadyQueue().remove();
 			cpu.setProcess( next );
-
 		} else {
 			// TODO Sleep until something else is added to the ready queue?
 			return;

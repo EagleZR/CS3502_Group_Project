@@ -11,7 +11,8 @@ public class MMU {
 
 	private ArrayList<ArrayList<Integer>> addressMap; // TODO Make this more efficient later
 	private ArrayList<Integer> pids;
-	private int[] addressOwnershipRegistry;
+	private ArrayList<Integer> freeAddresses;
+	//	private int[] addressOwnershipRegistry;
 	private Memory RAM;
 
 	/**
@@ -21,7 +22,11 @@ public class MMU {
 	 */
 	public MMU( Memory RAM ) {
 		this.RAM = RAM;
-		this.addressOwnershipRegistry = new int[RAM.getCapacity()];
+		this.freeAddresses = new ArrayList<>();
+		for ( int i = 0; i < RAM.getCapacity(); i++ ) {
+			this.freeAddresses.add( i );
+		}
+		// this.addressOwnershipRegistry = new int[RAM.getCapacity()];
 		this.addressMap = new ArrayList<>();
 		this.pids = new ArrayList<>();
 	}
@@ -33,7 +38,8 @@ public class MMU {
 	 * @param size The amount of memory that is to be reserved for the process.
 	 * @return {@code true} if the memory was successfully mapped for the process.
 	 */
-	public boolean mapMemory( int pid, int size ) {
+	public synchronized boolean mapMemory( int pid, int size ) {
+		System.out.println( "Loading process " + pid + " into RAM." );
 		try {
 			for ( int i = 0; i < size; i++ ) {
 				mapAddress( pid, i );
@@ -53,7 +59,7 @@ public class MMU {
 	 * @param pid The Process ID of the memory mappings to be checked.
 	 * @return {@code true} if the Process ID is associated with any memory mappings in RAM.
 	 */
-	public boolean processMapped( int pid ) {
+	public synchronized boolean processMapped( int pid ) {
 		return this.pids.contains( pid );
 	}
 
@@ -64,29 +70,35 @@ public class MMU {
 	 * @param logicalAddress The logical address of the memory as recognized by the process that owns it.
 	 * @throws InvalidAddressException Thrown if the physical memory is out of room.
 	 */
-	@Deprecated public void mapAddress( int pid, int logicalAddress ) throws InvalidAddressException {
-		for ( int i = 0; i < this.addressOwnershipRegistry.length; i++ ) {
-			if ( this.addressOwnershipRegistry[i] == 0 ) {
-				mapAddress( pid, logicalAddress, i );
-				this.addressOwnershipRegistry[i] = pid;
-				return;
-			}
+	private void mapAddress( int pid, int logicalAddress ) throws InvalidAddressException {
+		if ( this.freeAddresses.size() > 0 ) {
+			mapAddress( pid, logicalAddress, this.freeAddresses.remove( 0 ) );
+		} else {
+			throw new InvalidAddressException( "Not really invalid, we've just run out of memory..." );
 		}
-		throw new InvalidAddressException( "Not really invalid, we've just run out of memory..." );
 	}
 
-	@Deprecated private synchronized void mapAddress( int pid, int logicalAddress, int physicalAddress ) {
+	private void mapAddress( int pid, int logicalAddress, int physicalAddress ) {
 		ArrayList<Integer> processAddresses;
-		try {
-			processAddresses = this.addressMap.get( pid );
-		} catch ( IndexOutOfBoundsException e ) {
-			processAddresses = new ArrayList<>();
-			while ( ( pid - addressMap.size() ) + 1 > 0 ) {
+
+		if(pid >= this.addressMap.size() || this.addressMap.get( pid ) == null ) {
+			while ( (pid - addressMap.size()) >= 0 ) { // Only executes if it's not large enough
 				addressMap.add( null );
 			}
+			processAddresses = new ArrayList<>();
 			this.addressMap.set( pid, processAddresses );
+		} else {
+			processAddresses = this.addressMap.get( pid );
 		}
-		this.addressOwnershipRegistry[physicalAddress] = pid;
+//		try {
+//			processAddresses = this.addressMap.get( pid );
+//		} catch ( IndexOutOfBoundsException e ) {
+//			processAddresses = new ArrayList<>();
+//			while ( ( pid - addressMap.size() ) + 1 > 0 ) {
+//				addressMap.add( null );
+//			}
+//			this.addressMap.set( pid, processAddresses );
+//		}
 
 		while ( logicalAddress - processAddresses.size() + 1 > 0 ) {
 			processAddresses.add( null );
@@ -152,16 +164,12 @@ public class MMU {
 	 * @param pid The Process ID of the process whose memory is to be freed.
 	 */
 	public synchronized void terminatePID( int pid ) {
-		try {
-			this.addressMap.set( pid, null );
-			for ( int i = 0; i < this.addressOwnershipRegistry.length; i++ ) {
-				if ( this.addressOwnershipRegistry[i] == pid ) {
-					this.addressOwnershipRegistry[i] = 0;
-				}
+		System.out.println( "Removing process " + pid + " from RAM." );
+		if ( this.addressMap.size() > pid ) {
+			while ( !this.addressMap.get( pid ).isEmpty() ) {
+				this.freeAddresses.add( this.addressMap.get( pid ).remove( 0 ) );
 			}
-			this.pids.remove( pid );
-		} catch ( IndexOutOfBoundsException e ) {
-			// Do nothing, it's already been removed, so we're good
+			this.addressMap.set( pid, null );
 		}
 	}
 }

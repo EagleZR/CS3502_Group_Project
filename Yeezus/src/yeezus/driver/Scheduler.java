@@ -77,6 +77,5 @@ public class Scheduler implements Runnable {
 				next.setStatus( PCB.Status.READY );
 			}
 		}
-
 	}
 }

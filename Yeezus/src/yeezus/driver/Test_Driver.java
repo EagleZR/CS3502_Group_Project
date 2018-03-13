@@ -21,9 +21,9 @@ public class Test_Driver {
 	private MMU mmu;
 
 	@Before public void setUp() throws Exception {
-		this.disk = new Memory( 2048 );
-		this.controlDisk = new Memory( 2048 );
-		this.mmu = new MMU( new Memory( 1024 ) );
+		this.disk = new Memory( 150 );
+		this.controlDisk = new Memory( 150 );
+		this.mmu = new MMU( new Memory( 100 ) );
 		File file = new File( "src/yeezus/Test-File.txt" );
 		assertTrue( file.exists() );
 		Driver.loadFile( this.disk, file );
@@ -49,10 +49,11 @@ public class Test_Driver {
 		Driver.reset();
 		try {
 			new Driver( 0, this.disk, this.mmu, new Memory( 16 ), CPUSchedulingPolicy.FCFS );
-			fail();
 		} catch ( UninitializedDriverException e ) {
 			// Correct exception thrown
+			return;
 		}
+		fail();
 	}
 
 	@Test public void runFCFS() throws Exception {
