@@ -20,6 +20,8 @@ public class DMAChannel {
 
 	public void handle( ExecutableInstruction.IOExecutableInstruction instruction, PCB pcb ) throws InvalidAddressException {
 		pid = pcb.getPID();
+		int reg1 = instruction.reg1;
+		int reg2 = instruction.reg2;
 
 		//RW operation
 		if(instruction.type == InstructionSet.RD)
@@ -31,7 +33,7 @@ public class DMAChannel {
 			}
 			//reading reg2 into reg1
 		    else {
-				registers.write(instruction.reg1, mmu.read(pid, instruction.reg2));
+				registers.write(instruction.reg1, mmu.read(pid, (int)registers.read(reg2).getData()));
 				System.out.println("Reading reg2: " + instruction.reg2 + " into reg1: " + instruction.reg1);
 			}
 		}
@@ -46,7 +48,7 @@ public class DMAChannel {
 			}
 			//writing register 1 to register 2
 			else {
-				mmu.write(pid, instruction.reg2, registers.read(instruction.reg1));
+				mmu.write(pid, (int)registers.read(instruction.reg2).getData(), registers.read(instruction.reg1));
 				System.out.println("Writing reg1: " + instruction.reg1 + " into reg2: " + instruction.reg2);
 			}
 		}
