@@ -91,11 +91,11 @@ public class CPU {
 	 */
 	public void run() throws Exception {
 		if ( this.pcb == null ) {
-			// TODO Throw an invalid PID exception or something
+			// Do nothing
 			return;
 		}
 		while ( true ) {
-			// TODO Fetch
+			// Fetch
 			Word instruction = this.mmu.read( this.pcb.getPID(), this.pc++ );
 
 			// Decode
@@ -116,6 +116,30 @@ public class CPU {
 		}
 	}
 
+	protected void debugRun() throws Exception {
+		if ( this.pcb == null ) {
+			// Do nothing
+			return;
+		}
+		// Fetch
+		Word instruction = this.mmu.read( this.pcb.getPID(), this.pc++ );
+
+		// Decode
+		ExecutableInstruction executableInstruction = decode( instruction );
+
+		// Execute
+		if ( executableInstruction.type == InstructionSet.HLT ) {
+			this.pcb.setStatus( PCB.Status.TERMINATED );
+			return;
+		}
+
+		if ( executableInstruction.getClass() == ExecutableInstruction.IOExecutableInstruction.class ) {
+			this.dmaChannel.handle( (ExecutableInstruction.IOExecutableInstruction) executableInstruction, this.pcb );
+		} else {
+			executableInstruction.execute();
+		}
+	}
+
 	/**
 	 * Decodes the given {@link Word} into an {@link ExecutableInstruction} that the CPU can then execute.
 	 *
@@ -130,7 +154,8 @@ public class CPU {
 		if ( signature == 0x00000000 ) {
 			return new ExecutableInstruction.ArithmeticExecutableInstruction( word, this.registers );
 		} else if ( signature == 0x40000000 ) {
-			return new ExecutableInstruction.ConditionalExecutableInstruction( word, this.registers, this.pc );
+			return new ExecutableInstruction.ConditionalExecutableInstruction( word, this.registers, this.mmu,
+					this.pcb.getPID(), this.pc );
 		} else if ( signature == 0x80000000 ) {
 			return new ExecutableInstruction.UnconditionalJumpExecutableInstruction( word, this.registers, this.pc );
 		} else {

@@ -56,7 +56,7 @@ public class Test_Driver {
 	}
 
 	@Test public void runFCFS() throws Exception {
-		new Driver( 0, this.disk, this.mmu, new Memory( 16 ), CPUSchedulingPolicy.FCFS );
+		new Driver( 0, this.disk, this.mmu, new Memory( 16 ), CPUSchedulingPolicy.FCFS ).run();
 		// Print the disk contents for manual verification
 		File output = new File( "src/yeezus/FCFS_Output_Test_File.txt" );
 		output.createNewFile();
@@ -74,7 +74,7 @@ public class Test_Driver {
 	}
 
 	@Test public void runPriority() throws Exception {
-		new Driver( 0, this.disk, this.mmu, new Memory( 16 ), CPUSchedulingPolicy.Priority );
+		new Driver( 0, this.disk, this.mmu, new Memory( 16 ), CPUSchedulingPolicy.Priority ).run();
 		// Print the disk contents for manual verification
 		File output = new File( "src/yeezus/Priority_Output_Test_File.txt" );
 		output.createNewFile();
