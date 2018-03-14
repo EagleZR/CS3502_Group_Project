@@ -102,12 +102,8 @@ public class Test_Dispatcher {
 		for ( int i = 0; i < newProcess.getTotalSize(); i++ ) {
 			assertEquals( mmu.read( 2, i ), this.cpu.getCache().read( i ) );
 		}
-		for ( int i = 0; i < oldRegisters.getCapacity(); i++ ) {
-			assertEquals( oldRegisters.read( i ), oldProcess.getRegisters().read( i ) );
-		}
-		for ( int i = 0; i < oldCache.getCapacity(); i++ ) {
-			assertEquals( oldCache.read( i ), oldProcess.getCache().read( i ) );
-		}
+		checkMemory( oldRegisters, oldProcess.getRegisters() );
+		checkMemory( oldCache, oldProcess.getCache() );
 		assertEquals( 4, oldProcess.getPC() );
 
 		// Swap again
@@ -115,17 +111,20 @@ public class Test_Dispatcher {
 		dispatcher.run();
 
 		// Ensure that registers and cache are swapped in/restored
-		for ( int i = 0; i < oldRegisters.getCapacity(); i++ ) {
-			assertEquals( oldRegisters.read( i ), this.cpu.getRegisters().read( i ) );
-		}
-		for ( int i = 0; i < oldCache.getCapacity(); i++ ) {
-			assertEquals( oldCache.read( i ), this.cpu.getCache().read( i ) );
-		}
+		checkMemory( oldRegisters, this.cpu.getRegisters() );
+		checkMemory( oldCache, this.cpu.getCache() );
 
 		// Ensure that the pc was successfully loaded
 		for ( int i = 0; i < 6; i++ ) {
 			this.cpu.debugRun();
 		}
 		assertEquals( PCB.Status.TERMINATED, oldProcess.getStatus() );
+	}
+
+	private void checkMemory( Memory mem1, Memory mem2 ) throws Exception {
+		assertEquals( mem1.getCapacity(), mem2.getCapacity() );
+		for ( int i = 0; i < mem1.getCapacity(); i++ ) {
+			assertEquals( mem1.read( i ), mem2.read( i ) );
+		}
 	}
 }
