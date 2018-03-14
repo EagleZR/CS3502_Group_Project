@@ -76,12 +76,7 @@ public class Driver implements Runnable {
 		while ( !taskManager.getJobQueue().isEmpty() ) {
 			this.scheduler.run();
 			this.dispatcher.run();
-			try {
-				this.cpu.run();
-			} catch ( Exception e ) {
-				e.printStackTrace();
-				System.exit( 1 ); // Want to fail to indicate any error
-			}
+			this.cpu.run();
 			// TODO Handle interrupts
 		}
 

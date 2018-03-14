@@ -8,7 +8,7 @@ package yeezus.pcb;
 public class PCB {
 
 	private final int pid, startDiskAddress, instructionsLength, inputBufferLength, outputBufferLength, tempBufferLength, priority;
-	private int cpuid;
+	private int cpuid, executionCount;
 	private long clock;
 	private long elapsedWaitTime;
 	private long elapsedRunTime;
@@ -195,6 +195,14 @@ public class PCB {
 	 */
 	public synchronized long getElapsedRunTime() {
 		return this.elapsedRunTime + ( this.status == Status.RUNNING ? System.currentTimeMillis() - this.clock : 0 );
+	}
+
+	public int getExecutionCount() {
+		return executionCount;
+	}
+
+	public void setExecutionCount( int executionCount ) {
+		this.executionCount = executionCount;
 	}
 
 	/**

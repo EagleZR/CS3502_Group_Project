@@ -11,7 +11,7 @@ import java.io.File;
  * @author Mark Zeagler
  * @version 1.0
  */
-public class UninitializedDriverException extends Exception {
+public class UninitializedDriverException extends RuntimeException {
 
 	public UninitializedDriverException( String s ) {
 		super( s );

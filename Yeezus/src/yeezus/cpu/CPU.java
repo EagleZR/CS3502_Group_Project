@@ -11,7 +11,7 @@ import java.util.ArrayList;
  * {@link PCB}, it runs until the associated process has been terminated. The CPU fetches instructions from the {@link
  * MMU}, decodes them, and executes them. Changes to the process data are reflected in the RAM.
  */
-public class CPU {
+public class CPU implements Runnable {
 
 	private static final ArrayList<Integer> cpuids = new ArrayList<>();
 	private final int cpuid;
@@ -89,7 +89,7 @@ public class CPU {
 	 *                                     should handle that).
 	 * @throws InvalidAddressException     Thrown if an instruction tries to access an invalid address in memory.
 	 */
-	public void run() throws Exception {
+	public void run() {
 		if ( this.pcb == null || !this.mmu.processMapped( this.pcb.getPID() ) ) {
 			// Do nothing
 			return;
@@ -102,6 +102,8 @@ public class CPU {
 			ExecutableInstruction executableInstruction = decode( instruction );
 
 			// Execute
+			this.pcb.setExecutionCount( this.pcb.getExecutionCount() + 1 );
+
 			if ( executableInstruction.type == InstructionSet.HLT ) {
 				this.pcb.setStatus( PCB.Status.TERMINATED );
 				return;
@@ -111,12 +113,12 @@ public class CPU {
 				this.dmaChannel
 						.handle( (ExecutableInstruction.IOExecutableInstruction) executableInstruction, this.pcb );
 			} else {
-				executableInstruction.execute();
+				executableInstruction.run();
 			}
 		}
 	}
 
-	protected void debugRun() throws Exception {
+	public void debugRun() {
 		if ( this.pcb == null ) {
 			// Do nothing
 			return;
@@ -136,7 +138,7 @@ public class CPU {
 		if ( executableInstruction.getClass() == ExecutableInstruction.IOExecutableInstruction.class ) {
 			this.dmaChannel.handle( (ExecutableInstruction.IOExecutableInstruction) executableInstruction, this.pcb );
 		} else {
-			executableInstruction.execute();
+			executableInstruction.run();
 		}
 	}
 

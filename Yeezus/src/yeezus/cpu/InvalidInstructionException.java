@@ -9,7 +9,7 @@ import yeezus.memory.Word;
  * @author Mark Zeagler
  * @version 1.0
  */
-public class InvalidInstructionException extends Exception {
+public class InvalidInstructionException extends RuntimeException {
 	public InvalidInstructionException( String s ) {
 		super( s );
 	}
