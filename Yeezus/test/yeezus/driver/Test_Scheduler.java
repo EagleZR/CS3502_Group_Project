@@ -24,45 +24,45 @@ public class Test_Scheduler {
 	private TaskManager taskManager;
 
 	@Before public void setUp() throws Exception {
-		taskManager = TaskManager.INSTANCE;
-		disk = new Memory( 2048 );
-		RAM = new Memory( 1024 );
-		mmu = new MMU( RAM );
-		new Loader( taskManager, new File( "src/yeezus/Program-File.txt" ), disk );
+		this.taskManager = TaskManager.INSTANCE;
+		this.disk = new Memory( 2048 );
+		this.RAM = new Memory( 1024 );
+		this.mmu = new MMU( this.RAM );
+		new Loader( this.taskManager, new File( "src/yeezus/Program-File.txt" ), this.disk );
 	}
 
 	@Test public void testFCFS() throws Exception { // Job 1
-		Scheduler scheduler = new Scheduler( mmu, disk, taskManager, CPUSchedulingPolicy.FCFS );
+		Scheduler scheduler = new Scheduler( this.mmu, this.disk, this.taskManager, CPUSchedulingPolicy.FCFS );
 		scheduler.run();
-		assertEquals( "0xC050005C", mmu.read( 1, 0 ).toString() );
-		PCB pcb = taskManager.getPCB( 1 );
+		assertEquals( "0xC050005C", this.mmu.read( 1, 0 ).toString() );
+		PCB pcb = this.taskManager.getPCB( 1 );
 		/* TODO Check by logical addresses using the MMU
 		assertEquals( 0, pcb.getStartRAMInstructionAddress() );
 		assertEquals( 23, pcb.getStartRAMInputBufferAddress() );
 		assertEquals( 43, pcb.getStartRAMOutputBufferAddress() );
 		assertEquals( 55, pcb.getStartRAMTempBufferAddress() );
 		*/
-		assertEquals( pcb, taskManager.getReadyQueue().peek() );
+		assertEquals( pcb, this.taskManager.getReadyQueue().peek() );
 		assertEquals( PCB.Status.READY, pcb.getStatus() );
 	}
 
 	@Test public void testPriority() throws Exception {
-		Scheduler scheduler = new Scheduler( mmu, disk, taskManager, CPUSchedulingPolicy.Priority );
+		Scheduler scheduler = new Scheduler( this.mmu, this.disk, this.taskManager, CPUSchedulingPolicy.Priority );
 		scheduler.run();
-		assertEquals( "0xC050004C", mmu.read( 8, 0 ).toString() );
-		PCB pcb = taskManager.getPCB( 8 );
+		assertEquals( "0xC050004C", this.mmu.read( 8, 0 ).toString() );
+		PCB pcb = this.taskManager.getPCB( 8 );
 		/*
 		assertEquals( 0, pcb.getStartRAMInstructionAddress() );
 		assertEquals( 19, pcb.getStartRAMInputBufferAddress() );
 		assertEquals( 38, pcb.getStartRAMOutputBufferAddress() );
 		assertEquals( 49, pcb.getStartRAMTempBufferAddress() ); // TODO need to check these addresses again
 		*/
-		assertEquals( pcb, taskManager.getReadyQueue().peek() );
+		assertEquals( pcb, this.taskManager.getReadyQueue().peek() );
 		assertEquals( PCB.Status.READY, pcb.getStatus() );
 	}
 
 	@After public void tearDown() {
-		taskManager.reset();
+		this.taskManager.reset();
 	}
 
 }

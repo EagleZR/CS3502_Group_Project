@@ -24,14 +24,14 @@ public class Test_Driver {
 		this.disk = new Memory( 150 );
 		this.controlDisk = new Memory( 150 );
 		this.mmu = new MMU( new Memory( 100 ) );
-		File file = new File( "src/yeezus/Test-File.txt" );
+		File file = new File( "test/yeezus/Test-File.txt" );
 		assertTrue( file.exists() );
 		Driver.loadFile( this.disk, file );
 		// Copy contents into a control disk to verify that changes have occurred
-		for ( int i = 0; i < disk.getCapacity(); i++ ) {
-			this.controlDisk.write( i, disk.read( i ) );
+		for ( int i = 0; i < this.disk.getCapacity(); i++ ) {
+			this.controlDisk.write( i, this.disk.read( i ) );
 		}
-		for ( int i = 0; i < disk.getCapacity(); i++ ) {
+		for ( int i = 0; i < this.disk.getCapacity(); i++ ) {
 			assertEquals( this.controlDisk.read( i ), this.disk.read( i ) );
 		}
 	}
@@ -59,7 +59,7 @@ public class Test_Driver {
 	@Test public void runFCFS() throws Exception {
 		new Driver( 0, this.disk, this.mmu, new Memory( 16 ), CPUSchedulingPolicy.FCFS ).run();
 		// Print the disk contents for manual verification
-		File output = new File( "src/yeezus/FCFS_Output_Test_File.txt" );
+		File output = new File( "test/yeezus/FCFS_Output_Test_File.txt" );
 		output.createNewFile();
 		PrintStream out = new PrintStream( new FileOutputStream( output ) );
 		for ( int i = 0; i < this.disk.getCapacity(); i++ ) {
@@ -67,7 +67,7 @@ public class Test_Driver {
 		}
 		assertEquals( this.disk.read( 43 ).getData(), 228 );
 		// Check if any of them are not equal, indicating that some change has been made
-		for ( int i = 0; i < disk.getCapacity(); i++ ) {
+		for ( int i = 0; i < this.disk.getCapacity(); i++ ) {
 			if ( !this.controlDisk.read( i ).equals( this.disk.read( i ) ) ) {
 				System.out.println(
 						"Data change at address " + i + ".\tControl: " + this.controlDisk.read( i ) + ", Disk: "
@@ -81,7 +81,7 @@ public class Test_Driver {
 	@Test public void runPriority() throws Exception {
 		new Driver( 0, this.disk, this.mmu, new Memory( 16 ), CPUSchedulingPolicy.Priority ).run();
 		// Print the disk contents for manual verification
-		File output = new File( "src/yeezus/Priority_Output_Test_File.txt" );
+		File output = new File( "test/yeezus/Priority_Output_Test_File.txt" );
 		output.createNewFile();
 		PrintStream out = new PrintStream( new FileOutputStream( output ) );
 		for ( int i = 0; i < this.disk.getCapacity(); i++ ) {
@@ -89,7 +89,7 @@ public class Test_Driver {
 		}
 		assertEquals( this.disk.read( 43 ).getData(), 228 );
 		// Check if any of them are not equal, indicating that some change has been made
-		for ( int i = 0; i < disk.getCapacity(); i++ ) {
+		for ( int i = 0; i < this.disk.getCapacity(); i++ ) {
 			if ( !this.controlDisk.read( i ).equals( this.disk.read( i ) ) ) {
 				System.out.println(
 						"Data change at address " + i + ".\tControl: " + this.controlDisk.read( i ) + ", Disk: "
