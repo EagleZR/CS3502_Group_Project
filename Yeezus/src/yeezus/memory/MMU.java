@@ -10,7 +10,6 @@ import java.util.ArrayList;
 public class MMU {
 
 	private ArrayList<ArrayList<Integer>> addressMap; // TODO Make this more efficient later
-	private ArrayList<Integer> pids;
 	private ArrayList<Integer> freeAddresses;
 	//	private int[] addressOwnershipRegistry;
 	private Memory RAM;
@@ -28,7 +27,6 @@ public class MMU {
 		}
 		// this.addressOwnershipRegistry = new int[RAM.getCapacity()];
 		this.addressMap = new ArrayList<>();
-		this.pids = new ArrayList<>();
 	}
 
 	/**
@@ -44,7 +42,6 @@ public class MMU {
 			for ( int i = 0; i < size; i++ ) {
 				mapAddress( pid, i );
 			}
-			this.pids.add( pid );
 			System.out.println( "The process was successfully mapped." );
 			return true;
 		} catch ( InvalidAddressException e ) {
@@ -61,7 +58,7 @@ public class MMU {
 	 * @return {@code true} if the Process ID is associated with any memory mappings in RAM.
 	 */
 	public synchronized boolean processMapped( int pid ) {
-		return this.pids.contains( pid );
+		return this.addressMap.get( pid ) != null;
 	}
 
 	/**

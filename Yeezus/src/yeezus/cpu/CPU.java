@@ -155,9 +155,18 @@ public class CPU {
 			return new ExecutableInstruction.ArithmeticExecutableInstruction( word, this.registers );
 		} else if ( signature == 0x40000000 ) {
 			return new ExecutableInstruction.ConditionalExecutableInstruction( word, this.registers, this.mmu,
-					this.pcb.getPID(), this.pc );
+					this.pcb.getPID(), ( Integer value ) -> {
+				if ( value != -1 ) {
+					this.pc = value;
+				}
+			} );
 		} else if ( signature == 0x80000000 ) {
-			return new ExecutableInstruction.UnconditionalJumpExecutableInstruction( word, this.registers, this.pc );
+			return new ExecutableInstruction.UnconditionalJumpExecutableInstruction( word, this.registers,
+					( Integer value ) -> {
+						if ( value != -1 ) {
+							this.pc = value;
+						}
+					} );
 		} else {
 			return new ExecutableInstruction.IOExecutableInstruction( word, this.registers );
 		}

@@ -65,6 +65,7 @@ public class Test_Driver {
 		for ( int i = 0; i < this.disk.getCapacity(); i++ ) {
 			out.println( this.disk.read( i ) );
 		}
+		assertEquals( this.disk.read( 43 ).getData(), 228 );
 		// Check if any of them are not equal, indicating that some change has been made
 		for ( int i = 0; i < disk.getCapacity(); i++ ) {
 			if ( !this.controlDisk.read( i ).equals( this.disk.read( i ) ) ) {
@@ -86,6 +87,7 @@ public class Test_Driver {
 		for ( int i = 0; i < this.disk.getCapacity(); i++ ) {
 			out.println( this.disk.read( i ) );
 		}
+		assertEquals( this.disk.read( 43 ).getData(), 228 );
 		// Check if any of them are not equal, indicating that some change has been made
 		for ( int i = 0; i < disk.getCapacity(); i++ ) {
 			if ( !this.controlDisk.read( i ).equals( this.disk.read( i ) ) ) {

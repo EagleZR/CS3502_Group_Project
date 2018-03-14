@@ -30,6 +30,7 @@ public class Scheduler implements Runnable {
 		for ( PCB pcb : taskManager.getPCBs() ) {
 			int pid = pcb.getPID();
 			if ( pcb.getStatus() == PCB.Status.TERMINATED && this.mmu.processMapped( pid ) ) {
+				System.out.println( "Writing process " + pcb.getPID() + " back to disk." );
 				try {
 					for ( int i = 0; i < pcb.getTotalSize(); i++ ) {
 						this.disk.write( pcb.getStartDiskAddress() + i, this.mmu.read( pid, i ) );

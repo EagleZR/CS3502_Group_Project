@@ -2,6 +2,8 @@ package yeezus.cpu;
 
 import yeezus.memory.*;
 
+import java.util.function.Consumer;
+
 import static yeezus.cpu.InstructionSet.values;
 
 /**
@@ -62,7 +64,10 @@ abstract class ExecutableInstruction implements Executable {
 
 		// Executes the actions specified by this instruction
 		@Override public void execute() throws InvalidAddressException, InvalidWordException {
-			System.out.println( "Executing: " + this.type + ", " + this.s1 + ", " + this.s2 + ", " + this.d );
+			System.out.println(
+					"Executing: " + this.type + ", " + this.s1 + "(" + this.registers.read( s1 ).getData() + "), "
+							+ this.s2 + "(" + this.registers.read( s2 ).getData() + "), " + this.d + "("
+							+ this.registers.read( s1 ).getData() + ")" );
 			switch ( this.type ) { // Not the most efficient, but it will work for now
 				case MOV: // Transfers the content of one register into another
 					super.registers.write( this.d, super.registers.read( this.s1 ) );
@@ -92,9 +97,8 @@ abstract class ExecutableInstruction implements Executable {
 							super.registers.read( this.s1 ).getData() | super.registers.read( this.s2 ).getData() ) );
 					break;
 				case SLT: // Sets the D-reg to 1 if  first S-reg is less than the B-reg; 0 otherwise
-					// TODO Verify correct
 					super.registers.write( this.d, new Word(
-							( super.registers.read( this.s1 ).getData() > super.registers.read( this.s2 ).getData() ?
+							( super.registers.read( this.s1 ).getData() < super.registers.read( this.s2 ).getData() ?
 									1 :
 									0 ) ) );
 					break;
@@ -112,15 +116,15 @@ abstract class ExecutableInstruction implements Executable {
 
 		// The data retrieved from the instruction
 		private int bReg, dReg, data, pid;
-		private Integer programCounter;
+		private Consumer<Integer> countChanger;
 		private MMU mmu;
 
 		// Interprets the given instruction into a form that can be executed by the system.
-		ConditionalExecutableInstruction( Word instruction, Memory registers, MMU mmu, int pid, Integer programCounter )
-				throws InvalidInstructionException {
+		ConditionalExecutableInstruction( Word instruction, Memory registers, MMU mmu, int pid,
+				Consumer<Integer> countChanger ) throws InvalidInstructionException {
 			super( instruction, registers );
 
-			this.programCounter = programCounter;
+			this.countChanger = countChanger;
 			this.mmu = mmu;
 			this.pid = pid;
 
@@ -140,30 +144,32 @@ abstract class ExecutableInstruction implements Executable {
 
 		// Executes the actions specified by this instruction
 		@Override public void execute() throws InvalidWordException, InvalidAddressException {
-			System.out.println( "Executing: " + this.type + ", " + this.bReg + ", " + this.dReg + ", " + this.data );
+			System.out.println(
+					"Executing: " + this.type + ", " + this.bReg + "(" + this.registers.read( bReg ).getData() + "), "
+							+ this.dReg + "(" + this.registers.read( dReg ).getData() + "), " + this.data );
 			switch ( this.type ) {
 				case ST: // Stores content of a reg.  into an address
-					this.mmu.write( this.pid, (int) this.registers.read( this.dReg ).getData() / 4,
+					this.mmu.write( this.pid, ( this.data + (int) this.registers.read( this.dReg ).getData() ) / 4,
 							this.registers.read( this.bReg ) );
 					break;
 				case LW: // Loads the content of an address into a reg.
-					this.registers.write( this.bReg,
-							this.mmu.read( this.pid, (int) this.registers.read( this.dReg ).getData() / 4 ) );
+					this.registers.write( this.dReg, this.mmu.read( this.pid,
+							( this.data + (int) this.registers.read( this.bReg ).getData() ) / 4 ) );
 					break;
 				case MOVI: // Transfers address/data directly into a register
 					this.registers.write( this.dReg, new Word( this.data ) );
 					break;
 				case ADDI: // Adds a data value directly to the content of a register
 					this.registers
-							.write( this.dReg, new Word( this.registers.read( this.bReg ).getData() + this.data ) );
+							.write( this.dReg, new Word( this.registers.read( this.dReg ).getData() + this.data ) );
 					break;
 				case MULI: // Multiplies a data value directly with the content of a register
 					this.registers
-							.write( this.dReg, new Word( this.registers.read( this.bReg ).getData() * this.data ) );
+							.write( this.dReg, new Word( this.registers.read( this.dReg ).getData() * this.data ) );
 					break;
 				case DIVI: // Divides a data directly to the content of a register
 					this.registers
-							.write( this.dReg, new Word( this.registers.read( this.bReg ).getData() / this.data ) );
+							.write( this.dReg, new Word( this.registers.read( this.dReg ).getData() / this.data ) );
 					break;
 				case LDI: // Loads a data/address directly to the content of a register
 					this.registers.write( this.dReg, new Word( this.data ) );
@@ -173,36 +179,28 @@ abstract class ExecutableInstruction implements Executable {
 							new Word( ( super.registers.read( this.bReg ).getData() < this.data ? 1 : 0 ) ) );
 					break;
 				case BEQ: // Branches to an address when content of B-reg = D-reg
-					this.programCounter = (
+					this.countChanger.accept(
 							this.registers.read( this.bReg ).getData() == this.registers.read( this.dReg ).getData() ?
-									this.data :
-									this.programCounter );
+									this.data / 4 :
+									-1 );
 					break;
 				case BNE: // Branches to an address when content of B-reg <> D-reg
-					this.programCounter = (
+					this.countChanger.accept(
 							this.registers.read( this.bReg ).getData() != this.registers.read( this.dReg ).getData() ?
-									this.data :
-									this.programCounter );
+									this.data / 4 :
+									-1 );
 					break;
 				case BEZ: // Branches to an address when content of B-reg = 0
-					this.programCounter = ( this.registers.read( this.bReg ).getData() == 0 ?
-							this.data :
-							this.programCounter );
+					this.countChanger.accept( this.registers.read( this.bReg ).getData() == 0 ? this.data / 4 : -1 );
 					break;
 				case BNZ: // Branches to an address when content of B-reg <> 0
-					this.programCounter = ( this.registers.read( this.bReg ).getData() != 0 ?
-							this.data :
-							this.programCounter );
+					this.countChanger.accept( this.registers.read( this.bReg ).getData() != 0 ? this.data / 4 : -1 );
 					break;
 				case BGZ: // Branches to an address when content of B-reg > 0
-					this.programCounter = ( this.registers.read( this.bReg ).getData() > 0 ?
-							this.data :
-							this.programCounter );
+					this.countChanger.accept( this.registers.read( this.bReg ).getData() > 0 ? this.data / 4 : -1 );
 					break;
 				case BLZ: // Branches to an address when content of B-reg < 0
-					this.programCounter = ( this.registers.read( this.bReg ).getData() < 0 ?
-							this.data :
-							this.programCounter );
+					this.countChanger.accept( this.registers.read( this.bReg ).getData() < 0 ? this.data / 4 : -1 );
 					break;
 				case NOP: // Does nothing and moves to next instruction
 					// Do nothing
@@ -216,15 +214,15 @@ abstract class ExecutableInstruction implements Executable {
 	 */
 	static class UnconditionalJumpExecutableInstruction extends ExecutableInstruction {
 
-		Integer programCounter;
+		Consumer<Integer> countChanger;
 		// The data retrieved from the instruction
 		private int address;
 
 		// Interprets the given instruction into a form that can be executed by the system.
-		UnconditionalJumpExecutableInstruction( Word instruction, Memory registers, Integer programCounter )
+		UnconditionalJumpExecutableInstruction( Word instruction, Memory registers, Consumer<Integer> countChanger )
 				throws InvalidInstructionException {
 			super( instruction, registers );
-			this.programCounter = programCounter;
+			this.countChanger = countChanger;
 
 			// Find address
 			int addressMask = 0x00FFFFFF;
@@ -239,7 +237,7 @@ abstract class ExecutableInstruction implements Executable {
 					// Handled elsewhere, don't worry about it
 					break;
 				case JMP: // Jumps to a specified location
-					this.programCounter = this.address;
+					this.countChanger.accept( address / 4 );
 					break;
 				case NOP: // Does nothing and moves to next instruction
 					// Do nothing
