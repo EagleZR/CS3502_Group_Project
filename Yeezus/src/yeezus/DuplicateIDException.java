@@ -6,7 +6,7 @@ package yeezus;
  * @author Mark Zeagler
  * @version 1.0
  */
-public class DuplicateIDException extends Exception {
+public class DuplicateIDException extends RuntimeException {
 	public DuplicateIDException( String s ) {
 		super( s );
 	}

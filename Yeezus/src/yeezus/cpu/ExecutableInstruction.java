@@ -11,11 +11,11 @@ import static yeezus.cpu.InstructionSet.values;
 
 /**
  * A class that represents a single CPU Instruction in the OS. This takes in the data from a stored instruction and
- * translates it into something that can be executed by the CPU via the {@link ExecutableInstruction#execute()} method.
+ * translates it into something that can be executed by the CPU via the {@link Runnable#run()} method.
  *
  * @version 0.2
  */
-abstract class ExecutableInstruction implements Executable {
+abstract class ExecutableInstruction implements Runnable {
 
 	// The data retrieved from the instruction
 	InstructionSet type;
@@ -66,7 +66,7 @@ abstract class ExecutableInstruction implements Executable {
 		}
 
 		// Executes the actions specified by this instruction
-		@Override public void execute() throws InvalidAddressException, InvalidWordException {
+		@Override public void run() throws InvalidAddressException, InvalidWordException {
 			System.out.println(
 					"Executing: " + this.type + ", " + this.s1 + "(" + this.registers.read( s1 ).getData() + "), "
 							+ this.s2 + "(" + this.registers.read( s2 ).getData() + "), " + this.d + "("
@@ -145,7 +145,7 @@ abstract class ExecutableInstruction implements Executable {
 		}
 
 		// Executes the actions specified by this instruction
-		@Override public void execute() throws InvalidWordException, InvalidAddressException {
+		@Override public void run() throws InvalidWordException, InvalidAddressException {
 			System.out.println(
 					"Executing: " + this.type + ", " + this.bReg + "(" + this.registers.read( bReg ).getData() + "), "
 							+ this.dReg + "(" + this.registers.read( dReg ).getData() + "), " + this.data );
@@ -232,7 +232,7 @@ abstract class ExecutableInstruction implements Executable {
 		}
 
 		// Executes the actions specified by this instruction
-		@Override public void execute() {
+		@Override public void run() {
 			System.out.println( "Executing: " + this.type + ", " + this.address );
 			switch ( this.type ) {
 				case HLT: // Logical end of program
@@ -275,7 +275,7 @@ abstract class ExecutableInstruction implements Executable {
 		}
 
 		// Executes the actions specified by this instruction
-		@Override public void execute() throws ExecutionException {
+		@Override public void run() throws ExecutionException {
 			throw new ExecutionException( "Send this to the DMA-Channel for processing, don't execute." );
 			//			switch ( this.type ) {
 			//				case RD: // Reads content of I/P buffer into a accumulator

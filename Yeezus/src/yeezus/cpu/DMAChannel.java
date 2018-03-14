@@ -1,7 +1,6 @@
 package yeezus.cpu;
 //author: jessica brummel
 
-import yeezus.memory.InvalidAddressException;
 import yeezus.memory.MMU;
 import yeezus.memory.Memory;
 import yeezus.pcb.PCB;
@@ -19,15 +18,13 @@ public class DMAChannel {
 		this.registers = registers;
 	}
 
-	public void handle( ExecutableInstruction.IOExecutableInstruction instruction, PCB pcb )
-			throws InvalidAddressException {
+	public void handle( ExecutableInstruction.IOExecutableInstruction instruction, PCB pcb ) {
 		pid = pcb.getPID();
 		int reg1 = instruction.reg1;
 		int reg2 = instruction.reg2;
 
-		System.out.println(
-				"Executing: " + instruction.type + ", " + reg1 + ", " + reg2 + "(" + (int) ( registers.read( reg2 ).getData() / 4 )
-						+ "), " + instruction.address );
+		System.out.println( "Executing: " + instruction.type + ", " + reg1 + ", " + reg2 + "(" + (int) (
+				registers.read( reg2 ).getData() / 4 ) + "), " + instruction.address );
 
 		//RW operation
 		if ( instruction.type == InstructionSet.RD ) {

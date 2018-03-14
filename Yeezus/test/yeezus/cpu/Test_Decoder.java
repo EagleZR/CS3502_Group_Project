@@ -26,7 +26,7 @@ public class Test_Decoder {
 		CPU cpu = new CPU( 0, new MMU( new Memory( 1024 ) ), 16, 100 );
 		Memory registers = cpu.getRegisters();
 		registers.write( 7, new Word( "0x2341" ) );
-		cpu.decode( new Word( "0x05070000" ) ).execute();
+		cpu.decode( new Word( "0x05070000" ) ).run();
 		assertEquals( "0x00002341", registers.read( 0 ).toString() );
 
 	}
