@@ -6,6 +6,8 @@ import yeezus.memory.MMU;
 import yeezus.memory.Memory;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.PrintStream;
 
 public class Main {
 
@@ -34,8 +36,11 @@ public class Main {
 			thread.join( 500 );
 		}
 
+		File output = new File( "src/yeezus/Output_File.txt" );
+		output.createNewFile();
+		PrintStream out = new PrintStream( new FileOutputStream( output ) );
 		for ( int i = 0; i < disk.getCapacity(); i++ ) {
-			System.out.println( disk.read( i ).toString() );
+			out.println( disk.read( i ) );
 		}
 	}
 }
