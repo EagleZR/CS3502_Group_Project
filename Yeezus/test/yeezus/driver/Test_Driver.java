@@ -43,12 +43,12 @@ public class Test_Driver {
 	}
 
 	@Test public void loadFile() throws Exception {
-		new Driver( 0, this.disk, this.mmu, new Memory( 16 ), CPUSchedulingPolicy.FCFS );
-		new Driver( 1, this.disk, this.mmu, new Memory( 16 ), CPUSchedulingPolicy.FCFS );
+		new Driver( 0, this.disk, this.mmu, 16, 100, CPUSchedulingPolicy.FCFS );
+		new Driver( 1, this.disk, this.mmu, 16, 100, CPUSchedulingPolicy.FCFS );
 		// Should be no exception here
 		Driver.reset();
 		try {
-			new Driver( 0, this.disk, this.mmu, new Memory( 16 ), CPUSchedulingPolicy.FCFS );
+			new Driver( 0, this.disk, this.mmu, 16, 100, CPUSchedulingPolicy.FCFS );
 		} catch ( UninitializedDriverException e ) {
 			// Correct exception thrown
 			return;
@@ -57,7 +57,7 @@ public class Test_Driver {
 	}
 
 	@Test public void runFCFS() throws Exception {
-		new Driver( 0, this.disk, this.mmu, new Memory( 16 ), CPUSchedulingPolicy.FCFS ).run();
+		new Driver( 0, this.disk, this.mmu, 16, 100, CPUSchedulingPolicy.FCFS ).run();
 		// Print the disk contents for manual verification
 		File output = new File( "test/yeezus/FCFS_Output_Test_File.txt" );
 		output.createNewFile();
@@ -79,7 +79,7 @@ public class Test_Driver {
 	}
 
 	@Test public void runPriority() throws Exception {
-		new Driver( 0, this.disk, this.mmu, new Memory( 16 ), CPUSchedulingPolicy.Priority ).run();
+		new Driver( 0, this.disk, this.mmu, 16, 100, CPUSchedulingPolicy.Priority ).run();
 		// Print the disk contents for manual verification
 		File output = new File( "test/yeezus/Priority_Output_Test_File.txt" );
 		output.createNewFile();

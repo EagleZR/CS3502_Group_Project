@@ -15,7 +15,7 @@ import static org.junit.Assert.assertEquals;
 public class Test_Decoder {
 
 	@Test public void decode() throws Exception {
-		CPU cpu = new CPU( 0, new MMU( new Memory( 1024 ) ), new Memory( 16 ) );
+		CPU cpu = new CPU( 0, new MMU( new Memory( 1024 ) ), 16, 100 );
 		ExecutableInstruction executableInstruction = cpu.decode( new Word( "0xC050005C" ) );
 		assertEquals( InstructionSet.RD, executableInstruction.type );
 		assertEquals( ExecutableInstruction.IOExecutableInstruction.class, executableInstruction.getClass() );
@@ -23,8 +23,8 @@ public class Test_Decoder {
 	}
 
 	@Test public void add() throws Exception {
-		Memory registers = new Memory( 16 );
-		CPU cpu = new CPU( 0, new MMU( new Memory( 1024 ) ), registers );
+		CPU cpu = new CPU( 0, new MMU( new Memory( 1024 ) ), 16, 100 );
+		Memory registers = cpu.getRegisters();
 		registers.write( 7, new Word( "0x2341" ) );
 		cpu.decode( new Word( "0x05070000" ) ).execute();
 		assertEquals( "0x00002341", registers.read( 0 ).toString() );

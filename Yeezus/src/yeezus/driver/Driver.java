@@ -2,6 +2,7 @@ package yeezus.driver;
 
 import yeezus.DuplicateIDException;
 import yeezus.cpu.CPU;
+import yeezus.memory.InvalidWordException;
 import yeezus.memory.MMU;
 import yeezus.memory.Memory;
 import yeezus.pcb.TaskManager;
@@ -28,22 +29,24 @@ public class Driver implements Runnable {
 	 * @param cpuid            The ID of the CPU that is to be controlled by this driver instance.
 	 * @param disk             The disk that stores all of the programs to be run by the system.
 	 * @param mmu              The Memory Management Unit that controls access to the RAM.
-	 * @param registers        The registers that are associated with this driver's CPU.
+	 * @param registerSize     The the amount of registers that are associated with this driver's CPU.
+	 * @param cacheSize        The size of the cache to be used by the associated CPU.
 	 * @param schedulingPolicy The process scheduling policy that this system will adhere to.
 	 * @throws UninitializedDriverException Thrown if a driver instance is created before the loader has been run. This
 	 *                                      can be fixed by running {@link Driver#loadFile(Memory, File)} prior to
 	 *                                      creating a Driver instance.
 	 * @throws DuplicateIDException         Thrown if the given CPU ID already exists with another CPU.
 	 */
-	public Driver( int cpuid, Memory disk, MMU mmu, Memory registers, CPUSchedulingPolicy schedulingPolicy )
-			throws UninitializedDriverException, DuplicateIDException {
+	public Driver( int cpuid, Memory disk, MMU mmu, int registerSize, int cacheSize,
+			CPUSchedulingPolicy schedulingPolicy )
+			throws UninitializedDriverException, DuplicateIDException, InvalidWordException {
 		if ( loader == null ) {
 			// This makes sure that the loader has already been run. This allows us to easily create multiple Drivers for multi-threading
 			throw new UninitializedDriverException(
 					"Please use the loadFile static method before creating an instance of this class." );
 		}
 
-		this.cpu = new CPU( cpuid, mmu, registers );
+		this.cpu = new CPU( cpuid, mmu, registerSize, cacheSize );
 
 		this.scheduler = new Scheduler( mmu, disk, taskManager, schedulingPolicy );
 		this.dispatcher = new Dispatcher( taskManager, this.cpu );

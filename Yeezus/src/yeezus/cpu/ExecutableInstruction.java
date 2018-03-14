@@ -1,6 +1,9 @@
 package yeezus.cpu;
 
-import yeezus.memory.*;
+import yeezus.memory.InvalidAddressException;
+import yeezus.memory.InvalidWordException;
+import yeezus.memory.Memory;
+import yeezus.memory.Word;
 
 import java.util.function.Consumer;
 
@@ -115,18 +118,17 @@ abstract class ExecutableInstruction implements Executable {
 	static class ConditionalExecutableInstruction extends ExecutableInstruction {
 
 		// The data retrieved from the instruction
-		private int bReg, dReg, data, pid;
+		private int bReg, dReg, data;
+		private Memory cache;
 		private Consumer<Integer> countChanger;
-		private MMU mmu;
 
 		// Interprets the given instruction into a form that can be executed by the system.
-		ConditionalExecutableInstruction( Word instruction, Memory registers, MMU mmu, int pid,
+		ConditionalExecutableInstruction( Word instruction, Memory registers, Memory cache,
 				Consumer<Integer> countChanger ) throws InvalidInstructionException {
 			super( instruction, registers );
 
+			this.cache = cache;
 			this.countChanger = countChanger;
-			this.mmu = mmu;
-			this.pid = pid;
 
 			// Find B-reg
 			int bRegMask = 0x00F00000;
@@ -149,12 +151,12 @@ abstract class ExecutableInstruction implements Executable {
 							+ this.dReg + "(" + this.registers.read( dReg ).getData() + "), " + this.data );
 			switch ( this.type ) {
 				case ST: // Stores content of a reg.  into an address
-					this.mmu.write( this.pid, ( this.data + (int) this.registers.read( this.dReg ).getData() ) / 4,
+					this.cache.write( ( this.data + (int) this.registers.read( this.dReg ).getData() ) / 4,
 							this.registers.read( this.bReg ) );
 					break;
 				case LW: // Loads the content of an address into a reg.
-					this.registers.write( this.dReg, this.mmu.read( this.pid,
-							( this.data + (int) this.registers.read( this.bReg ).getData() ) / 4 ) );
+					this.registers.write( this.dReg,
+							this.cache.read( ( this.data + (int) this.registers.read( this.bReg ).getData() ) / 4 ) );
 					break;
 				case MOVI: // Transfers address/data directly into a register
 					this.registers.write( this.dReg, new Word( this.data ) );

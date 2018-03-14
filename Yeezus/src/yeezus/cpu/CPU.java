@@ -15,8 +15,8 @@ public class CPU {
 
 	private static final ArrayList<Integer> cpuids = new ArrayList<>();
 	private final int cpuid;
-	private MMU mmu;
-	private Memory registers;
+	private final Memory registers;
+	private final Memory cache;
 	private DMAChannel dmaChannel;
 	private PCB pcb;
 	private int pc;
@@ -24,20 +24,22 @@ public class CPU {
 	/**
 	 * Constructs a new CPU from the given parameters.
 	 *
-	 * @param cpuid     The ID of the new CPU. <b>NOTE: This must be a unique value.</b>
-	 * @param mmu       The MMU that manages this system's RAM.
-	 * @param registers The registers to be used by this CPU.
+	 * @param cpuid        The ID of the new CPU. <b>NOTE: This must be a unique value.</b>
+	 * @param mmu          The MMU that manages this system's RAM.
+	 * @param registerSize The amount of registers to be used by this CPU.
+	 * @param cacheSize    The size of the cache to be used by this CPU.
 	 * @throws DuplicateIDException Thrown if the given CPU ID is not unique.
 	 */
-	public CPU( int cpuid, MMU mmu, Memory registers ) throws DuplicateIDException {
+	public CPU( int cpuid, MMU mmu, int registerSize, int cacheSize )
+			throws DuplicateIDException, InvalidWordException {
 		if ( cpuids.contains( cpuid ) ) {
 			throw new DuplicateIDException( "The CPU ID " + cpuid + " already exists in this system." );
 		}
 		this.cpuid = cpuid;
 		cpuids.add( cpuid );
 
-		this.mmu = mmu;
-		this.registers = registers;
+		this.registers = new Memory( registerSize );
+		this.cache = new Memory( cacheSize );
 		this.dmaChannel = new DMAChannel( mmu, registers );
 	}
 
@@ -90,13 +92,13 @@ public class CPU {
 	 * @throws InvalidAddressException     Thrown if an instruction tries to access an invalid address in memory.
 	 */
 	public void run() throws Exception {
-		if ( this.pcb == null || !this.mmu.processMapped( this.pcb.getPID() ) ) {
+		if ( this.pcb == null ) {
 			// Do nothing
 			return;
 		}
 		while ( true ) {
 			// Fetch
-			Word instruction = this.mmu.read( this.pcb.getPID(), this.pc++ );
+			Word instruction = this.cache.read( this.pc++ );
 
 			// Decode
 			ExecutableInstruction executableInstruction = decode( instruction );
@@ -116,13 +118,14 @@ public class CPU {
 		}
 	}
 
+	// For testing
 	protected void debugRun() throws Exception {
 		if ( this.pcb == null ) {
 			// Do nothing
 			return;
 		}
 		// Fetch
-		Word instruction = this.mmu.read( this.pcb.getPID(), this.pc++ );
+		Word instruction = this.cache.read( this.pc++ );
 
 		// Decode
 		ExecutableInstruction executableInstruction = decode( instruction );
@@ -141,6 +144,24 @@ public class CPU {
 	}
 
 	/**
+	 * Retrieves the registers used by this CPU.
+	 *
+	 * @return The registers used by this CPU.
+	 */
+	public Memory getRegisters() {
+		return registers;
+	}
+
+	/**
+	 * Retrieves the cache used by this CPU.
+	 *
+	 * @return The cache used by this CPU.
+	 */
+	public Memory getCache() {
+		return cache;
+	}
+
+	/**
 	 * Decodes the given {@link Word} into an {@link ExecutableInstruction} that the CPU can then execute.
 	 *
 	 * @param word The data to be decoded.
@@ -154,12 +175,12 @@ public class CPU {
 		if ( signature == 0x00000000 ) {
 			return new ExecutableInstruction.ArithmeticExecutableInstruction( word, this.registers );
 		} else if ( signature == 0x40000000 ) {
-			return new ExecutableInstruction.ConditionalExecutableInstruction( word, this.registers, this.mmu,
-					this.pcb.getPID(), ( Integer value ) -> {
-				if ( value != -1 ) {
-					this.pc = value;
-				}
-			} );
+			return new ExecutableInstruction.ConditionalExecutableInstruction( word, this.registers, this.cache,
+					( Integer value ) -> {
+						if ( value != -1 ) {
+							this.pc = value;
+						}
+					} );
 		} else if ( signature == 0x80000000 ) {
 			return new ExecutableInstruction.UnconditionalJumpExecutableInstruction( word, this.registers,
 					( Integer value ) -> {
