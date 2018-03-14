@@ -4,6 +4,8 @@ import yeezus.driver.CPUSchedulingPolicy;
 import yeezus.driver.Driver;
 import yeezus.memory.MMU;
 import yeezus.memory.Memory;
+import yeezus.pcb.PCB;
+import yeezus.pcb.TaskManager;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -35,15 +37,24 @@ public class Main {
 			threads[i].run();
 		}
 
+		// (Busy) Wait for the threads
 		for ( Thread thread : threads ) {
-			thread.join( 500 );
+			thread.join( 5 );
 		}
 
+		// Print out the disk
 		File output = new File( "src/yeezus/Output_File.txt" );
 		output.createNewFile();
 		PrintStream out = new PrintStream( new FileOutputStream( output ) );
 		for ( int i = 0; i < disk.getCapacity(); i++ ) {
 			out.println( disk.read( i ) );
+		}
+
+		// Print out runtime information
+		for ( PCB pcb : TaskManager.INSTANCE.getPCBs() ) {
+			System.out.println(
+					"Process: " + pcb.getPID() + "\nWait Time: " + pcb.getElapsedWaitTime() + "\nRun Time: " + pcb
+							.getElapsedRunTime() + "\n" );
 		}
 	}
 }

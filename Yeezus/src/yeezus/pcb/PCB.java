@@ -1,5 +1,7 @@
 package yeezus.pcb;
 
+import yeezus.memory.Memory;
+
 /**
  * A class to hold various information relating to the processes run by the Yeezus Operating System. The data held by
  * these instances are to be used by the {@link yeezus.driver.Driver} and related classes for their interactions with
@@ -8,11 +10,37 @@ package yeezus.pcb;
 public class PCB {
 
 	private final int pid, startDiskAddress, instructionsLength, inputBufferLength, outputBufferLength, tempBufferLength, priority;
-	private int cpuid;
+	private int cpuid, pc;
 	private long clock;
 	private long elapsedWaitTime;
 	private long elapsedRunTime;
 	private Status status;
+
+	public int getPC() {
+		return pc;
+	}
+
+	public void setPC( int pc ) {
+		this.pc = pc;
+	}
+
+	public Memory getCache() {
+		return cache;
+	}
+
+	public void setCache( Memory cache ) {
+		this.cache = cache;
+	}
+
+	public Memory getRegisters() {
+		return registers;
+	}
+
+	public void setRegisters( Memory registers ) {
+		this.registers = registers;
+	}
+
+	private Memory cache, registers;
 
 	/**
 	 * Constructs a PCB with the given characteristics.

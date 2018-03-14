@@ -119,7 +119,7 @@ public class CPU {
 	}
 
 	// For testing
-	protected void debugRun() throws Exception {
+	public void debugRun() throws Exception {
 		if ( this.pcb == null ) {
 			// Do nothing
 			return;
