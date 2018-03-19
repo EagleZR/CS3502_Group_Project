@@ -171,4 +171,12 @@ public class MMU {
 			this.addressMap.set( pid, null );
 		}
 	}
+
+	public void reset() {
+		this.addressMap.clear();
+		this.freeAddresses.clear();
+		for ( int i = 0; i < this.RAM.getCapacity(); i++ ) {
+			this.freeAddresses.add( i );
+		}
+	}
 }
