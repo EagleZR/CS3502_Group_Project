@@ -15,31 +15,6 @@ public class PCB {
 	private long elapsedWaitTime;
 	private long elapsedRunTime;
 	private Status status;
-
-	public int getPC() {
-		return pc;
-	}
-
-	public void setPC( int pc ) {
-		this.pc = pc;
-	}
-
-	public Memory getCache() {
-		return cache;
-	}
-
-	public void setCache( Memory cache ) {
-		this.cache = cache;
-	}
-
-	public Memory getRegisters() {
-		return registers;
-	}
-
-	public void setRegisters( Memory registers ) {
-		this.registers = registers;
-	}
-
 	private Memory cache, registers;
 
 	/**
@@ -66,6 +41,30 @@ public class PCB {
 		this.outputBufferLength = outputBufferLength;
 		this.tempBufferLength = tempBufferLength;
 		this.priority = priority;
+	}
+
+	public int getPC() {
+		return pc;
+	}
+
+	public void setPC( int pc ) {
+		this.pc = pc;
+	}
+
+	public Memory getCache() {
+		return cache;
+	}
+
+	public void setCache( Memory cache ) {
+		this.cache = cache;
+	}
+
+	public Memory getRegisters() {
+		return registers;
+	}
+
+	public void setRegisters( Memory registers ) {
+		this.registers = registers;
 	}
 
 	/**
@@ -191,11 +190,13 @@ public class PCB {
 	 * @param status The new status of the PCB.
 	 */
 	public synchronized void setStatus( Status status ) {
+		if ( this.status == Status.TERMINATED ) {
+			return;
+		}
+		// System.out.println( "Process " + pid + " status set to " + status );
 		long timestamp = System.currentTimeMillis();
 		long elapsedTime = timestamp - this.clock;
-		if ( status == Status.TERMINATED ) {
-			// TODO Throw Exception about zombies or reincarnation something
-		} else if ( this.status == Status.RUNNING ) {
+		if ( this.status == Status.RUNNING ) {
 			this.elapsedRunTime += elapsedTime;
 		} else {
 			this.elapsedWaitTime += elapsedTime;

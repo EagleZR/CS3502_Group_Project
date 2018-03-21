@@ -37,6 +37,9 @@ public class MMU {
 	 * @return {@code true} if the memory was successfully mapped for the process.
 	 */
 	public synchronized boolean mapMemory( PCB pcb ) {
+		if ( pcb == null ) {
+			return false;
+		}
 		int pid = pcb.getPID();
 		int size = pcb.getTotalSize();
 		// System.out.println( "Loading process " + pid + " into RAM." );
@@ -165,9 +168,12 @@ public class MMU {
 	 * @param pcb The PCB of the process whose memory is to be freed.
 	 */
 	public synchronized void terminateProcessMemory( PCB pcb ) {
+		if ( pcb == null ) {
+			return;
+		}
 		int pid = pcb.getPID();
 		// System.out.println( "Removing process " + pid + " from RAM." );
-		if ( this.addressMap.size() > pid ) {
+		if ( this.addressMap.size() > pid && processMapped( pcb ) ) {
 			while ( !this.addressMap.get( pid ).isEmpty() ) {
 				this.freeAddresses.add( this.addressMap.get( pid ).remove( 0 ) );
 			}

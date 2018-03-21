@@ -102,15 +102,17 @@ public class CPU implements Runnable {
 		// System.out.println( "CPU " + this.cpuid + " is executing." );
 		while ( true ) {
 			// Fetch
-			if ( pc >= 100 ) { // Weird that after I check for this, it no longer is an issue... :/
-				System.err.println( "PC " + pc + " is invalid." );
-				System.err.println( "PID: " + pcb.getPID() );
-				System.err.println( "Previous Instruction: " + this.previousInstruction );
-				System.err.println( "Registers: " );
+			if ( pc >= 100 ) {
+				StringBuilder errorReport = new StringBuilder(
+						"PC " + pc + " is invalid.\nPID: " + pcb.getPID() + "\nInstruction Count: " + pcb
+								.getExecutionCount() + "\nPrevious Instruction: " + this.previousInstruction
+								+ "\nRegisters: " );
 				for ( int i = 0; i < this.registers.getCapacity(); i++ ) {
-					System.err.println( "\t" + this.registers.read( i ) );
+					errorReport.append( "\n\t" + this.registers.read( i ) );
 				}
-				System.exit( 1 );
+				System.err.println( errorReport );
+				pcb.setStatus( PCB.Status.TERMINATED );
+				return;
 			}
 			Word instruction = this.cache.read( this.pc++ );
 
@@ -131,6 +133,8 @@ public class CPU implements Runnable {
 			} else {
 				executableInstruction.run();
 			}
+
+			this.previousInstruction = executableInstruction;
 		}
 	}
 
@@ -157,8 +161,6 @@ public class CPU implements Runnable {
 		} else {
 			executableInstruction.run();
 		}
-
-		this.previousInstruction = executableInstruction;
 	}
 
 	/**
