@@ -8,7 +8,8 @@ package yeezus.pcb;
 public class PCB {
 
 	private final int pid, startDiskAddress, instructionsLength, inputBufferLength, outputBufferLength, tempBufferLength, priority;
-	private int cpuid, executionCount, numIO;
+	private int cpuid, executionCount;
+	private int numIO=0;
 	private long clock;
 	private long elapsedWaitTime;
 	private long elapsedRunTime;
@@ -30,7 +31,6 @@ public class PCB {
 		this.clock = System.currentTimeMillis();
 		this.elapsedWaitTime = 0;
 		this.elapsedRunTime = 0;
-		this.numIO = 0;
 		this.status = Status.NEW;
 		this.pid = pid;
 		this.startDiskAddress = startDiskAddress;
@@ -67,6 +67,8 @@ public class PCB {
 	 * @return The number of IO operations in this process.
 	 */
 	public int getNumIO(){return this.numIO;}
+
+	public void incNumIO(){ ++this.numIO;}
 
 	/**
 	 * The amount of instructions for this process.
