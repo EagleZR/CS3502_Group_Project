@@ -76,12 +76,15 @@ public class Driver implements Runnable {
 	 * data has been written back to the disk.
 	 */
 	@Override public void run() {
+		// System.out.println( "Starting Driver " + this.cpu.getCPUID() );
 		while ( !taskManager.getJobQueue().isEmpty() ) {
 			this.scheduler.run();
 			this.dispatcher.run();
 			this.cpu.run();
 			// TODO Handle interrupts
 		}
+
+		// System.out.println( "Terminating Driver " + this.cpu.getCPUID() );
 
 		// Ensure that memory is written back to the source
 		this.dispatcher.run();

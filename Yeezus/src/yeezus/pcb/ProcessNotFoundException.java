@@ -6,7 +6,7 @@ package yeezus.pcb;
  * @author Mark Zeagler
  * @version 1.0
  */
-public class ProcessNotFoundException extends Exception {
+public class ProcessNotFoundException extends RuntimeException {
 
 	public ProcessNotFoundException( String s ) {
 		super( s );

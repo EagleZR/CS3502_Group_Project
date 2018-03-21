@@ -29,7 +29,7 @@ public class Scheduler implements Runnable {
 		// Remove terminated processes from the RAM
 		for ( PCB pcb : taskManager.getPCBs() ) {
 			if ( pcb.getStatus() == PCB.Status.TERMINATED && this.mmu.processMapped( pcb ) ) {
-				System.out.println( "Writing process " + pcb.getPID() + " back to disk." );
+				// System.out.println( "Writing process " + pcb.getPID() + " back to disk." );
 				try {
 					for ( int i = 0; i < pcb.getTotalSize(); i++ ) {
 						this.disk.write( pcb.getStartDiskAddress() + i, this.mmu.read( pcb, i ) );

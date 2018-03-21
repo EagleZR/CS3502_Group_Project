@@ -195,8 +195,7 @@ public class PCB {
 		long elapsedTime = timestamp - this.clock;
 		if ( status == Status.TERMINATED ) {
 			// TODO Throw Exception about zombies or reincarnation something
-		}
-		if ( this.status == Status.RUNNING ) {
+		} else if ( this.status == Status.RUNNING ) {
 			this.elapsedRunTime += elapsedTime;
 		} else {
 			this.elapsedWaitTime += elapsedTime;

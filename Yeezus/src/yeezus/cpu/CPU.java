@@ -20,6 +20,7 @@ public class CPU implements Runnable {
 	private DMAChannel dmaChannel;
 	private PCB pcb;
 	private int pc;
+	private ExecutableInstruction previousInstruction;
 
 	/**
 	 * Constructs a new CPU from the given parameters.
@@ -35,6 +36,7 @@ public class CPU implements Runnable {
 		if ( cpuids.contains( cpuid ) ) {
 			throw new DuplicateIDException( "The CPU ID " + cpuid + " already exists in this system." );
 		}
+		// System.out.println( "Creating CPU " + cpuid );
 		this.cpuid = cpuid;
 		cpuids.add( cpuid );
 
@@ -94,10 +96,22 @@ public class CPU implements Runnable {
 	public void run() {
 		if ( this.pcb == null ) {
 			// Do nothing
+			// System.out.println( "CPU " + this.cpuid + " has nothing to do." );
 			return;
 		}
+		// System.out.println( "CPU " + this.cpuid + " is executing." );
 		while ( true ) {
 			// Fetch
+			if ( pc >= 100 ) { // Weird that after I check for this, it no longer is an issue... :/
+				System.err.println( "PC " + pc + " is invalid." );
+				System.err.println( "PID: " + pcb.getPID() );
+				System.err.println( "Previous Instruction: " + this.previousInstruction );
+				System.err.println( "Registers: " );
+				for ( int i = 0; i < this.registers.getCapacity(); i++ ) {
+					System.err.println( "\t" + this.registers.read( i ) );
+				}
+				System.exit( 1 );
+			}
 			Word instruction = this.cache.read( this.pc++ );
 
 			// Decode
@@ -143,6 +157,8 @@ public class CPU implements Runnable {
 		} else {
 			executableInstruction.run();
 		}
+
+		this.previousInstruction = executableInstruction;
 	}
 
 	/**

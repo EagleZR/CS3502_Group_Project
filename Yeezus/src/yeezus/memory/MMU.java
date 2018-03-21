@@ -39,12 +39,12 @@ public class MMU {
 	public synchronized boolean mapMemory( PCB pcb ) {
 		int pid = pcb.getPID();
 		int size = pcb.getTotalSize();
-		System.out.println( "Loading process " + pid + " into RAM." );
+		// System.out.println( "Loading process " + pid + " into RAM." );
 		try {
 			for ( int i = 0; i < size; i++ ) {
 				mapAddress( pid, i );
 			}
-			System.out.println( "The process was successfully mapped." );
+			// System.out.println( "The process was successfully mapped." );
 			return true;
 		} catch ( InvalidAddressException e ) {
 			terminateProcessMemory( pcb );
@@ -166,7 +166,7 @@ public class MMU {
 	 */
 	public synchronized void terminateProcessMemory( PCB pcb ) {
 		int pid = pcb.getPID();
-		System.out.println( "Removing process " + pid + " from RAM." );
+		// System.out.println( "Removing process " + pid + " from RAM." );
 		if ( this.addressMap.size() > pid ) {
 			while ( !this.addressMap.get( pid ).isEmpty() ) {
 				this.freeAddresses.add( this.addressMap.get( pid ).remove( 0 ) );

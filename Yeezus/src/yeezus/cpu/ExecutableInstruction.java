@@ -67,10 +67,7 @@ abstract class ExecutableInstruction implements Runnable {
 
 		// Executes the actions specified by this instruction
 		@Override public void run() throws InvalidAddressException, InvalidWordException {
-			System.out.println(
-					"Executing: " + this.type + ", " + this.s1 + "(" + this.registers.read( s1 ).getData() + "), "
-							+ this.s2 + "(" + this.registers.read( s2 ).getData() + "), " + this.d + "("
-							+ this.registers.read( s1 ).getData() + ")" );
+			// System.out.println("Executing: " + this.type + ", " + this.s1 + "(" + this.registers.read( s1 ).getData() + "), "+ this.s2 + "(" + this.registers.read( s2 ).getData() + "), " + this.d + "("+ this.registers.read( s1 ).getData() + ")" );
 			switch ( this.type ) { // Not the most efficient, but it will work for now
 				case MOV: // Transfers the content of one register into another
 					super.registers.write( this.d, super.registers.read( this.s1 ) );
@@ -110,6 +107,12 @@ abstract class ExecutableInstruction implements Runnable {
 					break;
 			}
 		}
+
+		@Override public String toString() {
+			return this.type + ", " + this.s1 + "(" + this.registers.read( s1 ).getData() + "), " + this.s2 + "("
+					+ this.registers.read( s2 ).getData() + "), " + this.d + "(" + this.registers.read( s1 ).getData()
+					+ ")";
+		}
 	}
 
 	/**
@@ -146,9 +149,7 @@ abstract class ExecutableInstruction implements Runnable {
 
 		// Executes the actions specified by this instruction
 		@Override public void run() throws InvalidWordException, InvalidAddressException {
-			System.out.println(
-					"Executing: " + this.type + ", " + this.bReg + "(" + this.registers.read( bReg ).getData() + "), "
-							+ this.dReg + "(" + this.registers.read( dReg ).getData() + "), " + this.data );
+			// System.out.println("Executing: " + this.type + ", " + this.bReg + "(" + this.registers.read( bReg ).getData() + "), "+ this.dReg + "(" + this.registers.read( dReg ).getData() + "), " + this.data );
 			switch ( this.type ) {
 				case ST: // Stores content of a reg.  into an address
 					this.cache.write( ( this.data + (int) this.registers.read( this.dReg ).getData() ) / 4,
@@ -209,6 +210,11 @@ abstract class ExecutableInstruction implements Runnable {
 					break;
 			}
 		}
+
+		@Override public String toString() {
+			return this.type + ", " + this.bReg + "(" + this.registers.read( bReg ).getData() + "), " + this.dReg + "("
+					+ this.registers.read( dReg ).getData() + "), " + this.data;
+		}
 	}
 
 	/**
@@ -233,7 +239,7 @@ abstract class ExecutableInstruction implements Runnable {
 
 		// Executes the actions specified by this instruction
 		@Override public void run() {
-			System.out.println( "Executing: " + this.type + ", " + this.address );
+			// System.out.println( "Executing: " + this.type + ", " + this.address );
 			switch ( this.type ) {
 				case HLT: // Logical end of program
 					// Handled elsewhere, don't worry about it
@@ -245,6 +251,10 @@ abstract class ExecutableInstruction implements Runnable {
 					// Do nothing
 					break;
 			}
+		}
+
+		@Override public String toString() {
+			return this.type + ", " + this.address;
 		}
 	}
 
