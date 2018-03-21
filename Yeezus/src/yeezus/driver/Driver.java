@@ -49,7 +49,7 @@ public class Driver implements Runnable {
 		this.cpu = new CPU( cpuid, mmu, registerSize, cacheSize );
 
 		this.scheduler = new Scheduler( mmu, disk, taskManager, schedulingPolicy );
-		this.dispatcher = new Dispatcher( taskManager, this.cpu );
+		this.dispatcher = new Dispatcher( taskManager, this.cpu, mmu );
 	}
 
 	/**

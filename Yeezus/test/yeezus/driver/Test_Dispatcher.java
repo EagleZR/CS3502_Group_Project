@@ -23,7 +23,7 @@ public class Test_Dispatcher {
 		taskManager = TaskManager.INSTANCE;
 		mmu = new MMU( new Memory( 1024 ) );
 		cpu = new CPU( 0, mmu, 16, 100 );
-		dispatcher = new Dispatcher( taskManager, cpu );
+		dispatcher = new Dispatcher( taskManager, cpu, mmu );
 		taskManager.addPCB( 1, 0, 10, 14, 20, 10, 1 );
 		taskManager.getReadyQueue().add( taskManager.getPCB( 1 ) );
 		PCB pcb = taskManager.getPCB( 1 );
