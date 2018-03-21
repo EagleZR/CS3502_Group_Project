@@ -27,16 +27,29 @@ public class Main {
 
 		Thread[] threads = new Thread[numCPUs];
 
-		// Start Drivers
+		// Create Drivers
 		for ( int i = 0; i < numCPUs; i++ ) {
-			Driver driver = new Driver( 0, disk, mmu, registers, CPUSchedulingPolicy.FCFS );
+			Driver driver = new Driver( i, disk, mmu, registers, CPUSchedulingPolicy.FCFS );
 			threads[i] = new Thread( driver );
-			threads[i].run();
 		}
 
-		for ( Thread thread : threads ) {
-			thread.join( 500 );
+		// Log start time
+		long startTime = System.currentTimeMillis();
+
+		// Start threads
+		for ( int i = 0; i < numCPUs; i++ ) {
+			threads[i].start();
 		}
+
+		// (Busy) Wait for the threads
+		for ( Thread thread : threads ) {
+			thread.join( 5 );
+		}
+
+		// Log end time
+		long endTime = System.currentTimeMillis();
+
+		System.out.println( "The system completed in " + ( endTime - startTime ) + " milliseconds." );
 
 		File output = new File( "src/yeezus/Output_File.txt" );
 		output.createNewFile();
