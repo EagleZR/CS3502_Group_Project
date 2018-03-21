@@ -15,7 +15,14 @@ public class Test_PCB {
 	PCB PCB;
 
 	@Before public void setUp() {
+
 		this.PCB = new PCB( 14, 10, 6, 10, 13, 10, 2 );
+
+	}
+
+	@Test public void getNumIO() throws Exception{
+		assertEquals(3, this.PCB.getNumIO());
+
 	}
 
 	@Test public void getPid() throws Exception {
@@ -96,5 +103,7 @@ public class Test_PCB {
 		Thread.sleep( 1 );
 		assertNotEquals( timestamp, this.PCB.getElapsedRunTime() );
 	}
+
+
 
 }
