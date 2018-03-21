@@ -27,13 +27,13 @@ public class Test_Dispatcher {
 		taskManager.addPCB( 1, 0, 10, 14, 20, 10, 1 );
 		taskManager.getReadyQueue().add( taskManager.getPCB( 1 ) );
 		PCB pcb = taskManager.getPCB( 1 );
-		mmu.mapMemory( 1, 54 );
+		mmu.mapMemory( pcb );
 		for ( int i = 0; i < pcb.getInstructionsLength() - 1; i++ ) {
-			mmu.write( 1, i, new Word( "0x13000000" ) ); // NOP
+			mmu.write( pcb, i, new Word( "0x13000000" ) ); // NOP
 		}
-		mmu.write( 1, 9, new Word( "0x92000000" ) ); // HLT
+		mmu.write( pcb, 9, new Word( "0x92000000" ) ); // HLT
 		for ( int i = pcb.getInstructionsLength(); i < pcb.getTotalSize(); i++ ) {
-			mmu.write( 1, i, new Word( i ) );
+			mmu.write( pcb, i, new Word( i ) );
 		}
 
 		// Test that the dispatcher loads the next process into an empty CPU
@@ -56,9 +56,8 @@ public class Test_Dispatcher {
 	@Test public void testLoadCache() throws Exception {
 		PCB pcb = taskManager.getPCB( 1 );
 		Memory cache = cpu.getCache();
-		int pid = pcb.getPID();
 		for ( int i = 0; i < pcb.getTotalSize(); i++ ) {
-			assertEquals( mmu.read( pid, i ), cache.read( i ) );
+			assertEquals( mmu.read( pcb, i ), cache.read( i ) );
 		}
 	}
 
@@ -84,9 +83,9 @@ public class Test_Dispatcher {
 		// Make ready new process
 		taskManager.addPCB( 2, 55, 4, 9, 7, 6, 2 );
 		PCB newProcess = taskManager.getPCB( 2 );
-		this.mmu.mapMemory( 2, newProcess.getTotalSize() );
+		this.mmu.mapMemory( TaskManager.INSTANCE.getPCB( 2 ) );
 		for ( int i = 0; i < newProcess.getTotalSize(); i++ ) {
-			mmu.write( 1, i, new Word( i * i ) );
+			mmu.write( TaskManager.INSTANCE.getPCB( 1 ), i, new Word( i * i ) );
 		}
 		taskManager.getReadyQueue().add( newProcess );
 
@@ -100,7 +99,7 @@ public class Test_Dispatcher {
 
 		// Check that the cache has been swapped, and old changes are reflected in the PCB
 		for ( int i = 0; i < newProcess.getTotalSize(); i++ ) {
-			assertEquals( mmu.read( 2, i ), this.cpu.getCache().read( i ) );
+			assertEquals( mmu.read( TaskManager.INSTANCE.getPCB( 2 ), i ), this.cpu.getCache().read( i ) );
 		}
 		checkMemory( oldRegisters, oldProcess.getRegisters() );
 		checkMemory( oldCache, oldProcess.getCache() );

@@ -28,14 +28,13 @@ public class Scheduler implements Runnable {
 	@Override public void run() {
 		// Remove terminated processes from the RAM
 		for ( PCB pcb : taskManager.getPCBs() ) {
-			int pid = pcb.getPID();
-			if ( pcb.getStatus() == PCB.Status.TERMINATED && this.mmu.processMapped( pid ) ) {
+			if ( pcb.getStatus() == PCB.Status.TERMINATED && this.mmu.processMapped( pcb ) ) {
 				System.out.println( "Writing process " + pcb.getPID() + " back to disk." );
 				try {
 					for ( int i = 0; i < pcb.getTotalSize(); i++ ) {
-						this.disk.write( pcb.getStartDiskAddress() + i, this.mmu.read( pid, i ) );
+						this.disk.write( pcb.getStartDiskAddress() + i, this.mmu.read( pcb, i ) );
 					}
-					this.mmu.terminatePID( pid );
+					this.mmu.terminateProcessMemory( pcb );
 				} catch ( InvalidAddressException e ) {
 					// Do nothing, process has already been removed
 				}
@@ -63,10 +62,10 @@ public class Scheduler implements Runnable {
 
 			// Verify that the process's memory can be mapped
 			int totalSize = next.getTotalSize();
-			if ( mmu.mapMemory( next.getPID(), totalSize ) ) {
+			if ( mmu.mapMemory( next ) ) {
 				for ( int i = 0; i < totalSize; i++ ) {
 					try {
-						mmu.write( next.getPID(), i, disk.read( next.getStartDiskAddress() + i ) );
+						mmu.write( next, i, disk.read( next.getStartDiskAddress() + i ) );
 					} catch ( InvalidAddressException e ) {
 						e.printStackTrace();
 						System.err.println(

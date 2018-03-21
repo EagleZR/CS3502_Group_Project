@@ -34,7 +34,7 @@ public class Test_Scheduler {
 	@Test public void testFCFS() throws Exception { // Job 1
 		Scheduler scheduler = new Scheduler( this.mmu, this.disk, this.taskManager, CPUSchedulingPolicy.FCFS );
 		scheduler.run();
-		assertEquals( "0xC050005C", this.mmu.read( 1, 0 ).toString() );
+		assertEquals( "0xC050005C", this.mmu.read( TaskManager.INSTANCE.getPCB( 1 ), 0 ).toString() );
 		PCB pcb = this.taskManager.getPCB( 1 );
 		/* TODO Check by logical addresses using the MMU
 		assertEquals( 0, pcb.getStartRAMInstructionAddress() );
@@ -49,7 +49,7 @@ public class Test_Scheduler {
 	@Test public void testPriority() throws Exception {
 		Scheduler scheduler = new Scheduler( this.mmu, this.disk, this.taskManager, CPUSchedulingPolicy.Priority );
 		scheduler.run();
-		assertEquals( "0xC050004C", this.mmu.read( 8, 0 ).toString() );
+		assertEquals( "0xC050004C", this.mmu.read( TaskManager.INSTANCE.getPCB( 8 ), 0 ).toString() );
 		PCB pcb = this.taskManager.getPCB( 8 );
 		/*
 		assertEquals( 0, pcb.getStartRAMInstructionAddress() );
