@@ -66,7 +66,8 @@ public class Main {
 		for ( PCB pcb : TaskManager.INSTANCE.getPCBs() ) {
 			System.out.println(
 					"Process: " + pcb.getPID() + "\nWait Time: " + pcb.getElapsedWaitTime() + "\nRun Time: " + pcb
-							.getElapsedRunTime() + "\nExecution Count: " + pcb.getExecutionCount() + "\n" );
+							.getElapsedRunTime() + "\nExecution Count: " + pcb.getExecutionCount() + "\n" +
+							"IO Count: " +  pcb.getNumIO());
 		}
 	}
 }

@@ -10,6 +10,7 @@ import yeezus.memory.Memory;
 public class PCB {
 
 	private final int pid, startDiskAddress, instructionsLength, inputBufferLength, outputBufferLength, tempBufferLength, priority;
+	private int numIO=0;
 	private int cpuid, pc, executionCount;
 	private long clock;
 	private long elapsedWaitTime;
@@ -85,6 +86,16 @@ public class PCB {
 	public synchronized void setCPUID( int cpuid ) {
 		this.cpuid = cpuid;
 	}
+
+
+	/**
+	 * The amount of IO operations for this process.
+	 *
+	 * @return The number of IO operations in this process.
+	 */
+	public int getNumIO(){return this.numIO;}
+
+	public void incNumIO(){ ++this.numIO;}
 
 	/**
 	 * The amount of instructions for this process.

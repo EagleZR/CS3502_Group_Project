@@ -19,6 +19,7 @@ public class DMAChannel {
 	}
 
 	public void handle( ExecutableInstruction.IOExecutableInstruction instruction, PCB pcb ) {
+		pcb.incNumIO();
 		int reg1 = instruction.reg1;
 		int reg2 = instruction.reg2;
 
@@ -52,5 +53,6 @@ public class DMAChannel {
 				// System.out.println( "Writing " + registers.read( instruction.reg1 ).getData() + " into address: "+ registers.read( instruction.reg2 ).getData() / 4 );
 			}
 		}
+
 	}
 }
