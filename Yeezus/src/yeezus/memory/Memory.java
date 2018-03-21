@@ -27,7 +27,7 @@ public class Memory {
 	 * @return The {@link Word} stored at the given physical address.
 	 * @throws InvalidAddressException Thrown if the physical address given is outside of the scope of this memory.memory.
 	 */
-	public Word read( int physicalAddress ) throws InvalidAddressException {
+	public synchronized Word read( int physicalAddress ) throws InvalidAddressException {
 		if ( physicalAddress > storage.length ) {
 			throw new InvalidAddressException(
 					"Address: " + physicalAddress + " is too high. The capacity is: " + storage.length );
@@ -45,7 +45,7 @@ public class Memory {
 	 * @param word            The {@link Word} to be stored at the physical address.
 	 * @throws InvalidAddressException Thrown if the physical address given is outside of the scope of this memory.memory.
 	 */
-	public void write( int physicalAddress, Word word ) throws InvalidAddressException {
+	public synchronized void write( int physicalAddress, Word word ) throws InvalidAddressException {
 		if ( physicalAddress > storage.length ) {
 			throw new InvalidAddressException(
 					"Address: " + physicalAddress + " is too high. The capacity is: " + storage.length );
