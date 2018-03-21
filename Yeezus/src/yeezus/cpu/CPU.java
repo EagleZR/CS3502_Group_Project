@@ -21,6 +21,7 @@ public class CPU implements Runnable {
 	private PCB pcb;
 	private int pc;
 	private ExecutableInstruction previousInstruction;
+	private ArrayList<String> log;
 
 	/**
 	 * Constructs a new CPU from the given parameters.
@@ -43,6 +44,7 @@ public class CPU implements Runnable {
 		this.registers = new Memory( registerSize );
 		this.cache = new Memory( cacheSize );
 		this.dmaChannel = new DMAChannel( mmu, registers );
+		this.log = new ArrayList<>();
 	}
 
 	/**
@@ -51,6 +53,14 @@ public class CPU implements Runnable {
 	public static void reset() {
 		cpuids.clear();
 		// TODO Reset everything
+	}
+
+	protected synchronized int getPC() {
+		return pc;
+	}
+
+	protected synchronized void setPC( int pc ) {
+		this.pc = pc;
 	}
 
 	/**
@@ -79,7 +89,7 @@ public class CPU implements Runnable {
 	public void setProcess( PCB pcb ) {
 		this.pcb = pcb;
 		this.pcb.setStatus( PCB.Status.RUNNING );
-		this.pc = 0;
+		setPC( 0 );
 	}
 
 	/**
@@ -94,7 +104,7 @@ public class CPU implements Runnable {
 	 * @throws InvalidAddressException     Thrown if an instruction tries to access an invalid address in memory.
 	 */
 	public void run() {
-		if ( this.pcb == null ) {
+		if ( this.pcb == null || this.pcb.getStatus() == PCB.Status.TERMINATED ) {
 			// Do nothing
 			// System.out.println( "CPU " + this.cpuid + " has nothing to do." );
 			return;
@@ -102,19 +112,16 @@ public class CPU implements Runnable {
 		// System.out.println( "CPU " + this.cpuid + " is executing." );
 		while ( true ) {
 			// Fetch
-			if ( pc >= 100 ) {
-				StringBuilder errorReport = new StringBuilder(
-						"PC " + pc + " is invalid.\nPID: " + pcb.getPID() + "\nInstruction Count: " + pcb
-								.getExecutionCount() + "\nPrevious Instruction: " + this.previousInstruction
-								+ "\nRegisters: " );
-				for ( int i = 0; i < this.registers.getCapacity(); i++ ) {
-					errorReport.append( "\n\t" + this.registers.read( i ) );
+			if ( getPC() >= this.pcb.getInstructionsLength() ) {
+				System.err.println( generateDump() );
+				while ( !log.isEmpty() ) {
+					System.out.println( this.log.remove( this.log.size() - 1 ) );
 				}
-				System.err.println( errorReport );
 				pcb.setStatus( PCB.Status.TERMINATED );
 				return;
 			}
-			Word instruction = this.cache.read( this.pc++ );
+			Word instruction = this.cache.read( getPC() );
+			setPC( getPC() + 1 );
 
 			// Decode
 			ExecutableInstruction executableInstruction = decode( instruction );
@@ -135,6 +142,7 @@ public class CPU implements Runnable {
 			}
 
 			this.previousInstruction = executableInstruction;
+			this.log.add( generateDump() );
 		}
 	}
 
@@ -145,7 +153,8 @@ public class CPU implements Runnable {
 			return;
 		}
 		// Fetch
-		Word instruction = this.cache.read( this.pc++ );
+		Word instruction = this.cache.read( getPC() );
+		setPC( getPC() + 1 );
 
 		// Decode
 		ExecutableInstruction executableInstruction = decode( instruction );
@@ -195,21 +204,22 @@ public class CPU implements Runnable {
 		if ( signature == 0x00000000 ) {
 			return new ExecutableInstruction.ArithmeticExecutableInstruction( word, this.registers );
 		} else if ( signature == 0x40000000 ) {
-			return new ExecutableInstruction.ConditionalExecutableInstruction( word, this.registers, this.cache,
-					( Integer value ) -> {
-						if ( value != -1 ) {
-							this.pc = value;
-						}
-					} );
+			return new ExecutableInstruction.ConditionalExecutableInstruction( word, this.registers, this.cache, this );
 		} else if ( signature == 0x80000000 ) {
-			return new ExecutableInstruction.UnconditionalJumpExecutableInstruction( word, this.registers,
-					( Integer value ) -> {
-						if ( value != -1 ) {
-							this.pc = value;
-						}
-					} );
+			return new ExecutableInstruction.UnconditionalJumpExecutableInstruction( word, this.registers, this );
 		} else {
 			return new ExecutableInstruction.IOExecutableInstruction( word, this.registers );
 		}
+	}
+
+	public String generateDump() {
+		StringBuilder dumpReport = new StringBuilder(
+				"CPU: " + cpuid + "\nPC: " + getPC() + "\nPID: " + pcb.getPID() + "\nInstruction Count: " + pcb
+						.getExecutionCount() + "\nPrevious Instruction: " + this.previousInstruction
+						+ "\nRegisters: " );
+		for ( int i = 0; i < this.registers.getCapacity(); i++ ) {
+			dumpReport.append( "\n\t" ).append( this.registers.read( i ) );
+		}
+		return dumpReport.toString();
 	}
 }

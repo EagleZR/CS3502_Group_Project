@@ -5,8 +5,6 @@ import yeezus.memory.InvalidWordException;
 import yeezus.memory.Memory;
 import yeezus.memory.Word;
 
-import java.util.function.Consumer;
-
 import static yeezus.cpu.InstructionSet.values;
 
 /**
@@ -120,18 +118,18 @@ abstract class ExecutableInstruction implements Runnable {
 	 */
 	static class ConditionalExecutableInstruction extends ExecutableInstruction {
 
+		CPU cpu;
 		// The data retrieved from the instruction
 		private int bReg, dReg, data;
 		private Memory cache;
-		private Consumer<Integer> countChanger;
 
 		// Interprets the given instruction into a form that can be executed by the system.
-		ConditionalExecutableInstruction( Word instruction, Memory registers, Memory cache,
-				Consumer<Integer> countChanger ) throws InvalidInstructionException {
+		ConditionalExecutableInstruction( Word instruction, Memory registers, Memory cache, CPU cpu )
+				throws InvalidInstructionException {
 			super( instruction, registers );
 
 			this.cache = cache;
-			this.countChanger = countChanger;
+			this.cpu = cpu;
 
 			// Find B-reg
 			int bRegMask = 0x00F00000;
@@ -182,28 +180,30 @@ abstract class ExecutableInstruction implements Runnable {
 							new Word( ( super.registers.read( this.bReg ).getData() < this.data ? 1 : 0 ) ) );
 					break;
 				case BEQ: // Branches to an address when content of B-reg = D-reg
-					this.countChanger.accept(
+					this.cpu.setPC(
 							this.registers.read( this.bReg ).getData() == this.registers.read( this.dReg ).getData() ?
 									this.data / 4 :
-									-1 );
+									this.cpu.getPC() );
 					break;
 				case BNE: // Branches to an address when content of B-reg <> D-reg
-					this.countChanger.accept(
+					this.cpu.setPC(
 							this.registers.read( this.bReg ).getData() != this.registers.read( this.dReg ).getData() ?
 									this.data / 4 :
-									-1 );
+									this.cpu.getPC() );
 					break;
 				case BEZ: // Branches to an address when content of B-reg = 0
-					this.countChanger.accept( this.registers.read( this.bReg ).getData() == 0 ? this.data / 4 : -1 );
+					this.cpu.setPC(
+							this.registers.read( this.bReg ).getData() == 0 ? this.data / 4 : this.cpu.getPC() );
 					break;
 				case BNZ: // Branches to an address when content of B-reg <> 0
-					this.countChanger.accept( this.registers.read( this.bReg ).getData() != 0 ? this.data / 4 : -1 );
+					this.cpu.setPC(
+							this.registers.read( this.bReg ).getData() != 0 ? this.data / 4 : this.cpu.getPC() );
 					break;
 				case BGZ: // Branches to an address when content of B-reg > 0
-					this.countChanger.accept( this.registers.read( this.bReg ).getData() > 0 ? this.data / 4 : -1 );
+					this.cpu.setPC( this.registers.read( this.bReg ).getData() > 0 ? this.data / 4 : this.cpu.getPC() );
 					break;
 				case BLZ: // Branches to an address when content of B-reg < 0
-					this.countChanger.accept( this.registers.read( this.bReg ).getData() < 0 ? this.data / 4 : -1 );
+					this.cpu.setPC( this.registers.read( this.bReg ).getData() < 0 ? this.data / 4 : this.cpu.getPC() );
 					break;
 				case NOP: // Does nothing and moves to next instruction
 					// Do nothing
@@ -222,15 +222,15 @@ abstract class ExecutableInstruction implements Runnable {
 	 */
 	static class UnconditionalJumpExecutableInstruction extends ExecutableInstruction {
 
-		Consumer<Integer> countChanger;
+		private CPU cpu;
 		// The data retrieved from the instruction
 		private int address;
 
 		// Interprets the given instruction into a form that can be executed by the system.
-		UnconditionalJumpExecutableInstruction( Word instruction, Memory registers, Consumer<Integer> countChanger )
+		UnconditionalJumpExecutableInstruction( Word instruction, Memory registers, CPU cpu )
 				throws InvalidInstructionException {
 			super( instruction, registers );
-			this.countChanger = countChanger;
+			this.cpu = cpu;
 
 			// Find address
 			int addressMask = 0x00FFFFFF;
@@ -245,7 +245,7 @@ abstract class ExecutableInstruction implements Runnable {
 					// Handled elsewhere, don't worry about it
 					break;
 				case JMP: // Jumps to a specified location
-					this.countChanger.accept( address / 4 );
+					this.cpu.setPC( address / 4 );
 					break;
 				case NOP: // Does nothing and moves to next instruction
 					// Do nothing
@@ -298,6 +298,11 @@ abstract class ExecutableInstruction implements Runnable {
 			//					// Do nothing
 			//					break;
 			//			}
+		}
+
+		@Override public String toString() {
+			return this.type + ", " + this.reg1 + "(" + this.registers.read( reg1 ).getData() + "), " + this.reg2 + "("
+					+ this.registers.read( reg2 ).getData() + "), " + this.address;
 		}
 	}
 }

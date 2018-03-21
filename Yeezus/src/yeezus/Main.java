@@ -33,7 +33,12 @@ public class Main {
 		// Create Drivers
 		for ( int i = 0; i < NUM_CPUS; i++ ) {
 			Driver driver = new Driver( i, disk, mmu, REGISTER_SIZE, CACHE_SIZE, CPUSchedulingPolicy.FCFS );
-			threads[i] = new Thread( driver );
+			Thread newThread = new Thread( driver );
+			threads[i] = newThread;
+			newThread.setUncaughtExceptionHandler( ( t, e ) -> {
+				e.printStackTrace();
+				System.err.println( driver.getCpu().generateDump() );
+			} );
 		}
 
 		// Log start time
@@ -66,8 +71,8 @@ public class Main {
 		for ( PCB pcb : TaskManager.INSTANCE.getPCBs() ) {
 			System.out.println(
 					"Process: " + pcb.getPID() + "\nWait Time: " + pcb.getElapsedWaitTime() + "\nRun Time: " + pcb
-							.getElapsedRunTime() + "\nExecution Count: " + pcb.getExecutionCount() + "\n" +
-							"IO Count: " +  pcb.getNumIO());
+							.getElapsedRunTime() + "\nExecution Count: " + pcb.getExecutionCount() + "\n" + "IO Count: "
+							+ pcb.getNumIO() + "\n" );
 		}
 	}
 }

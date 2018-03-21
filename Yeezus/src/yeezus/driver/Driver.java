@@ -52,6 +52,10 @@ public class Driver implements Runnable {
 		this.dispatcher = new Dispatcher( taskManager, this.cpu, mmu );
 	}
 
+	public CPU getCpu() {
+		return cpu;
+	}
+
 	/**
 	 * This loads a file onto the disk in preparation for the creation of Dispatcher instances which will load and
 	 * execute the programs contained in the file.
