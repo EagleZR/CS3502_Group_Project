@@ -12,7 +12,11 @@ import java.io.PrintStream;
 
 public class Main {
 
+	// System Variables
 	private final static int NUM_CPUS = 4;
+	private final static CPUSchedulingPolicy POLICY = CPUSchedulingPolicy.FCFS;
+
+	// Memory Data
 	private final static int DISK_SIZE = 2048;
 	private final static int RAM_SIZE = 1024;
 	private final static int CACHE_SIZE = 100;
@@ -29,7 +33,7 @@ public class Main {
 			// Initialize and create Driver
 			Driver.loadFile( disk,
 					new File( Main.class.getClassLoader().getResource( "Program-File.txt" ).getFile() ) );
-			driver = new Driver( NUM_CPUS, disk, REGISTER_SIZE, CACHE_SIZE, RAM_SIZE, CPUSchedulingPolicy.FCFS );
+			driver = new Driver( NUM_CPUS, disk, REGISTER_SIZE, CACHE_SIZE, RAM_SIZE, POLICY );
 		} catch ( Exception e ) {
 			System.err.println( "An exception occurred in system initialization." );
 			e.printStackTrace();
@@ -70,10 +74,9 @@ public class Main {
 		// Print out runtime information
 		try {
 			for ( PCB pcb : TaskManager.INSTANCE.getPCBs() ) {
-				System.out.println(
-						"Process: " + pcb.getPID() + "\nWait Time (ns): " + pcb.getElapsedWaitTime() + "\nRun Time (ns): " + pcb
-								.getElapsedRunTime() + "\nExecution Count: " + pcb.getExecutionCount() + "\n"
-								+ "IO Count: " + pcb.getNumIO() + "\n" );
+				System.out.println( "Process: " + pcb.getPID() + "\nWait Time (ns): " + pcb.getElapsedWaitTime()
+						+ "\nRun Time (ns): " + pcb.getElapsedRunTime() + "\nExecution Count: " + pcb
+						.getExecutionCount() + "\n" + "IO Count: " + pcb.getNumIO() + "\n" );
 			}
 		} catch ( Exception e ) {
 			System.err.println( "An exception occurred while printing the process data." );
