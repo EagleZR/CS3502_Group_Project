@@ -39,6 +39,7 @@ public class Driver {
 	 * @param disk             The disk that stores all of the programs to be run by the system.
 	 * @param registerSize     The the amount of registers that are associated with this driver's CPU.
 	 * @param cacheSize        The size of the cache to be used by the associated CPU.
+	 * @param ramSize          The size of the cache to be used by the OS.
 	 * @param schedulingPolicy The process scheduling policy that this system will adhere to.
 	 * @throws UninitializedDriverException Thrown if a driver instance is created before the loader has been run. This
 	 *                                      can be fixed by running {@link Driver#loadFile(Memory, File)} prior to
@@ -91,6 +92,7 @@ public class Driver {
 	 *
 	 * @param disk        The disk onto which the contents of the programFile will be loaded.
 	 * @param programFile The file whose contents will be loaded onto the disk.
+	 * @throws Exception Thrown if there is an issue while loading the file.
 	 */
 	public static void loadFile( Memory disk, File programFile ) throws Exception {
 		taskManager = TaskManager.INSTANCE;
@@ -115,6 +117,8 @@ public class Driver {
 	/**
 	 * Executes the main loop of the driver. This loop will run until all processes have been completed, and the process
 	 * data has been written back to the disk.
+	 *
+	 * @throws InterruptedException See {@link InterruptedException}.
 	 */
 	public void run() throws InterruptedException {
 		// Start threads

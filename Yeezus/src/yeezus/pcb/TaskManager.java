@@ -112,7 +112,7 @@ public enum TaskManager {
 	/**
 	 * <p>Retrieves all of the {@link PCB}s that have run, are running, or will run on this system.</p><p>For a list of
 	 * all processes waiting to be run, use {@link TaskManager#getJobQueue()}. For {@link PCB}s of processes that are
-	 * ready to be run, use {@link TaskManager#getReadyQueue()}.</p></p><p><b>NOTE:</b> {@link List} is not
+	 * ready to be run, use {@link TaskManager#getReadyQueue()}.</p><p><b>NOTE:</b> {@link List} is not
 	 * synchronized, so the returned list is a clone of the original, not the original itself. Changes made to the
 	 * cloned object will not be reflected in the original.</p>
 	 *

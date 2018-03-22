@@ -14,6 +14,8 @@ public class Memory {
 
 	/**
 	 * Constructs a new memory.memory device with the given capacity.
+	 *
+	 * @param capacity The size of the memory to be created.
 	 */
 	public Memory( int capacity ) throws InvalidWordException {
 		this.storage = new Word[capacity];
