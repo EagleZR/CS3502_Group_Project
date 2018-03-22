@@ -1,6 +1,6 @@
 package yeezus.memory;
 
-import org.jetbrains.annotations.NotNull;
+import com.sun.istack.internal.NotNull;
 
 /**
  * A storage mechanism for {@link Word}s in the {@link yeezus} operating system.

@@ -21,7 +21,7 @@ public class Test_Driver {
 	@Before public void setUp() throws Exception {
 		this.disk = new Memory( 150 );
 		this.controlDisk = new Memory( 150 );
-		File file = new File( "test/yeezus/Test-File.txt" );
+		File file = new File( this.getClass().getClassLoader().getResource( "Test-File.txt" ).getFile() );
 		assertTrue( file.exists() );
 		Driver.loadFile( this.disk, file );
 		// Copy contents into a control disk to verify that changes have occurred
@@ -55,8 +55,9 @@ public class Test_Driver {
 	@Test public void runFCFS() throws Exception {
 		new Driver( 1, this.disk, 16, 100, 100, CPUSchedulingPolicy.FCFS ).run();
 		// Print the disk contents for manual verification
-		File output = new File( "test/yeezus/FCFS_Output_Test_File.txt" );
-		if ( output.createNewFile() ) {
+		File output = new File( "output/FCFS_Output_Test_File.txt" );
+		output.getParentFile().mkdirs();
+		if ( output.exists() || output.createNewFile() ) {
 			PrintStream out = new PrintStream( new FileOutputStream( output ) );
 			for ( int i = 0; i < this.disk.getCapacity(); i++ ) {
 				out.println( this.disk.read( i ) );
@@ -78,8 +79,9 @@ public class Test_Driver {
 	@Test public void runPriority() throws Exception {
 		new Driver( 1, this.disk, 16, 100, 100, CPUSchedulingPolicy.Priority ).run();
 		// Print the disk contents for manual verification
-		File output = new File( "test/yeezus/Priority_Output_Test_File.txt" );
-		if ( output.createNewFile() ) {
+		File output = new File( "output/Priority_Output_Test_File.txt" );
+		output.getParentFile().mkdirs();
+		if ( output.exists() || output.createNewFile() ) {
 			PrintStream out = new PrintStream( new FileOutputStream( output ) );
 			for ( int i = 0; i < this.disk.getCapacity(); i++ ) {
 				out.println( this.disk.read( i ) );

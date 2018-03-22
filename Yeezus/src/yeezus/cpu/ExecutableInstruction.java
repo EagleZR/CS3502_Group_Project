@@ -1,6 +1,6 @@
 package yeezus.cpu;
 
-import org.jetbrains.annotations.NotNull;
+import com.sun.istack.internal.NotNull;
 import yeezus.memory.InvalidAddressException;
 import yeezus.memory.InvalidWordException;
 import yeezus.memory.Memory;

@@ -27,7 +27,8 @@ public class Main {
 			disk = new Memory( DISK_SIZE );
 
 			// Initialize and create Driver
-			Driver.loadFile( disk, new File( "src/yeezus/Program-File.txt" ) );
+			Driver.loadFile( disk,
+					new File( Main.class.getClassLoader().getResource( "Program-File.txt" ).getFile() ) );
 			driver = new Driver( NUM_CPUS, disk, REGISTER_SIZE, CACHE_SIZE, RAM_SIZE, CPUSchedulingPolicy.FCFS );
 		} catch ( Exception e ) {
 			System.err.println( "An exception occurred in system initialization." );
@@ -53,7 +54,7 @@ public class Main {
 
 		// Print out the disk
 		try {
-			File output = new File( "src/yeezus/Output_File.txt" );
+			File output = new File( "output/Output_File.txt" );
 			if ( !output.exists() && !output.createNewFile() ) {
 				throw new Exception( "The output file could not be created." ); // idk how else to exit a try block
 			}

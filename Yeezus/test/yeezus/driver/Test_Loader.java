@@ -25,7 +25,8 @@ public class Test_Loader {
 			throws InvalidWordException, DuplicateIDException, IOException, InvalidAddressException {
 		taskManager = TaskManager.INSTANCE;
 		disk = new Memory( 2048 );
-		new Loader( taskManager, new File( "src/yeezus/Program-File.txt" ), disk );
+		new Loader( taskManager,
+				new File( Test_Loader.class.getClassLoader().getResource( "Program-File.txt" ).getFile() ), disk );
 	}
 
 	@AfterClass public static void tearDown() {

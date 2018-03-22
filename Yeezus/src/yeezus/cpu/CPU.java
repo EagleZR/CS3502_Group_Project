@@ -1,6 +1,6 @@
 package yeezus.cpu;
 
-import org.jetbrains.annotations.NotNull;
+import com.sun.istack.internal.NotNull;
 import yeezus.DuplicateIDException;
 import yeezus.memory.*;
 import yeezus.pcb.PCB;

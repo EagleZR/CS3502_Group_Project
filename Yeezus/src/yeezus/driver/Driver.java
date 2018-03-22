@@ -1,6 +1,6 @@
 package yeezus.driver;
 
-import org.jetbrains.annotations.NotNull;
+import com.sun.istack.internal.NotNull;
 import yeezus.DuplicateIDException;
 import yeezus.cpu.CPU;
 import yeezus.memory.InvalidWordException;
