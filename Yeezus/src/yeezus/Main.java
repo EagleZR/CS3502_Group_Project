@@ -37,7 +37,7 @@ public class Main {
 		}
 
 		// Log start time
-		long startTime = System.currentTimeMillis();
+		long startTime = System.nanoTime();
 
 		try {
 			driver.run();
@@ -48,9 +48,9 @@ public class Main {
 			return;
 		}
 		// Log end time
-		long endTime = System.currentTimeMillis();
+		long endTime = System.nanoTime();
 
-		System.out.println( "The system completed in " + ( endTime - startTime ) + " milliseconds." );
+		System.out.println( "The system completed in " + ( endTime - startTime ) + " nanoseconds." );
 
 		// Print out the disk
 		try {
@@ -71,7 +71,7 @@ public class Main {
 		try {
 			for ( PCB pcb : TaskManager.INSTANCE.getPCBs() ) {
 				System.out.println(
-						"Process: " + pcb.getPID() + "\nWait Time: " + pcb.getElapsedWaitTime() + "\nRun Time: " + pcb
+						"Process: " + pcb.getPID() + "\nWait Time (ns): " + pcb.getElapsedWaitTime() + "\nRun Time (ns): " + pcb
 								.getElapsedRunTime() + "\nExecution Count: " + pcb.getExecutionCount() + "\n"
 								+ "IO Count: " + pcb.getNumIO() + "\n" );
 			}

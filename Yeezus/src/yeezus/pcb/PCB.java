@@ -34,7 +34,7 @@ public class PCB {
 	 */
 	PCB( int pid, int startDiskAddress, int instructionsLength, int inputBufferLength, int outputBufferLength,
 			int tempBufferLength, int priority ) {
-		this.clock = System.currentTimeMillis();
+		this.clock = System.nanoTime();
 		this.elapsedWaitTime = 0;
 		this.elapsedRunTime = 0;
 		this.status = Status.NEW;
@@ -264,7 +264,7 @@ public class PCB {
 			return;
 		}
 		// System.out.println( "Process " + pid + " status set to " + status );
-		long timestamp = System.currentTimeMillis();
+		long timestamp = System.nanoTime();
 		long elapsedTime = timestamp - this.clock;
 		if ( this.status == Status.RUNNING ) {
 			this.elapsedRunTime += elapsedTime;
@@ -282,7 +282,7 @@ public class PCB {
 	 */
 	public synchronized long getElapsedWaitTime() {
 		return this.elapsedWaitTime + ( this.status != Status.RUNNING && this.status != Status.TERMINATED ?
-				System.currentTimeMillis() - this.clock :
+				System.nanoTime() - this.clock :
 				0 );
 	}
 
@@ -292,7 +292,7 @@ public class PCB {
 	 * @return the elapsed amount of time this PCB has been running on the CPU.
 	 */
 	public synchronized long getElapsedRunTime() {
-		return this.elapsedRunTime + ( this.status == Status.RUNNING ? System.currentTimeMillis() - this.clock : 0 );
+		return this.elapsedRunTime + ( this.status == Status.RUNNING ? System.nanoTime() - this.clock : 0 );
 	}
 
 	/**
