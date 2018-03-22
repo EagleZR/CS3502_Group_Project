@@ -113,8 +113,7 @@ abstract class ExecutableInstruction implements Runnable {
 		@Override public String toString() {
 			return this.type + ", " + this.s1 + "(" + this.registers.read( this.s1 ).getData() + "), " + this.s2 + "("
 					+ this.registers.read( this.s2 ).getData() + "), " + this.d + "(" + this.registers.read( this.s1 )
-					.getData()
-					+ ")";
+					.getData() + ")";
 		}
 	}
 
@@ -130,8 +129,7 @@ abstract class ExecutableInstruction implements Runnable {
 
 		// Interprets the given instruction into a form that can be executed by the system.
 		ConditionalExecutableInstruction( @NotNull Word instruction, @NotNull Memory registers, @NotNull Memory cache,
-				@NotNull CPU cpu )
-				throws InvalidInstructionException {
+				@NotNull CPU cpu ) throws InvalidInstructionException {
 			super( instruction, registers );
 
 			this.cache = cache;

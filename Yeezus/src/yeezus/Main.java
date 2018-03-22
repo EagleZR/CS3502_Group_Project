@@ -32,8 +32,9 @@ public class Main {
 			disk = new Memory( DISK_SIZE );
 
 			// Initialize and create Driver
-			Driver.loadFile( disk,
-					new File( Objects.requireNonNull( Main.class.getClassLoader().getResource( "Program-File.txt" ) ).getFile() ) );
+			Driver.loadFile( disk, new File(
+					Objects.requireNonNull( Main.class.getClassLoader().getResource( "Program-File.txt" ) )
+							.getFile() ) );
 			driver = new Driver( NUM_CPUS, disk, REGISTER_SIZE, CACHE_SIZE, RAM_SIZE, POLICY );
 		} catch ( Exception e ) {
 			System.err.println( "An exception occurred in system initialization." );
@@ -64,8 +65,35 @@ public class Main {
 				throw new Exception( "The output file could not be created." ); // idk how else to exit a try block
 			}
 			PrintStream out = new PrintStream( new FileOutputStream( output ) );
-			for ( int i = 0; i < disk.getCapacity(); i++ ) {
-				out.println( disk.read( i ) );
+			for ( PCB pcb : TaskManager.INSTANCE.getPCBs() ) {
+				out.println( "****Job " + pcb.getPID() + "****" );
+				// Instructions
+				out.println( "Job " + pcb.getPID() + " Instructions:" );
+				for ( int i = 0; i < pcb.getInstructionsLength(); i++ ) {
+					out.println( disk.read( pcb.getInstructionDiskAddress() + i ) );
+				}
+				out.println();
+
+				// Input Buffer
+				out.println( "Job " + pcb.getPID() + " Input Buffer:" );
+				for ( int i = 0; i < pcb.getInputBufferLength(); i++ ) {
+					out.println( disk.read( pcb.getInputBufferDiskAddress() + i ) );
+				}
+				out.println();
+
+				// Output Buffer
+				out.println( "Job " + pcb.getPID() + " Output Buffer:" );
+				for ( int i = 0; i < pcb.getOutputBufferLength(); i++ ) {
+					out.println( disk.read( pcb.getOutputBufferDiskAddress() + i ) );
+				}
+				out.println();
+
+				// Temp Buffer
+				out.println( "Job " + pcb.getPID() + " Temp Buffer:" );
+				for ( int i = 0; i < pcb.getTempBufferLength(); i++ ) {
+					out.println( disk.read( pcb.getTempBufferDiskAddress() + i ) );
+				}
+				out.println( "______________________\n" );
 			}
 		} catch ( Exception e ) {
 			System.err.println( "An exception occurred while writing to the output file." );

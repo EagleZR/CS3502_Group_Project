@@ -6,8 +6,6 @@ import yeezus.memory.Memory;
 import yeezus.pcb.PCB;
 import yeezus.pcb.TaskManager;
 
-import java.util.NoSuchElementException;
-
 public class Dispatcher implements Runnable {
 
 	private TaskManager taskManager;
@@ -25,11 +23,7 @@ public class Dispatcher implements Runnable {
 			if ( ( cpu.getProcess() == null || PCB.Status.RUNNING != cpu.getProcess().getStatus() )
 					&& this.taskManager.getReadyQueue().size() > 0 ) {
 				PCB next;
-				try {
-					next = this.taskManager.getReadyQueue().remove();
-				} catch ( NoSuchElementException e ) {
-					return;
-				}
+				next = this.taskManager.getReadyQueue().remove();
 				cpu.setProcess( next );
 				Memory cache = cpu.getCache();
 				for ( int i = 0; i < next.getTotalSize() && i < cache.getCapacity(); i++ ) {

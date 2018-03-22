@@ -6,16 +6,18 @@ package yeezus.driver;
  * author: jessica brummel
  **/
 
+import yeezus.DuplicateIDException;
 import yeezus.memory.InvalidAddressException;
 import yeezus.memory.InvalidWordException;
 import yeezus.memory.Memory;
 import yeezus.memory.Word;
-import yeezus.DuplicateIDException;
 import yeezus.pcb.PCB;
-
 import yeezus.pcb.TaskManager;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 
 public class Loader {
@@ -73,7 +75,7 @@ public class Loader {
 				if ( currentLine.contains( "Data" ) ) {
 					// System.out.println( "Grabbing the data" );
 					subLine = currentLine.substring( 8 );
-				// 	System.out.println( "This is the first line:" + subLine );
+					// 	System.out.println( "This is the first line:" + subLine );
 					int space = subLine.indexOf( ' ' );
 					inputBuffSize = Integer.decode( "0x" + subLine.substring( 0, space ) );
 

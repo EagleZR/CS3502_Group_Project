@@ -210,7 +210,8 @@ public class CPU implements Runnable {
 		}
 
 		if ( executableInstruction.getClass() == ExecutableInstruction.IOExecutableInstruction.class ) {
-			this.dmaChannel.handle( (ExecutableInstruction.IOExecutableInstruction) executableInstruction, getProcess() );
+			this.dmaChannel
+					.handle( (ExecutableInstruction.IOExecutableInstruction) executableInstruction, getProcess() );
 		} else {
 			executableInstruction.run();
 		}
