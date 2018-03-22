@@ -79,7 +79,7 @@ public class Driver {
 			this.threads[i] = new Thread( this.cpus[i] );
 			this.threads[i].setUncaughtExceptionHandler( ( t, e ) -> {
 				e.printStackTrace();
-				System.err.println( cpu.generateSimpleDump() );
+				cpu.printDump();
 			} );
 		}
 	}
