@@ -1,9 +1,12 @@
 package yeezus.memory;
 
+import org.jetbrains.annotations.NotNull;
+
 /**
- * The collective memory system of the OS, including the registers, RAM, and disk storage space.
+ * A storage mechanism for {@link Word}s in the {@link yeezus} operating system.
  *
- * @version 1.0
+ * @author Mark Zeagler
+ * @version 2.0
  */
 public class Memory {
 
@@ -14,9 +17,9 @@ public class Memory {
 	 */
 	public Memory( int capacity ) throws InvalidWordException {
 		this.storage = new Word[capacity];
+		Word zero = new Word( "0x00000000" );
 		for ( int i = 0; i < capacity; i++ ) {
-			String word = "0x00000000";
-			this.storage[i] = new Word( word );
+			this.storage[i] = zero;
 		}
 	}
 
@@ -29,14 +32,14 @@ public class Memory {
 	 *                                 memory.memory.
 	 */
 	public synchronized Word read( int physicalAddress ) throws InvalidAddressException {
-		if ( physicalAddress > storage.length ) {
+		if ( physicalAddress > this.storage.length ) {
 			throw new InvalidAddressException(
-					"Address: " + physicalAddress + " is too high. The capacity is: " + storage.length );
+					"Address: " + physicalAddress + " is too high. The capacity is: " + this.storage.length );
 		}
 		if ( physicalAddress < 0 ) {
 			throw new InvalidAddressException( "Can't have a negative physicalAddress (" + physicalAddress + ")." );
 		}
-		return storage[physicalAddress];
+		return this.storage[physicalAddress];
 	}
 
 	/**
@@ -47,15 +50,15 @@ public class Memory {
 	 * @throws InvalidAddressException Thrown if the physical address given is outside of the scope of this
 	 *                                 memory.memory.
 	 */
-	public synchronized void write( int physicalAddress, Word word ) throws InvalidAddressException {
-		if ( physicalAddress > storage.length ) {
+	public synchronized void write( int physicalAddress, @NotNull Word word ) throws InvalidAddressException {
+		if ( physicalAddress > this.storage.length ) {
 			throw new InvalidAddressException(
-					"Address: " + physicalAddress + " is too high. The capacity is: " + storage.length );
+					"Address: " + physicalAddress + " is too high. The capacity is: " + this.storage.length );
 		}
 		if ( physicalAddress < 0 ) {
 			throw new InvalidAddressException( "Can't have a negative physicalAddress" );
 		}
-		storage[physicalAddress] = word;
+		this.storage[physicalAddress] = word;
 	}
 
 	/**

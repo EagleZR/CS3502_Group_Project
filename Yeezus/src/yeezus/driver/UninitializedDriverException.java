@@ -9,11 +9,11 @@ import java.io.File;
  * Driver#loadFile(Memory, File)} method.
  *
  * @author Mark Zeagler
- * @version 1.0
+ * @version 1.1
  */
-public class UninitializedDriverException extends RuntimeException {
+class UninitializedDriverException extends RuntimeException {
 
-	public UninitializedDriverException( String s ) {
+	UninitializedDriverException( String s ) {
 		super( s );
 	}
 }

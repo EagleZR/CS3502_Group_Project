@@ -4,7 +4,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import yeezus.cpu.CPU;
-import yeezus.memory.MMU;
 import yeezus.memory.Memory;
 import yeezus.pcb.TaskManager;
 
@@ -18,12 +17,10 @@ public class Test_Driver {
 
 	private Memory controlDisk;
 	private Memory disk;
-	private MMU mmu;
 
 	@Before public void setUp() throws Exception {
 		this.disk = new Memory( 150 );
 		this.controlDisk = new Memory( 150 );
-		this.mmu = new MMU( new Memory( 100 ) );
 		File file = new File( "test/yeezus/Test-File.txt" );
 		assertTrue( file.exists() );
 		Driver.loadFile( this.disk, file );
@@ -36,19 +33,18 @@ public class Test_Driver {
 		}
 	}
 
-	@After public void tearDown() throws Exception {
+	@After public void tearDown() {
 		Driver.reset();
 		TaskManager.INSTANCE.reset();
 		CPU.reset();
 	}
 
-	@Test public void loadFile() throws Exception {
-		new Driver( 0, this.disk, this.mmu, 16, 100, CPUSchedulingPolicy.FCFS );
-		new Driver( 1, this.disk, this.mmu, 16, 100, CPUSchedulingPolicy.FCFS );
+	@Test public void loadFile() {
+		new Driver( 1, this.disk, 16, 100, 100, CPUSchedulingPolicy.FCFS );
 		// Should be no exception here
 		Driver.reset();
 		try {
-			new Driver( 0, this.disk, this.mmu, 16, 100, CPUSchedulingPolicy.FCFS );
+			new Driver( 1, this.disk, 16, 100, 100, CPUSchedulingPolicy.FCFS );
 		} catch ( UninitializedDriverException e ) {
 			// Correct exception thrown
 			return;
@@ -57,13 +53,14 @@ public class Test_Driver {
 	}
 
 	@Test public void runFCFS() throws Exception {
-		new Driver( 0, this.disk, this.mmu, 16, 100, CPUSchedulingPolicy.FCFS ).run();
+		new Driver( 1, this.disk, 16, 100, 100, CPUSchedulingPolicy.FCFS ).run();
 		// Print the disk contents for manual verification
 		File output = new File( "test/yeezus/FCFS_Output_Test_File.txt" );
-		output.createNewFile();
-		PrintStream out = new PrintStream( new FileOutputStream( output ) );
-		for ( int i = 0; i < this.disk.getCapacity(); i++ ) {
-			out.println( this.disk.read( i ) );
+		if ( output.createNewFile() ) {
+			PrintStream out = new PrintStream( new FileOutputStream( output ) );
+			for ( int i = 0; i < this.disk.getCapacity(); i++ ) {
+				out.println( this.disk.read( i ) );
+			}
 		}
 		assertEquals( this.disk.read( 43 ).getData(), 228 );
 		// Check if any of them are not equal, indicating that some change has been made
@@ -79,13 +76,14 @@ public class Test_Driver {
 	}
 
 	@Test public void runPriority() throws Exception {
-		new Driver( 0, this.disk, this.mmu, 16, 100, CPUSchedulingPolicy.Priority ).run();
+		new Driver( 1, this.disk, 16, 100, 100, CPUSchedulingPolicy.Priority ).run();
 		// Print the disk contents for manual verification
 		File output = new File( "test/yeezus/Priority_Output_Test_File.txt" );
-		output.createNewFile();
-		PrintStream out = new PrintStream( new FileOutputStream( output ) );
-		for ( int i = 0; i < this.disk.getCapacity(); i++ ) {
-			out.println( this.disk.read( i ) );
+		if ( output.createNewFile() ) {
+			PrintStream out = new PrintStream( new FileOutputStream( output ) );
+			for ( int i = 0; i < this.disk.getCapacity(); i++ ) {
+				out.println( this.disk.read( i ) );
+			}
 		}
 		assertEquals( this.disk.read( 43 ).getData(), 228 );
 		// Check if any of them are not equal, indicating that some change has been made

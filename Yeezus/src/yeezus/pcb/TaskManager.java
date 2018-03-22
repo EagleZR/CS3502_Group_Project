@@ -13,14 +13,18 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * <p>The Task Manager for the processes within the {@link yeezus} Operating System. This implementation is little more
  * than a wrapper to control access to the {@link PCB}s it contains. To ensure that it remains a singleton, it is
  * implemented as an {@link Enum} with a single instance.</p><p>Processes are registered by the {@link Loader} at system
- * startup using the {@link TaskManager#addPCB(int, int, int, int, int, int, int)} process. Once a process has been added, its {@code PCB} can be directly retrieved using the {@link TaskManager#getPCB(int)} method. A
- * Job Queue that manages all un-run jobs on the system and a Ready Queue to keep track of which jobs have been loaded
- * into RAM and are ready to go are both instantiated and maintained within this Task Manager. The Job Queue can be
- * retrieved using the {@link TaskManager#getJobQueue()} method while the Ready Queue can be retrieved with the {@link
+ * startup using the {@link TaskManager#addPCB(int, int, int, int, int, int, int)} process. Once a process has been
+ * added, its {@code PCB} can be directly retrieved using the {@link TaskManager#getPCB(int)} method. A Job Queue that
+ * manages all un-run jobs on the system and a Ready Queue to keep track of which jobs have been loaded into RAM and are
+ * ready to go are both instantiated and maintained within this Task Manager. The Job Queue can be retrieved using the
+ * {@link TaskManager#getJobQueue()} method while the Ready Queue can be retrieved with the {@link
  * TaskManager#getReadyQueue()} method.</p><p>While all of the methods contained in this class are thread safe, the
  * {@link List}s that contain the Job Queue and the all of the {@link PCB}s are not, and they are returned as clones;
  * any changes to them will not be reflected in the original, and they should be used for reading only. The Ready Queue,
  * however, is thread safe, and can be edited outside of this class.</p>
+ *
+ * @author Mark Zeagler
+ * @version 2.0
  */
 public enum TaskManager {
 
@@ -115,7 +119,7 @@ public enum TaskManager {
 	 * @return A {@link List} of {@link PCB}s for all processes on the system.
 	 */
 	public List<PCB> getPCBs() {
-		return new ArrayList<PCB>( this.PCBs );
+		return new ArrayList<>( this.PCBs );
 	}
 
 	/**

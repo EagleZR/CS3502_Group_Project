@@ -1,9 +1,10 @@
 package yeezus.memory;
 
 /**
- * A stand-in version of a memory.Word data type that will be the basis of the memory system in this OS.
+ * A stand-in version of a word (4 bytes) that will be the basis of the memory system in the {@link yeezus} OS.
  *
- * @version 1.0
+ * @author Mark Zeagler
+ * @version 2.0
  */
 public class Word {
 

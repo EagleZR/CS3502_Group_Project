@@ -9,13 +9,13 @@ import static org.junit.Assert.*;
 
 public class Test_MMU {
 
-	MMU mmu;
+	private MMU mmu;
 
-	@Before public void setup() throws Exception {
+	@Before public void setup() {
 		this.mmu = new MMU( new Memory( 1024 ) );
 	}
 
-	@Test public void testMapMemory() throws Exception {
+	@Test public void testMapMemory() {
 		TaskManager.INSTANCE.addPCB( 1, 21, 32, 32, 32, 32, 1 );
 		// Map 100 addresses to process 0
 		assertTrue( this.mmu.mapMemory( TaskManager.INSTANCE.getPCB( 1 ) ) );
@@ -49,21 +49,25 @@ public class Test_MMU {
 		}
 	}
 
-	@Test public void testCapacity() throws Exception {
+	@Test public void testCapacity() {
 		TaskManager.INSTANCE.addPCB( 1, 0, 1024, 0, 0, 0, 1 );
 		assertTrue( this.mmu.mapMemory( TaskManager.INSTANCE.getPCB( 1 ) ) );
+
 		TaskManager.INSTANCE.addPCB( 2, 0, 1024, 0, 0, 0, 1 );
 		assertFalse( this.mmu.mapMemory( TaskManager.INSTANCE.getPCB( 2 ) ) );
 	}
 
-	@Test public void testTerminate() throws Exception {
+	@Test public void testTerminate() {
 		TaskManager.INSTANCE.addPCB( 1, 0, 1024, 0, 0, 0, 1 );
 		assertTrue( this.mmu.mapMemory( TaskManager.INSTANCE.getPCB( 1 ) ) );
 		this.mmu.terminateProcessMemory( TaskManager.INSTANCE.getPCB( 1 ) );
+
 		TaskManager.INSTANCE.addPCB( 2, 0, 200, 0, 0, 0, 1 );
 		assertTrue( this.mmu.mapMemory( TaskManager.INSTANCE.getPCB( 2 ) ) );
+
 		TaskManager.INSTANCE.addPCB( 3, 0, 200, 0, 0, 0, 1 );
 		assertTrue( this.mmu.mapMemory( TaskManager.INSTANCE.getPCB( 3 ) ) );
+
 		this.mmu.write( TaskManager.INSTANCE.getPCB( 3 ), 0, new Word( 210 ) );
 		this.mmu.terminateProcessMemory( TaskManager.INSTANCE.getPCB( 2 ) );
 	}

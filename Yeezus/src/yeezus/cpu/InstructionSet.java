@@ -2,6 +2,9 @@ package yeezus.cpu;
 
 /**
  * The given opcodes for the set of instructions to be performed by the {@link yeezus} Operating System.
+ *
+ * @author Mark Zeagler
+ * @version 1.0
  */
 public enum InstructionSet {
 

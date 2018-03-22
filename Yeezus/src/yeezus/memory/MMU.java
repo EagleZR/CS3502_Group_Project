@@ -8,6 +8,9 @@ import java.util.ArrayList;
  * The MMU helps organize the RAM {@link Memory} in the {@link yeezus} Operating System. The MMU keeps track of which
  * processes own which RAM addresses or blocks of addresses, and acts as the translator between logical and physical
  * memory.
+ *
+ * @author Mark Zeagler
+ * @version 2.0
  */
 public class MMU {
 
@@ -26,7 +29,6 @@ public class MMU {
 		for ( int i = 0; i < RAM.getCapacity(); i++ ) {
 			this.freeAddresses.add( i );
 		}
-		// this.addressOwnershipRegistry = new int[RAM.getCapacity()];
 		this.addressMap = new ArrayList<>();
 	}
 
@@ -40,18 +42,20 @@ public class MMU {
 		if ( pcb == null ) {
 			return false;
 		}
+
 		int pid = pcb.getPID();
 		int size = pcb.getTotalSize();
-		// System.out.println( "Loading process " + pid + " into RAM." );
+
+		if ( size > this.freeAddresses.size() ) {
+			return false;
+		}
 		try {
 			for ( int i = 0; i < size; i++ ) {
 				mapAddress( pid, i );
 			}
-			// System.out.println( "The process was successfully mapped." );
 			return true;
 		} catch ( InvalidAddressException e ) {
 			terminateProcessMemory( pcb );
-			// e.printStackTrace();
 			return false;
 		}
 	}
@@ -85,23 +89,14 @@ public class MMU {
 		ArrayList<Integer> processAddresses;
 
 		if ( pid >= this.addressMap.size() || this.addressMap.get( pid ) == null ) {
-			while ( ( pid - addressMap.size() ) >= 0 ) { // Only executes if it's not large enough
-				addressMap.add( null );
+			while ( ( pid - this.addressMap.size() ) >= 0 ) { // Only executes if it's not large enough
+				this.addressMap.add( null );
 			}
 			processAddresses = new ArrayList<>();
 			this.addressMap.set( pid, processAddresses );
 		} else {
 			processAddresses = this.addressMap.get( pid );
 		}
-		//		try {
-		//			processAddresses = this.addressMap.get( pid );
-		//		} catch ( IndexOutOfBoundsException e ) {
-		//			processAddresses = new ArrayList<>();
-		//			while ( ( pid - addressMap.size() ) + 1 > 0 ) {
-		//				addressMap.add( null );
-		//			}
-		//			this.addressMap.set( pid, processAddresses );
-		//		}
 
 		while ( logicalAddress - processAddresses.size() + 1 > 0 ) {
 			processAddresses.add( null );
@@ -172,8 +167,7 @@ public class MMU {
 			return;
 		}
 		int pid = pcb.getPID();
-		// System.out.println( "Removing process " + pid + " from RAM." );
-		if ( this.addressMap.size() > pid && processMapped( pcb ) ) {
+		if ( this.addressMap.size() > pid && processMapped( pcb ) && this.addressMap.get( pid ) != null ) {
 			while ( !this.addressMap.get( pid ).isEmpty() ) {
 				this.freeAddresses.add( this.addressMap.get( pid ).remove( 0 ) );
 			}

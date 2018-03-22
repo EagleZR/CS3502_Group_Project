@@ -1,5 +1,6 @@
 package yeezus.cpu;
 
+import org.jetbrains.annotations.NotNull;
 import yeezus.memory.InvalidAddressException;
 import yeezus.memory.InvalidWordException;
 import yeezus.memory.Memory;
@@ -11,7 +12,8 @@ import static yeezus.cpu.InstructionSet.values;
  * A class that represents a single CPU Instruction in the OS. This takes in the data from a stored instruction and
  * translates it into something that can be executed by the CPU via the {@link Runnable#run()} method.
  *
- * @version 0.2
+ * @author Mark Zeagler
+ * @version 1.1
  */
 abstract class ExecutableInstruction implements Runnable {
 
@@ -20,13 +22,14 @@ abstract class ExecutableInstruction implements Runnable {
 	Memory registers;
 
 	// Retrieves the type and sets the registers
-	private ExecutableInstruction( Word instruction, Memory registers ) throws InvalidInstructionException {
+	private ExecutableInstruction( @NotNull Word instruction, @NotNull Memory registers )
+			throws InvalidInstructionException {
 		this.type = getInstructionSet( instruction );
 		this.registers = registers;
 	}
 
 	// Retrieves the type from the instruction set
-	private InstructionSet getInstructionSet( Word instruction ) throws InvalidInstructionException {
+	private InstructionSet getInstructionSet( @NotNull Word instruction ) throws InvalidInstructionException {
 		long mask = 0x3F000000;
 		long opcode = ( mask & instruction.getData() ) >> 24;
 		for ( InstructionSet instructionSet : values() ) {
@@ -46,7 +49,8 @@ abstract class ExecutableInstruction implements Runnable {
 		private int s1, s2, d;
 
 		// Interprets the given instruction into a form that can be executed by the system.
-		ArithmeticExecutableInstruction( Word instruction, Memory registers ) throws InvalidInstructionException {
+		ArithmeticExecutableInstruction( @NotNull Word instruction, @NotNull Memory registers )
+				throws InvalidInstructionException {
 			super( instruction, registers );
 
 			// TODO This can probably be done more efficiently, but I'm afraid I'd lose my mind
@@ -107,8 +111,9 @@ abstract class ExecutableInstruction implements Runnable {
 		}
 
 		@Override public String toString() {
-			return this.type + ", " + this.s1 + "(" + this.registers.read( s1 ).getData() + "), " + this.s2 + "("
-					+ this.registers.read( s2 ).getData() + "), " + this.d + "(" + this.registers.read( s1 ).getData()
+			return this.type + ", " + this.s1 + "(" + this.registers.read( this.s1 ).getData() + "), " + this.s2 + "("
+					+ this.registers.read( this.s2 ).getData() + "), " + this.d + "(" + this.registers.read( this.s1 )
+					.getData()
 					+ ")";
 		}
 	}
@@ -124,7 +129,8 @@ abstract class ExecutableInstruction implements Runnable {
 		private Memory cache;
 
 		// Interprets the given instruction into a form that can be executed by the system.
-		ConditionalExecutableInstruction( Word instruction, Memory registers, Memory cache, CPU cpu )
+		ConditionalExecutableInstruction( @NotNull Word instruction, @NotNull Memory registers, @NotNull Memory cache,
+				@NotNull CPU cpu )
 				throws InvalidInstructionException {
 			super( instruction, registers );
 
@@ -212,8 +218,8 @@ abstract class ExecutableInstruction implements Runnable {
 		}
 
 		@Override public String toString() {
-			return this.type + ", " + this.bReg + "(" + this.registers.read( bReg ).getData() + "), " + this.dReg + "("
-					+ this.registers.read( dReg ).getData() + "), " + this.data;
+			return this.type + ", " + this.bReg + "(" + this.registers.read( this.bReg ).getData() + "), " + this.dReg
+					+ "(" + this.registers.read( this.dReg ).getData() + "), " + this.data;
 		}
 	}
 
@@ -227,7 +233,7 @@ abstract class ExecutableInstruction implements Runnable {
 		private int address;
 
 		// Interprets the given instruction into a form that can be executed by the system.
-		UnconditionalJumpExecutableInstruction( Word instruction, Memory registers, CPU cpu )
+		UnconditionalJumpExecutableInstruction( @NotNull Word instruction, @NotNull Memory registers, @NotNull CPU cpu )
 				throws InvalidInstructionException {
 			super( instruction, registers );
 			this.cpu = cpu;
@@ -245,7 +251,7 @@ abstract class ExecutableInstruction implements Runnable {
 					// Handled elsewhere, don't worry about it
 					break;
 				case JMP: // Jumps to a specified location
-					this.cpu.setPC( address / 4 );
+					this.cpu.setPC( this.address / 4 );
 					break;
 				case NOP: // Does nothing and moves to next instruction
 					// Do nothing
@@ -267,7 +273,8 @@ abstract class ExecutableInstruction implements Runnable {
 		int reg1, reg2, address;
 
 		// Interprets the given instruction into a form that can be executed by the system.
-		IOExecutableInstruction( Word instruction, Memory registers ) throws InvalidInstructionException {
+		IOExecutableInstruction( @NotNull Word instruction, @NotNull Memory registers )
+				throws InvalidInstructionException {
 
 			super( instruction, registers );
 
@@ -301,8 +308,8 @@ abstract class ExecutableInstruction implements Runnable {
 		}
 
 		@Override public String toString() {
-			return this.type + ", " + this.reg1 + "(" + this.registers.read( reg1 ).getData() + "), " + this.reg2 + "("
-					+ this.registers.read( reg2 ).getData() + "), " + this.address;
+			return this.type + ", " + this.reg1 + "(" + this.registers.read( this.reg1 ).getData() + "), " + this.reg2
+					+ "(" + this.registers.read( this.reg2 ).getData() + "), " + this.address;
 		}
 	}
 }

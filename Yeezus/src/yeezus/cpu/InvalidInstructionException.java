@@ -7,10 +7,10 @@ import yeezus.memory.Word;
  * InstructionSet}.
  *
  * @author Mark Zeagler
- * @version 1.0
+ * @version 1.1
  */
-public class InvalidInstructionException extends RuntimeException {
-	public InvalidInstructionException( String s ) {
+class InvalidInstructionException extends RuntimeException {
+	InvalidInstructionException( String s ) {
 		super( s );
 	}
 }
