@@ -18,7 +18,7 @@ public class Test_PCB {
 		this.pcb = new PCB( 14, 10, 6, 10, 13, 10, 2 );
 	}
 
-	@Test public void getNumIO() throws Exception {
+	@Test public void getNumIO() {
 		this.pcb.incNumIO();
 		this.pcb.incNumIO();
 		this.pcb.incNumIO();
@@ -26,43 +26,43 @@ public class Test_PCB {
 
 	}
 
-	@Test public void getPid() throws Exception {
+	@Test public void getPid() {
 		assertEquals( 14, this.pcb.getPID() );
 	}
 
-	@Test public void getStartInstructionAddress() throws Exception {
+	@Test public void getStartInstructionAddress() {
 		assertEquals( 10, this.pcb.getStartDiskAddress() );
 	}
 
-	@Test public void getInstructionLength() throws Exception {
+	@Test public void getInstructionLength() {
 		assertEquals( 6, this.pcb.getInstructionsLength() );
 	}
 
-	@Test public void getStartInputBufferAddress() throws Exception {
+	@Test public void getStartInputBufferAddress() {
 		assertEquals( 16, this.pcb.getInputBufferDiskAddress() );
 	}
 
-	@Test public void getInputBufferLength() throws Exception {
+	@Test public void getInputBufferLength() {
 		assertEquals( 10, this.pcb.getInputBufferLength() );
 	}
 
-	@Test public void getStartOutputBufferAddress() throws Exception {
+	@Test public void getStartOutputBufferAddress() {
 		assertEquals( 26, this.pcb.getOutputBufferDiskAddress() );
 	}
 
-	@Test public void getOutputBufferLength() throws Exception {
+	@Test public void getOutputBufferLength() {
 		assertEquals( 13, this.pcb.getOutputBufferLength() );
 	}
 
-	@Test public void getStartTempBufferAddress() throws Exception {
+	@Test public void getStartTempBufferAddress() {
 		assertEquals( 39, this.pcb.getTempBufferDiskAddress() );
 	}
 
-	@Test public void getTempBufferLength() throws Exception {
+	@Test public void getTempBufferLength() {
 		assertEquals( 10, this.pcb.getTempBufferLength() );
 	}
 
-	@Test public void getPriority() throws Exception {
+	@Test public void getPriority() {
 		assertEquals( 2, this.pcb.getPriority() );
 	}
 

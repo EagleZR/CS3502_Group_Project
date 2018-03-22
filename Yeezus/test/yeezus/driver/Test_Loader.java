@@ -3,10 +3,10 @@ package yeezus.driver;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import yeezus.DuplicateIDException;
 import yeezus.memory.InvalidAddressException;
 import yeezus.memory.InvalidWordException;
 import yeezus.memory.Memory;
-import yeezus.DuplicateIDException;
 import yeezus.pcb.PCB;
 import yeezus.pcb.TaskManager;
 
@@ -28,8 +28,12 @@ public class Test_Loader {
 		new Loader( taskManager, new File( "src/yeezus/Program-File.txt" ), disk );
 	}
 
+	@AfterClass public static void tearDown() {
+		taskManager.reset();
+	}
+
 	// Test that the Disk is filled correctly by the Loader
-	@Test public void testMemory() throws Exception {
+	@Test public void testMemory() {
 		// Test first address
 		assertEquals( "0xC050005C", disk.read( 0 ).toString() );
 		// Test last address of first job
@@ -43,7 +47,7 @@ public class Test_Loader {
 	}
 
 	// Test that the TaskManager is filled correctly by the Loader
-	@Test public void testPCB() throws Exception {
+	@Test public void testPCB() {
 		// Ensure that the first job's PID exists in the TaskManager
 		assertTrue( taskManager.contains( 1 ) );
 		PCB pcb = taskManager.getPCB( 1 );
@@ -71,10 +75,6 @@ public class Test_Loader {
 			assertTrue( taskManager.contains( i ) );
 			assertEquals( PCB.Status.NEW, taskManager.getPCB( i ).getStatus() );
 		}
-	}
-
-	@AfterClass public static void tearDown() {
-		taskManager.reset();
 	}
 
 }

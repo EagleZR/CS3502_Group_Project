@@ -14,7 +14,7 @@ import java.util.ArrayList;
  */
 public class MMU {
 
-	private ArrayList<ArrayList<Integer>> addressMap; // TODO Make this more efficient later
+	private ArrayList<ArrayList<Integer>> addressMap;
 	private ArrayList<Integer> freeAddresses;
 	private Memory RAM;
 

@@ -19,7 +19,7 @@ public class Test_Memory {
 	public Test_Memory() throws InvalidWordException {
 	}
 
-	@Test public void testCapacities() throws Exception {
+	@Test public void testCapacities() {
 		// Registers
 		for ( int i = 0; i < REGISTER_CAPACITY; i++ ) {
 			this.registers.write( i, new Word( "0x00000000" ) );
@@ -55,7 +55,7 @@ public class Test_Memory {
 		this.registers.read( -1 );
 	}
 
-	@Test public void testRead() throws Exception {
+	@Test public void testRead() {
 		this.registers.write( 0, new Word( "0x00003123" ) );
 		assertEquals( 0x00003123, this.registers.read( 0 ).getData() );
 

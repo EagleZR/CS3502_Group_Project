@@ -53,7 +53,7 @@ abstract class ExecutableInstruction implements Runnable {
 				throws InvalidInstructionException {
 			super( instruction, registers );
 
-			// TODO This can probably be done more efficiently, but I'm afraid I'd lose my mind
+			// This can probably be done more efficiently, but I'm afraid I'd lose my mind
 			// Find s1
 			int s1Mask = 0x00F00000;
 			this.s1 = (int) ( ( instruction.getData() & s1Mask ) >> 20 );
@@ -296,10 +296,8 @@ abstract class ExecutableInstruction implements Runnable {
 			throw new ExecutionException( "Send this to the DMA-Channel for processing, don't execute." );
 			//			switch ( this.type ) {
 			//				case RD: // Reads content of I/P buffer into a accumulator
-			//					// TODO RD
 			//					break;
 			//				case WR: // Writes the content of accumulator into O/P buffer
-			//					// TODO WR
 			//					break;
 			//				case NOP: // Does nothing and moves to next instruction
 			//					// Do nothing

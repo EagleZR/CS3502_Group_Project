@@ -55,7 +55,6 @@ public class CPU implements Runnable {
 	 */
 	public static void reset() {
 		cpuids.clear();
-		// TODO Reset everything
 	}
 
 	/**

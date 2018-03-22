@@ -15,12 +15,16 @@ public class Test_TaskManager {
 
 	private static TaskManager taskManager;
 
-	@BeforeClass public static void setUp() throws Exception {
+	@BeforeClass public static void setUp() {
 		taskManager = TaskManager.INSTANCE;
 		taskManager.addPCB( 14, 10, 6, 10, 25, 26, 2 );
 	}
 
-	@Test( expected = DuplicateIDException.class ) public void addProcess() throws Exception {
+	@AfterClass public static void tearDown() {
+		taskManager.reset();
+	}
+
+	@Test( expected = DuplicateIDException.class ) public void addProcess() {
 		taskManager.addPCB( 14, 10, 15, 10, 25, 26, 2 );
 	}
 
@@ -30,7 +34,7 @@ public class Test_TaskManager {
 		assertFalse( taskManager.contains( -1 ) );
 	}
 
-	@Test public void getProcess() throws Exception {
+	@Test public void getProcess() {
 		PCB PCB = taskManager.getPCB( 14 );
 		assertEquals( 10, PCB.getStartDiskAddress() );
 		assertEquals( 6, PCB.getInstructionsLength() );
@@ -43,12 +47,8 @@ public class Test_TaskManager {
 		assertEquals( 2, PCB.getPriority() );
 	}
 
-	@Test( expected = ProcessNotFoundException.class ) public void invalidPID() throws Exception {
+	@Test( expected = ProcessNotFoundException.class ) public void invalidPID() {
 		taskManager.getPCB( 3 );
-	}
-
-	@AfterClass public static void tearDown() {
-		taskManager.reset();
 	}
 
 }
