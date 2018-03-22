@@ -10,6 +10,7 @@ import yeezus.pcb.TaskManager;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
+import java.util.Objects;
 
 import static org.junit.Assert.*;
 
@@ -21,7 +22,7 @@ public class Test_Driver {
 	@Before public void setUp() throws Exception {
 		this.disk = new Memory( 150 );
 		this.controlDisk = new Memory( 150 );
-		File file = new File( this.getClass().getClassLoader().getResource( "Test-File.txt" ).getFile() );
+		File file = new File( Objects.requireNonNull( this.getClass().getClassLoader().getResource( "Test-File.txt" ) ).getFile() );
 		assertTrue( file.exists() );
 		Driver.loadFile( this.disk, file );
 		// Copy contents into a control disk to verify that changes have occurred

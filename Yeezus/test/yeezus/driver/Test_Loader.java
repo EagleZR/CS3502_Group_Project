@@ -12,6 +12,7 @@ import yeezus.pcb.TaskManager;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Objects;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -26,7 +27,8 @@ public class Test_Loader {
 		taskManager = TaskManager.INSTANCE;
 		disk = new Memory( 2048 );
 		new Loader( taskManager,
-				new File( Test_Loader.class.getClassLoader().getResource( "Program-File.txt" ).getFile() ), disk );
+				new File( Objects.requireNonNull( Test_Loader.class.getClassLoader().getResource( "Program-File.txt" ) )
+						.getFile() ), disk );
 	}
 
 	@AfterClass public static void tearDown() {

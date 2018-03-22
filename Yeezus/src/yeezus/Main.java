@@ -9,6 +9,7 @@ import yeezus.pcb.TaskManager;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
+import java.util.Objects;
 
 public class Main {
 
@@ -32,7 +33,7 @@ public class Main {
 
 			// Initialize and create Driver
 			Driver.loadFile( disk,
-					new File( Main.class.getClassLoader().getResource( "Program-File.txt" ).getFile() ) );
+					new File( Objects.requireNonNull( Main.class.getClassLoader().getResource( "Program-File.txt" ) ).getFile() ) );
 			driver = new Driver( NUM_CPUS, disk, REGISTER_SIZE, CACHE_SIZE, RAM_SIZE, POLICY );
 		} catch ( Exception e ) {
 			System.err.println( "An exception occurred in system initialization." );
