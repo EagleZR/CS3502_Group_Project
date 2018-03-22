@@ -30,6 +30,7 @@ public class Driver {
 	private CPU[] cpus;
 	private Thread[] threads;
 	private Memory disk;
+	private long[] idleTimes, executeTimes;
 
 	/**
 	 * Constructs a new Driver instance from the given parameters.
@@ -101,6 +102,14 @@ public class Driver {
 	 */
 	public static void reset() {
 		loader = null;
+	}
+
+	public long[] getIdleTimes() {
+		return idleTimes;
+	}
+
+	public long[] getExecuteTimes() {
+		return executeTimes;
 	}
 
 	/**
@@ -176,9 +185,17 @@ public class Driver {
 		} while ( !allJoined );
 
 		// Ensure that memory is written back to the source
+		this.executeTimes = new long[this.cpus.length];
+		this.idleTimes = new long[this.cpus.length];
 		for ( int i = 0; i < TaskManager.INSTANCE.getPCBs().size(); i++ ) {
 			// Wasted iterations, but ensures everything is written back
 			this.scheduler.run();
+		}
+
+		// Determine idle/execute times
+		for ( int i = 0; i < this.cpus.length; i++ ) {
+			idleTimes[i] = this.cpus[i].getIdleTime();
+			executeTimes[i] = this.cpus[i].getExecuteTime();
 		}
 	}
 

@@ -56,7 +56,7 @@ public class Main {
 		// Log end time
 		long endTime = System.nanoTime();
 
-		System.out.println( "The system completed in " + ( endTime - startTime ) + " nanoseconds." );
+		System.out.println( "The system completed in " + ( endTime - startTime ) / 1000 + " milliseconds." );
 
 		// Print out the disk
 		try {
@@ -102,10 +102,17 @@ public class Main {
 
 		// Print out runtime information
 		try {
+			System.out.println( "CPU Execute Times (ms): " );
+			for ( int i = 0; i < NUM_CPUS; i++ ) {
+				System.out.println( "CPU " + i + " execute time: " + ( driver.getExecuteTimes()[i] / 1000 ) );
+				System.out.println( "CPU " + i + " idle time: " + ( driver.getIdleTimes()[i] / 1000 ) );
+			}
+			System.out.println( "\nProcess Information: " );
 			for ( PCB pcb : TaskManager.INSTANCE.getPCBs() ) {
-				System.out.println( "Process: " + pcb.getPID() + "\nWait Time (ns): " + pcb.getElapsedWaitTime()
-						+ "\nRun Time (ns): " + pcb.getElapsedRunTime() + "\nExecution Count: " + pcb
-						.getExecutionCount() + "\n" + "IO Count: " + pcb.getNumIO() + "\n" );
+				System.out.println(
+						"Process: " + pcb.getPID() + "\nWait Time (ms): " + ( pcb.getElapsedWaitTime() / 1000 )
+								+ "\nRun Time (ms): " + ( pcb.getElapsedRunTime() / 1000 ) + "\nExecution Count: " + pcb
+								.getExecutionCount() + "\n" + "IO Count: " + pcb.getNumIO() + "\n" );
 			}
 		} catch ( Exception e ) {
 			System.err.println( "An exception occurred while printing the process data." );

@@ -26,6 +26,8 @@ public class CPU implements Runnable {
 	private ExecutableInstruction previousInstruction;
 	private ArrayList<String> log;
 	private boolean shutdown = false;
+	private long idleTime = 0;
+	private long executeTime = 0;
 
 	/**
 	 * Constructs a new CPU from the given parameters.
@@ -55,6 +57,24 @@ public class CPU implements Runnable {
 	 */
 	public static void reset() {
 		cpuids.clear();
+	}
+
+	/**
+	 * The amount of time this CPU has been executing processes.
+	 *
+	 * @return The amount of time in nanoseconds that this CPU has been busy.
+	 */
+	public long getExecuteTime() {
+		return executeTime;
+	}
+
+	/**
+	 * Retrieves the elapsed idle time for this CPU.
+	 *
+	 * @return The amount of time in nanoseconds that this CPU has been idling, without a process.
+	 */
+	public long getIdleTime() {
+		return idleTime;
 	}
 
 	/**
@@ -142,6 +162,7 @@ public class CPU implements Runnable {
 	 * @throws InvalidAddressException     Thrown if an instruction tries to access an invalid address in memory.
 	 */
 	@Override public void run() {
+		long startExecuteTime = System.nanoTime();
 		while ( !isShutdown() ) {
 			while ( getProcess() != null && getProcess().getStatus() != PCB.Status.TERMINATED ) {
 				// Check if this process has had a pc error
@@ -178,6 +199,8 @@ public class CPU implements Runnable {
 					}
 				}
 			}
+			long startSleepTime = System.nanoTime();
+			this.executeTime += startSleepTime - startExecuteTime;
 			synchronized ( this ) {
 				try {
 					this.wait();
@@ -185,6 +208,8 @@ public class CPU implements Runnable {
 					e.printStackTrace();
 				}
 			}
+			startExecuteTime = System.nanoTime();
+			this.idleTime += startExecuteTime - startSleepTime;
 		}
 	}
 
@@ -262,7 +287,7 @@ public class CPU implements Runnable {
 	 *
 	 * @return A {@link String} that displays the current state of this process's execution.
 	 */
-	public String generateSimpleDump() {
+	private String generateSimpleDump() {
 		StringBuilder dumpReport = new StringBuilder(
 				"CPU: " + this.cpuid + "\nPC: " + getPC() + "\nPID: " + getProcess().getPID() + "\nInstruction Count: "
 						+ getProcess().getExecutionCount() + "\nPrevious Instruction: " + this.previousInstruction
