@@ -28,6 +28,7 @@ public class CPU implements Runnable {
 	private boolean shutdown = false;
 	private long idleTime = 0;
 	private long executeTime = 0;
+	private int numProcesses =0;
 
 	/**
 	 * Constructs a new CPU from the given parameters.
@@ -114,7 +115,7 @@ public class CPU implements Runnable {
 			this.pc = pc;
 		}
 	}
-
+	public int getNumProcesses(){return this.numProcesses;}
 	/**
 	 * Retrieves the CPU ID for this CPU instance.
 	 *
@@ -147,6 +148,7 @@ public class CPU implements Runnable {
 		this.pcb.setCPUID( this.cpuid );
 		this.pcb.setStatus( PCB.Status.RUNNING );
 		setPC( 0 );
+		numProcesses++;
 	}
 
 	/**

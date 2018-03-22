@@ -199,6 +199,13 @@ public class Driver {
 		}
 	}
 
+	public String getProcPerCPU(){
+		String s = "";
+		for(int i=0; i<cpus.length; i++){
+			s += "\nCPU: " + i +" received " + cpus[i].getNumProcesses();
+		}
+		return s;
+	}
 	/**
 	 * Prints a dump of the data that contains the current state of the system. This will print to the {@link
 	 * System#out} {@link java.io.PrintStream}.

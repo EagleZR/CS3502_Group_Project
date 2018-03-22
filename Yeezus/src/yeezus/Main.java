@@ -15,7 +15,7 @@ public class Main {
 
 	// System Variables
 	private final static int NUM_CPUS = 4;
-	private final static CPUSchedulingPolicy POLICY = CPUSchedulingPolicy.FCFS;
+	private final static CPUSchedulingPolicy POLICY = CPUSchedulingPolicy.Priority;
 
 	// Memory Data
 	private final static int DISK_SIZE = 2048;
@@ -111,9 +111,11 @@ public class Main {
 			for ( PCB pcb : TaskManager.INSTANCE.getPCBs() ) {
 				System.out.println(
 						"Process: " + pcb.getPID() + "\nWait Time (ms): " + ( pcb.getElapsedWaitTime() / 1000000 )
-								+ "\nRun Time (ms): " + ( pcb.getElapsedRunTime() / 1000000 ) + "\nExecution Count: " + pcb
+								+ "\nRun Time (ms): " + ( pcb.getElapsedRunTime() / 1000000 ) + " \nCompletion time (ms): "
+                                + ( (pcb.getElapsedRunTime() + pcb.getElapsedWaitTime())/ 1000000 ) + "\nExecution Count: " + pcb
 								.getExecutionCount() + "\n" + "IO Count: " + pcb.getNumIO() + "\n" );
 			}
+			System.out.println(driver.getProcPerCPU());
 		} catch ( Exception e ) {
 			System.err.println( "An exception occurred while printing the process data." );
 			e.printStackTrace();
