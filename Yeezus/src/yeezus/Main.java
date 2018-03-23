@@ -9,6 +9,7 @@ import yeezus.pcb.TaskManager;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintStream;
+import java.net.URLDecoder;
 import java.util.Objects;
 
 public class Main {
@@ -32,9 +33,9 @@ public class Main {
 			disk = new Memory( DISK_SIZE );
 
 			// Initialize and create Driver
-			Driver.loadFile( disk, new File(
-					Objects.requireNonNull( Main.class.getClassLoader().getResource( "Program-File.txt" ) )
-							.getFile() ) );
+			Driver.loadFile( disk, new File( ( URLDecoder.decode(
+					Objects.requireNonNull( Main.class.getClassLoader().getResource( "Program-File.txt" ) ).getFile(),
+					"UTF-8" ) ) ) );
 			driver = new Driver( NUM_CPUS, disk, REGISTER_SIZE, CACHE_SIZE, RAM_SIZE, POLICY );
 		} catch ( Exception e ) {
 			System.err.println( "An exception occurred in system initialization." );
@@ -111,11 +112,12 @@ public class Main {
 			for ( PCB pcb : TaskManager.INSTANCE.getPCBs() ) {
 				System.out.println(
 						"Process: " + pcb.getPID() + "\nWait Time (ms): " + ( pcb.getElapsedWaitTime() / 1000000 )
-								+ "\nRun Time (ms): " + ( pcb.getElapsedRunTime() / 1000000 ) + " \nCompletion time (ms): "
-                                + ( (pcb.getElapsedRunTime() + pcb.getElapsedWaitTime())/ 1000000 ) + "\nExecution Count: " + pcb
-								.getExecutionCount() + "\n" + "IO Count: " + pcb.getNumIO() + "\n" );
+								+ "\nRun Time (ms): " + ( pcb.getElapsedRunTime() / 1000000 )
+								+ " \nCompletion time (ms): " + ( ( pcb.getElapsedRunTime() + pcb.getElapsedWaitTime() )
+								/ 1000000 ) + "\nExecution Count: " + pcb.getExecutionCount() + "\n" + "IO Count: "
+								+ pcb.getNumIO() + "\n" );
 			}
-			System.out.println(driver.getProcPerCPU());
+			System.out.println( driver.getProcPerCPU() );
 		} catch ( Exception e ) {
 			System.err.println( "An exception occurred while printing the process data." );
 			e.printStackTrace();

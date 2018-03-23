@@ -9,6 +9,7 @@ import yeezus.pcb.PCB;
 import yeezus.pcb.TaskManager;
 
 import java.io.File;
+import java.net.URLDecoder;
 import java.util.Objects;
 
 import static org.junit.Assert.assertEquals;
@@ -29,8 +30,9 @@ public class Test_Scheduler {
 		this.disk = new Memory( 2048 );
 		this.RAM = new Memory( 1024 );
 		this.mmu = new MMU( this.RAM );
-		new Loader( this.taskManager,
-				new File( Objects.requireNonNull( this.getClass().getClassLoader().getResource( "Program-File.txt" ) ).getFile() ), this.disk );
+		new Loader( this.taskManager, new File( ( URLDecoder.decode(
+				Objects.requireNonNull( this.getClass().getClassLoader().getResource( "Program-File.txt" ) ).getFile(),
+				"UTF-8" ) ) ), this.disk );
 	}
 
 	@Test public void testFCFS() { // Job 1

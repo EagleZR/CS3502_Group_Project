@@ -12,6 +12,7 @@ import yeezus.pcb.TaskManager;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URLDecoder;
 import java.util.Objects;
 
 import static org.junit.Assert.assertEquals;
@@ -26,9 +27,9 @@ public class Test_Loader {
 			throws InvalidWordException, DuplicateIDException, IOException, InvalidAddressException {
 		taskManager = TaskManager.INSTANCE;
 		disk = new Memory( 2048 );
-		new Loader( taskManager,
-				new File( Objects.requireNonNull( Test_Loader.class.getClassLoader().getResource( "Program-File.txt" ) )
-						.getFile() ), disk );
+		new Loader( taskManager, new File( ( URLDecoder.decode(
+				Objects.requireNonNull( Test_Loader.class.getClassLoader().getResource( "Program-File.txt" ) )
+						.getFile(), "UTF-8" ) ) ), disk );
 	}
 
 	@AfterClass public static void tearDown() {
