@@ -3,11 +3,9 @@ package yeezus.pcb;
 import yeezus.DuplicateIDException;
 import yeezus.driver.Loader;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.function.Consumer;
 
 /**
  * <p>The Task Manager for the processes within the {@link yeezus} Operating System. This implementation is little more
@@ -26,7 +24,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * @author Mark Zeagler
  * @version 2.0
  */
-public enum TaskManager {
+public enum TaskManager implements Iterable<PCB> {
 
 	/**
 	 * This ensures that there's only a single instance.
@@ -112,14 +110,23 @@ public enum TaskManager {
 	/**
 	 * <p>Retrieves all of the {@link PCB}s that have run, are running, or will run on this system.</p><p>For a list of
 	 * all processes waiting to be run, use {@link TaskManager#getJobQueue()}. For {@link PCB}s of processes that are
-	 * ready to be run, use {@link TaskManager#getReadyQueue()}.</p><p><b>NOTE:</b> {@link List} is not
-	 * synchronized, so the returned list is a clone of the original, not the original itself. Changes made to the
-	 * cloned object will not be reflected in the original.</p>
+	 * ready to be run, use {@link TaskManager#getReadyQueue()}.</p><p><b>NOTE:</b> {@link List} is not synchronized, so
+	 * the returned list is a clone of the original, not the original itself. Changes made to the cloned object will not
+	 * be reflected in the original.</p>
 	 *
 	 * @return A {@link List} of {@link PCB}s for all processes on the system.
 	 */
-	public List<PCB> getPCBs() {
+	private List<PCB> getPCBs() {
 		return new ArrayList<>( this.PCBs );
+	}
+
+	/**
+	 * Retrieves the number of {@link PCB}s stored in this task manager.
+	 *
+	 * @return The number of {@link PCB}s in this task manager.
+	 */
+	public int size() {
+		return this.PCBs.size();
 	}
 
 	/**
@@ -143,5 +150,42 @@ public enum TaskManager {
 		this.jobQueue.clear();
 		this.PCBs.clear();
 		this.readyQueue.clear();
+	}
+
+	@Override public void forEach( Consumer<? super PCB> action ) {
+		iterator().forEachRemaining( action );
+	}
+
+	@Override public Iterator<PCB> iterator() {
+		return new Iterator<PCB>() { // If this actually works...
+
+			private int i = 0;
+
+			@Override public void forEachRemaining( Consumer<? super PCB> action ) {
+				for ( ; this.i < TaskManager.INSTANCE.getPCBs().size(); this.i++ ) {
+					action.accept( TaskManager.INSTANCE.getPCB( i ) );
+				}
+			}
+
+			@Override public boolean hasNext() {
+				return this.i < TaskManager.INSTANCE.getPCBs().size();
+			}
+
+			@Override public PCB next() {
+				if ( hasNext() ) {
+					return TaskManager.INSTANCE.getPCB( ++this.i );
+				} else {
+					throw new NoSuchElementException();
+				}
+			}
+
+			/**
+			 * Not supported. To clear the {@link TaskManager}, use {@link TaskManager#reset()}.
+			 */
+			@Override public void remove() {
+				throw new UnsupportedOperationException(
+						"We don't want to remove PCBs from the Task Manager. To clear the Task Manager, use TaskManager.reset()" );
+			}
+		};
 	}
 }

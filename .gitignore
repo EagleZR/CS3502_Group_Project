@@ -14,7 +14,6 @@
 *.jar
 *.war
 *.ear
-*.zip
 *.tar.gz
 *.rar
 
@@ -26,6 +25,7 @@ hs_err_pid*
 
 # Microsoft Word Temporary Files
 ~$*.doc*
+~$*.xls*
 
 ~*.tmp
 Yeezus/out/production/Yeezus/Program-File.txt

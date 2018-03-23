@@ -134,7 +134,7 @@ public class Driver {
 			// TODO Handle interrupts
 
 			jobsDone = true;
-			for ( PCB pcb : TaskManager.INSTANCE.getPCBs() ) {
+			for ( PCB pcb : TaskManager.INSTANCE ) {
 				if ( pcb.getStatus() != PCB.Status.TERMINATED ) {
 					jobsDone = false;
 				}
@@ -191,7 +191,7 @@ public class Driver {
 		// Ensure that memory is written back to the source
 		this.executeTimes = new long[this.cpus.length];
 		this.idleTimes = new long[this.cpus.length];
-		for ( int i = 0; i < TaskManager.INSTANCE.getPCBs().size(); i++ ) {
+		for ( int i = 0; i < TaskManager.INSTANCE.size(); i++ ) {
 			// Wasted iterations, but ensures everything is written back
 			this.scheduler.run();
 		}
@@ -203,13 +203,14 @@ public class Driver {
 		}
 	}
 
-	public String getProcPerCPU(){
+	public String getProcPerCPU() {
 		String s = "";
-		for(int i=0; i<cpus.length; i++){
-			s += "\nCPU: " + i +" received " + cpus[i].getNumProcesses();
+		for ( int i = 0; i < cpus.length; i++ ) {
+			s += "\nCPU: " + i + " received " + cpus[i].getNumProcesses();
 		}
 		return s;
 	}
+
 	/**
 	 * Prints a dump of the data that contains the current state of the system. This will print to the {@link
 	 * System#out} {@link java.io.PrintStream}.
@@ -226,7 +227,7 @@ public class Driver {
 		}
 
 		System.out.println( "**Process Info**" );
-		for ( PCB pcb : TaskManager.INSTANCE.getPCBs() ) {
+		for ( PCB pcb : TaskManager.INSTANCE ) {
 			StringBuilder pcbDump = new StringBuilder();
 			pcbDump.append( "Process: " ).append( pcb.getPID() ).append( "\nStatus: " ).append( pcb.getStatus() )
 					.append( "\nOutput Buffer: " );

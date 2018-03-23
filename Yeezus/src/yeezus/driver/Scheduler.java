@@ -27,7 +27,7 @@ public class Scheduler implements Runnable {
 	 */
 	@Override public void run() {
 		// Remove terminated processes from the RAM
-		for ( PCB pcb : this.taskManager.getPCBs() ) {
+		for ( PCB pcb : this.taskManager ) {
 			if ( pcb.getStatus() == PCB.Status.TERMINATED && this.mmu.processMapped( pcb ) ) {
 				try {
 					// Write process back to disk
