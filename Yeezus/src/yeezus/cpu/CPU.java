@@ -28,7 +28,7 @@ public class CPU implements Runnable {
 	private boolean shutdown = false;
 	private long idleTime = 0;
 	private long executeTime = 0;
-	private int numProcesses =0;
+	private int numProcesses = 0;
 
 	/**
 	 * Constructs a new CPU from the given parameters.
@@ -115,7 +115,11 @@ public class CPU implements Runnable {
 			this.pc = pc;
 		}
 	}
-	public int getNumProcesses(){return this.numProcesses;}
+
+	public int getNumProcesses() {
+		return this.numProcesses;
+	}
+
 	/**
 	 * Retrieves the CPU ID for this CPU instance.
 	 *

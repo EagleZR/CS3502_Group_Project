@@ -1,7 +1,7 @@
 package yeezus.driver;
 /**
- * The loader of the OS. Takes a txt file and grabs the PCB attributes, the info about the buffers, and
- * sends instructions to drive.
+ * The loader of the OS. Takes a txt file and grabs the PCB attributes, the info about the buffers, and sends
+ * instructions to drive.
  * <p>
  * author: jessica brummel
  **/

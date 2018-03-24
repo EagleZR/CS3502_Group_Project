@@ -7,7 +7,6 @@
  * @author Nick Curtin
  * @author Pablo Avecilla
  * @author Selena Guillen
- *
  * @version Phase 1 Part 2
  */
 
