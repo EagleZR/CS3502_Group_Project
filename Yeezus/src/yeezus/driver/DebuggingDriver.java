@@ -1,10 +1,7 @@
 package yeezus.driver;
 
-import com.sun.istack.internal.NotNull;
 import yeezus.DuplicateIDException;
 import yeezus.cpu.CPU;
-import yeezus.cpu.ContinuousCPU;
-import yeezus.memory.InvalidWordException;
 import yeezus.memory.Memory;
 import yeezus.pcb.PCB;
 import yeezus.pcb.TaskManager;
@@ -12,19 +9,15 @@ import yeezus.pcb.TaskManager;
 import java.io.File;
 
 /**
- * This class represents the CPU Driver within the {@link yeezus} operating system. Multiple instances of this class
- * indicate the presence of multiple logical CPUs. To initialize the class, the {@link Loader} must be called using the
- * static {@link Driver#loadFile(Memory, File)} method to load the contents of the Program-File.txt to the virtual
- * disk.
- *
  * @author Mark Zeagler
- * @version 2.0
+ * @version 1.0
  */
-public class Driver extends AbstractDriver {
+public class DebuggingDriver extends AbstractDriver {
 
 	private CPU cpu;
 	private Memory registers;
 	private Dispatcher dispatcher;
+	private boolean jobsDone = false;
 
 	/**
 	 * Constructs a new Driver instance from the given parameters.
@@ -35,16 +28,15 @@ public class Driver extends AbstractDriver {
 	 * @param ramSize          The size of the cache to be used by the OS.
 	 * @param schedulingPolicy The process scheduling policy that this system will adhere to.
 	 * @throws UninitializedDriverException Thrown if a driver instance is created before the loader has been run. This
-	 *                                      can be fixed by running {@link Driver#loadFile(Memory, File)} prior to
-	 *                                      creating a Driver instance.
+	 *                                      can be fixed by running {@link DebuggingDriver#loadFile(Memory, File)} prior
+	 *                                      to creating a Driver instance.
 	 * @throws DuplicateIDException         Thrown if the given CPU ID already exists with another CPU.
 	 */
-	public Driver( @NotNull Memory disk, int registerSize, int cacheSize, int ramSize,
-			@NotNull CPUSchedulingPolicy schedulingPolicy )
-			throws UninitializedDriverException, DuplicateIDException, InvalidWordException {
+	public DebuggingDriver( Memory disk, int registerSize, int cacheSize, int ramSize,
+			CPUSchedulingPolicy schedulingPolicy ) {
 		super( disk, registerSize, cacheSize, ramSize, schedulingPolicy );
 
-		this.cpu = new ContinuousCPU( 0, this.mmu, registerSize, cacheSize );
+		this.cpu = new CPU( 0, this.mmu, registerSize, cacheSize );
 		this.registers = this.cpu.getRegisters();
 
 		this.dispatcher = new Dispatcher( TaskManager.INSTANCE, this.mmu, this.cpu );
@@ -57,26 +49,24 @@ public class Driver extends AbstractDriver {
 	 * @throws InterruptedException See {@link InterruptedException}.
 	 */
 	@Override public void run() {
-		// Wait for all jobs to be completed. Could probably make this more efficient
-		boolean jobsDone = false;
-		while ( !jobsDone ) { // Loop through Scheduler/Dispatcher
+		// Check if all jobs have been completed. Could probably make this more efficient...
+		for ( PCB pcb : TaskManager.INSTANCE ) {
+			if ( pcb.getStatus() != PCB.Status.TERMINATED ) {
+				this.jobsDone = false;
+			}
+		}
+
+		if ( !this.jobsDone ) { // Loop through Scheduler/Dispatcher
 			this.scheduler.run();
 			this.dispatcher.run();
 			this.cpu.run();
 			// TODO Handle interrupts
-
-			jobsDone = true;
-			for ( PCB pcb : TaskManager.INSTANCE ) {
-				if ( pcb.getStatus() != PCB.Status.TERMINATED ) {
-					jobsDone = false;
-				}
+		} else {
+			// Ensure that memory is written back to the source
+			for ( int i = 0; i < TaskManager.INSTANCE.size(); i++ ) {
+				// Wasted iterations, but ensures everything is written back
+				this.scheduler.run();
 			}
-		}
-
-		// Ensure that memory is written back to the source
-		for ( int i = 0; i < TaskManager.INSTANCE.size(); i++ ) {
-			// Wasted iterations, but ensures everything is written back
-			this.scheduler.run();
 		}
 	}
 
@@ -112,5 +102,9 @@ public class Driver extends AbstractDriver {
 
 	public Memory getRegisters() {
 		return this.registers;
+	}
+
+	public boolean isFinished() {
+		return this.jobsDone;
 	}
 }

@@ -10,7 +10,7 @@ import yeezus.memory.Word;
  * @version 1.0
  */
 public class Test_WordVisualizer extends Application {
-	@Override public void start( Stage primaryStage ) throws Exception {
+	@Override public void start( Stage primaryStage ) {
 		WordVisualizer word = new WordVisualizer( 0, new Word( "0x12310321" ) );
 		word.setPrefWidth( 200 );
 		Scene scene = new Scene( word, 200, 100 );

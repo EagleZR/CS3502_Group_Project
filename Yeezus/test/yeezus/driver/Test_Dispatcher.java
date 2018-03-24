@@ -24,7 +24,7 @@ public class Test_Dispatcher {
 		this.mmu = new MMU( new Memory( 1024 ) );
 		this.cpus = new CPU[1];
 		this.cpus[0] = new CPU( 0, this.mmu, 16, 100 );
-		this.dispatcher = new Dispatcher( this.taskManager, this.cpus, this.mmu );
+		this.dispatcher = new Dispatcher( this.taskManager, this.mmu, this.cpus );
 		this.taskManager.addPCB( 1, 0, 10, 14, 20, 10, 1 );
 		this.taskManager.getReadyQueue().add( this.taskManager.getPCB( 1 ) );
 		PCB pcb = this.taskManager.getPCB( 1 );
@@ -66,7 +66,7 @@ public class Test_Dispatcher {
 	public void testSwap() { // TODO Re-enable when we actually need to swap
 		// Run several cycles to increment counter
 		for ( int i = 0; i < 4; i++ ) { // Move counter to 4
-			this.cpus[0].debugRun();
+			this.cpus[0].run();
 		}
 
 		// Set up old process and save the control data
@@ -116,7 +116,7 @@ public class Test_Dispatcher {
 
 		// Ensure that the pc was successfully loaded
 		for ( int i = 0; i < 6; i++ ) {
-			this.cpus[0].debugRun();
+			this.cpus[0].run();
 		}
 		assertEquals( PCB.Status.TERMINATED, oldProcess.getStatus() );
 	}

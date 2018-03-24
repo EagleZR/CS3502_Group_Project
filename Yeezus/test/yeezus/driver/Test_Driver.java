@@ -44,11 +44,11 @@ public class Test_Driver {
 	}
 
 	@Test public void loadFile() {
-		new Driver( 1, this.disk, 16, 100, 100, CPUSchedulingPolicy.FCFS );
+		new Driver( this.disk, 16, 100, 100, CPUSchedulingPolicy.FCFS );
 		// Should be no exception here
 		Driver.reset();
 		try {
-			new Driver( 1, this.disk, 16, 100, 100, CPUSchedulingPolicy.FCFS );
+			new Driver( this.disk, 16, 100, 100, CPUSchedulingPolicy.FCFS );
 		} catch ( UninitializedDriverException e ) {
 			// Correct exception thrown
 			return;
@@ -57,7 +57,7 @@ public class Test_Driver {
 	}
 
 	@Test public void runFCFS() throws Exception {
-		new Driver( 1, this.disk, 16, 100, 100, CPUSchedulingPolicy.FCFS ).run();
+		new Driver( this.disk, 16, 100, 100, CPUSchedulingPolicy.FCFS ).run();
 		// Print the disk contents for manual verification
 		File output = new File( "output/FCFS_Output_Test_File.txt" );
 		output.getParentFile().mkdirs();
@@ -81,7 +81,7 @@ public class Test_Driver {
 	}
 
 	@Test public void runPriority() throws Exception {
-		new Driver( 1, this.disk, 16, 100, 100, CPUSchedulingPolicy.Priority ).run();
+		new Driver( this.disk, 16, 100, 100, CPUSchedulingPolicy.Priority ).run();
 		// Print the disk contents for manual verification
 		File output = new File( "output/Priority_Output_Test_File.txt" );
 		output.getParentFile().mkdirs();

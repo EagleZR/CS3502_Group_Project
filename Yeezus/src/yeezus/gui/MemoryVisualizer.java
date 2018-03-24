@@ -24,8 +24,8 @@ public class MemoryVisualizer extends ListView<WordVisualizer> { // TODO Use Lis
 
 	private void setup() {
 		ArrayList<WordVisualizer> words = new ArrayList<>();
-		for ( int i = 0; i < memory.getCapacity(); i++ ) {
-			WordVisualizer word = new WordVisualizer( i, memory.read( i ) );
+		for ( int i = 0; i < this.memory.getCapacity(); i++ ) {
+			WordVisualizer word = new WordVisualizer( i, this.memory.read( i ) );
 			words.add( word );
 		}
 		this.wordVisualizers = FXCollections.observableList( words );
@@ -37,5 +37,10 @@ public class MemoryVisualizer extends ListView<WordVisualizer> { // TODO Use Lis
 		for ( int i = 0; i < this.memory.getCapacity(); i++ ) {
 			this.wordVisualizers.get( i ).update( this.memory.read( i ) );
 		}
+	}
+
+	public void setMemory( Memory memory ) {
+		this.memory = memory;
+		update();
 	}
 }

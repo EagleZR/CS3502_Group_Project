@@ -6,7 +6,7 @@ import javafx.stage.Stage;
 import yeezus.pcb.TaskManager;
 
 public class Test_PCB_Pane extends Application {
-	@Override public void start( Stage primaryStage ) throws Exception {
+	@Override public void start( Stage primaryStage ) {
 		TaskManager taskManager = TaskManager.INSTANCE;
 		taskManager.addPCB( 0, 0, 15, 34, 61, 15, 7 );
 		PCB_Pane pcb_pane = new PCB_Pane( taskManager.getPCB( 0 ) );

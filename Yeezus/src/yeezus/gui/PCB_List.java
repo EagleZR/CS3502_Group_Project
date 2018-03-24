@@ -14,7 +14,7 @@ public class PCB_List extends ListView<PCB_Pane> {
 
 	public PCB_List( TaskManager taskManager ) {
 		ArrayList<PCB_Pane> pcbs = new ArrayList<>();
-		for ( PCB pcb : taskManager.getPCBs() ) {
+		for ( PCB pcb : taskManager ) {
 			pcbs.add( new PCB_Pane( pcb ) );
 		}
 		this.panes = FXCollections.observableList( pcbs );

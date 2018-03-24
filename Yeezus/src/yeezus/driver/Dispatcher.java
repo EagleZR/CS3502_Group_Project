@@ -12,7 +12,7 @@ public class Dispatcher implements Runnable {
 	private CPU[] cpus;
 	private MMU mmu;
 
-	Dispatcher( TaskManager taskManager, CPU[] cpus, MMU mmu ) {
+	Dispatcher( TaskManager taskManager, MMU mmu, CPU... cpus ) {
 		this.taskManager = taskManager;
 		this.cpus = cpus;
 		this.mmu = mmu;

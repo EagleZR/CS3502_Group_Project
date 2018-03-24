@@ -11,7 +11,7 @@ import yeezus.memory.Word;
  * @version 1.0
  */
 public class Test_MemoryVisualizer extends Application {
-	@Override public void start( Stage primaryStage ) throws Exception {
+	@Override public void start( Stage primaryStage ) {
 		int capacity = 1024;
 		Memory memory = new Memory( capacity );
 		for ( int i = 0; i < capacity; i++ ) {

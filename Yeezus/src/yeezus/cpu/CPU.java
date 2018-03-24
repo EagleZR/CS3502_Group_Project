@@ -9,8 +9,9 @@ import java.util.ArrayList;
 
 /**
  * This class emulates some of the CPU's actions in the {@link yeezus} Operating System. Once it has been assigned a
- * {@link PCB}, it runs until the associated process has been terminated. The CPU fetches instructions from the {@link
- * MMU}, decodes them, and executes them. Changes to the process data are reflected in the RAM.
+ * {@link PCB}, it will work on a single instruction from that process for every time {@link CPU#run()} is called. The
+ * CPU fetches instructions from the {@link MMU}, decodes them, and executes them. Output data from the process is saved
+ * in the RAM.
  *
  * @author Mark Zeagler
  * @version 1.0
@@ -25,9 +26,6 @@ public class CPU implements Runnable {
 	private int pc;
 	private ExecutableInstruction previousInstruction;
 	private ArrayList<String> log;
-	private boolean shutdown = false;
-	private long idleTime = 0;
-	private long executeTime = 0;
 	private int numProcesses = 0;
 
 	/**
@@ -58,41 +56,6 @@ public class CPU implements Runnable {
 	 */
 	public static void reset() {
 		cpuids.clear();
-	}
-
-	/**
-	 * The amount of time this CPU has been executing processes.
-	 *
-	 * @return The amount of time in nanoseconds that this CPU has been busy.
-	 */
-	public long getExecuteTime() {
-		return executeTime;
-	}
-
-	/**
-	 * Retrieves the elapsed idle time for this CPU.
-	 *
-	 * @return The amount of time in nanoseconds that this CPU has been idling, without a process.
-	 */
-	public long getIdleTime() {
-		return idleTime;
-	}
-
-	/**
-	 * Checks if the shutdown signal has been sent to this CPU.
-	 *
-	 * @return {@code true} if this CPU has been signaled to shut down.
-	 */
-	private synchronized boolean isShutdown() {
-		return this.shutdown;
-	}
-
-	/**
-	 * Signals this CPU to shut down.
-	 */
-	public synchronized void signalShutdown() {
-		this.shutdown = true;
-
 	}
 
 	/**
@@ -152,13 +115,12 @@ public class CPU implements Runnable {
 		this.pcb.setCPUID( this.cpuid );
 		this.pcb.setStatus( PCB.Status.RUNNING );
 		setPC( 0 );
-		numProcesses++;
+		this.numProcesses++;
 	}
 
 	/**
-	 * Executes any process that is loaded into this CPU. <p><b>NOTE:</b> If there is no currently-set process, this
-	 * method will cause its parent thread to sleep. To wake it up, use {@link CPU#setProcess(PCB)} to set a new
-	 * process, followed by {@link Object#notify()} to begin its execution again.</p>
+	 * Executes the next instruction of the any process that is loaded into this CPU. If there is no process, or the
+	 * process is not {@link PCB.Status#RUNNING}, this will do nothing.
 	 *
 	 * @throws InvalidInstructionException Thrown if the fetched Instruction could not be successfully decoded.
 	 * @throws InvalidWordException        Thrown if there was an issue with storing new data in the execution of the
@@ -168,83 +130,39 @@ public class CPU implements Runnable {
 	 * @throws InvalidAddressException     Thrown if an instruction tries to access an invalid address in memory.
 	 */
 	@Override public void run() {
-		long startExecuteTime = System.nanoTime();
-		while ( !isShutdown() ) {
-			while ( getProcess() != null && getProcess().getStatus() != PCB.Status.TERMINATED ) {
-				// Check if this process has had a pc error
-				if ( getPC() >= getProcess().getInstructionsLength() ) {
-					System.err.println( generateSimpleDump() );
-					printDump();
-					getProcess().setStatus( PCB.Status.TERMINATED );
+		if ( getProcess() != null && getProcess().getStatus() == PCB.Status.RUNNING ) {
+			// Check if this process has had a pc error
+			if ( getPC() >= getProcess().getInstructionsLength() ) {
+				System.err.println( generateSimpleDump() );
+				printDump();
+				getProcess().setStatus( PCB.Status.TERMINATED );
+			} else {
+				// Fetch
+				Word instruction = this.cache.read( getPC() );
+				setPC( getPC() + 1 );
+
+				// Decode
+				ExecutableInstruction executableInstruction = decode( instruction );
+
+				// Execute
+				getProcess().incExecutionCount();
+
+				if ( executableInstruction.type == InstructionSet.HLT ) {
+					getProcess().setStatus(
+							PCB.Status.TERMINATED ); // Make sure this is the last call to getProcess() this loop
+					this.previousInstruction = null;
+					this.log.clear();
 				} else {
-					// Fetch
-					Word instruction = this.cache.read( getPC() );
-					setPC( getPC() + 1 );
-
-					// Decode
-					ExecutableInstruction executableInstruction = decode( instruction );
-
-					// Execute
-					getProcess().incExecutionCount();
-
-					if ( executableInstruction.type == InstructionSet.HLT ) {
-						getProcess().setStatus(
-								PCB.Status.TERMINATED ); // Make sure this is the last call to getProcess() this loop
-						this.previousInstruction = null;
-						this.log.clear();
+					if ( executableInstruction.getClass() == ExecutableInstruction.IOExecutableInstruction.class ) {
+						this.dmaChannel.handle( (ExecutableInstruction.IOExecutableInstruction) executableInstruction,
+								getProcess() );
 					} else {
-						if ( executableInstruction.getClass() == ExecutableInstruction.IOExecutableInstruction.class ) {
-							this.dmaChannel
-									.handle( (ExecutableInstruction.IOExecutableInstruction) executableInstruction,
-											getProcess() );
-						} else {
-							executableInstruction.run();
-						}
-						this.previousInstruction = executableInstruction;
-						this.log.add( generateSimpleDump() );
+						executableInstruction.run();
 					}
+					this.previousInstruction = executableInstruction;
+					this.log.add( generateSimpleDump() );
 				}
 			}
-			long startSleepTime = System.nanoTime();
-			this.executeTime += startSleepTime - startExecuteTime;
-			synchronized ( this ) {
-				try {
-					this.wait();
-				} catch ( InterruptedException e ) {
-					e.printStackTrace();
-				}
-			}
-			startExecuteTime = System.nanoTime();
-			this.idleTime += startExecuteTime - startSleepTime;
-		}
-	}
-
-	/**
-	 * For testing use only. For regular execution, use {@link CPU#run()}.
-	 */
-	public void debugRun() {
-		if ( getProcess() == null ) {
-			// Do nothing
-			return;
-		}
-		// Fetch
-		Word instruction = this.cache.read( getPC() );
-		setPC( getPC() + 1 );
-
-		// Decode
-		ExecutableInstruction executableInstruction = decode( instruction );
-
-		// Execute
-		if ( executableInstruction.type == InstructionSet.HLT ) {
-			getProcess().setStatus( PCB.Status.TERMINATED );
-			return;
-		}
-
-		if ( executableInstruction.getClass() == ExecutableInstruction.IOExecutableInstruction.class ) {
-			this.dmaChannel
-					.handle( (ExecutableInstruction.IOExecutableInstruction) executableInstruction, getProcess() );
-		} else {
-			executableInstruction.run();
 		}
 	}
 
