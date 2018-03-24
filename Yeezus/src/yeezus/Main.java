@@ -281,10 +281,12 @@ public class Main {
 			XSSFCell cpuidCell = row.createCell( x, CellType.NUMERIC );
 			XSSFCell busyCell = row.createCell( x + 1, CellType.NUMERIC );
 			XSSFCell idleCell = row.createCell( x + 2, CellType.NUMERIC );
+			XSSFCell numProcessesCell = row.createCell( x + 3, CellType.NUMERIC );
 
 			cpuidCell.setCellValue( i );
 			busyCell.setCellValue( busyTimes[i] / timeConverter );
 			idleCell.setCellValue( idleTimes[i] / timeConverter );
+			numProcessesCell.setCellValue(driver.getProcPerCPU());
 		}
 
 		// Write average rows
