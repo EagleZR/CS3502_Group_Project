@@ -4,11 +4,11 @@ package yeezus.pcb;
  * Thrown if the {@code PID} was not found within the {@link TaskManager}.
  *
  * @author Mark Zeagler
- * @version 1.0
+ * @version 1.1
  */
-public class ProcessNotFoundException extends Exception {
+class ProcessNotFoundException extends RuntimeException {
 
-	public ProcessNotFoundException( String s ) {
+	ProcessNotFoundException( String s ) {
 		super( s );
 	}
 }

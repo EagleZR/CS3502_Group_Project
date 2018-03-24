@@ -19,26 +19,23 @@ public class DMAChannel {
 	}
 
 	public void handle( ExecutableInstruction.IOExecutableInstruction instruction, PCB pcb ) {
-		pid = pcb.getPID();
+		pcb.incNumIO();
 		int reg1 = instruction.reg1;
 		int reg2 = instruction.reg2;
 
-		System.out.println( "Executing: " + instruction.type + ", " + reg1 + ", " + reg2 + "(" + (int) (
-				registers.read( reg2 ).getData() / 4 ) + "), " + instruction.address );
+		//	System.out.println( "Executing: " + instruction.type + ", " + reg1 + ", " + reg2 + "(" + (int) registers.read( reg2 ).getData() / 4 )+"), " + instruction.address );
 
 		//RW operation
 		if ( instruction.type == InstructionSet.RD ) {
 			//reading address into reg1
 			if ( instruction.reg2 == 0 && instruction.address != 0 ) {
-				registers.write( instruction.reg1, mmu.read( pid, instruction.address / 4 ) );
-				System.out.println( "Reading address: " + instruction.address / 4 + " into reg1: " + instruction.reg1 );
+				registers.write( instruction.reg1, mmu.read( pcb, instruction.address / 4 ) );
+				// System.out.println( "Reading address: " + instruction.address / 4 + " into reg1: " + instruction.reg1 );
 			}
 			//reading reg2 into reg1
 			else {
-				registers.write( instruction.reg1, mmu.read( pid, (int) ( registers.read( reg2 ).getData() / 4 ) ) );
-				System.out.println(
-						"Reading address: " + registers.read( instruction.reg2 ).getData() / 4 + " into reg1: "
-								+ instruction.reg1 );
+				registers.write( instruction.reg1, mmu.read( pcb, (int) ( registers.read( reg2 ).getData() / 4 ) ) );
+				// System.out.println("Reading address: " + registers.read( instruction.reg2 ).getData() / 4 + " into reg1: "+ instruction.reg1 );
 			}
 		}
 
@@ -46,17 +43,16 @@ public class DMAChannel {
 		else if ( instruction.type == InstructionSet.WR ) {
 			//writing register 1 to address
 			if ( instruction.reg2 == 0 && instruction.address != 0 ) {
-				mmu.write( pid, instruction.address / 4, registers.read( instruction.reg1 ) );
-				System.out.println( "Writing " + registers.read( instruction.reg1 ).getData() + " into address: "
-						+ instruction.address / 4 );
+				mmu.write( pcb, instruction.address / 4, registers.read( instruction.reg1 ) );
+				// System.out.println( "Writing " + registers.read( instruction.reg1 ).getData() + " into address: "+ instruction.address / 4 );
 			}
 			//writing register 1 to register 2
 			else {
-				mmu.write( pid, (int) registers.read( instruction.reg2 ).getData() / 4,
+				mmu.write( pcb, (int) registers.read( instruction.reg2 ).getData() / 4,
 						registers.read( instruction.reg1 ) );
-				System.out.println( "Writing " + registers.read( instruction.reg1 ).getData() + " into address: "
-						+ registers.read( instruction.reg2 ).getData() / 4 );
+				// System.out.println( "Writing " + registers.read( instruction.reg1 ).getData() + " into address: "+ registers.read( instruction.reg2 ).getData() / 4 );
 			}
 		}
+
 	}
 }

@@ -1,10 +1,13 @@
 package yeezus.cpu;
 
 /**
- * To be thrown during the execution of an {@link Executable} object.
+ * To be thrown during the execution of an {@link ExecutableInstruction}.
+ *
+ * @author Mark Zeagler
+ * @version 1.1
  */
-public class ExecutionException extends RuntimeException {
-	public ExecutionException( String s ) {
+class ExecutionException extends RuntimeException {
+	ExecutionException( String s ) {
 		super( s );
 	}
 }

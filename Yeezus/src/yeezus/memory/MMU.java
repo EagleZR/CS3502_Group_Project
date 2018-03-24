@@ -1,17 +1,21 @@
 package yeezus.memory;
 
+import yeezus.pcb.PCB;
+
 import java.util.ArrayList;
 
 /**
  * The MMU helps organize the RAM {@link Memory} in the {@link yeezus} Operating System. The MMU keeps track of which
  * processes own which RAM addresses or blocks of addresses, and acts as the translator between logical and physical
  * memory.
+ *
+ * @author Mark Zeagler
+ * @version 2.0
  */
 public class MMU {
 
-	private ArrayList<ArrayList<Integer>> addressMap; // TODO Make this more efficient later
+	private ArrayList<ArrayList<Integer>> addressMap;
 	private ArrayList<Integer> freeAddresses;
-	//	private int[] addressOwnershipRegistry;
 	private Memory RAM;
 
 	/**
@@ -25,28 +29,33 @@ public class MMU {
 		for ( int i = 0; i < RAM.getCapacity(); i++ ) {
 			this.freeAddresses.add( i );
 		}
-		// this.addressOwnershipRegistry = new int[RAM.getCapacity()];
 		this.addressMap = new ArrayList<>();
 	}
 
 	/**
 	 * Maps the requested amount of memory in RAM to the given Process ID.
 	 *
-	 * @param pid  The Process ID for the process whose memory is to be mapped.
-	 * @param size The amount of memory that is to be reserved for the process.
+	 * @param pcb The PCB of the process to be mapped.
 	 * @return {@code true} if the memory was successfully mapped for the process.
 	 */
-	public synchronized boolean mapMemory( int pid, int size ) {
-		System.out.println( "Loading process " + pid + " into RAM." );
+	public synchronized boolean mapMemory( PCB pcb ) {
+		if ( pcb == null ) {
+			return false;
+		}
+
+		int pid = pcb.getPID();
+		int size = pcb.getTotalSize();
+
+		if ( size > this.freeAddresses.size() ) {
+			return false;
+		}
 		try {
 			for ( int i = 0; i < size; i++ ) {
 				mapAddress( pid, i );
 			}
-			System.out.println( "The process was successfully mapped." );
 			return true;
 		} catch ( InvalidAddressException e ) {
-			terminatePID( pid );
-			e.printStackTrace();
+			terminateProcessMemory( pcb );
 			return false;
 		}
 	}
@@ -54,15 +63,15 @@ public class MMU {
 	/**
 	 * Checks if the given Process ID has any associated memory mappings in RAM.
 	 *
-	 * @param pid The Process ID of the memory mappings to be checked.
+	 * @param pcb The PCB of the memory mappings to be checked.
 	 * @return {@code true} if the Process ID is associated with any memory mappings in RAM.
 	 */
-	public synchronized boolean processMapped( int pid ) {
-		return this.addressMap.get( pid ) != null;
+	public synchronized boolean processMapped( PCB pcb ) {
+		return this.addressMap.get( pcb.getPID() ) != null;
 	}
 
 	/**
-	 * {@code @Deprecated} Don't use this anymore. Use {@link MMU#mapMemory(int, int)} instead.
+	 * {@code @Deprecated} Don't use this anymore. Use {@link MMU#mapMemory(PCB)} instead.
 	 *
 	 * @param pid            The Process ID of the process whose memory is to be mapped.
 	 * @param logicalAddress The logical address of the memory as recognized by the process that owns it.
@@ -80,23 +89,14 @@ public class MMU {
 		ArrayList<Integer> processAddresses;
 
 		if ( pid >= this.addressMap.size() || this.addressMap.get( pid ) == null ) {
-			while ( ( pid - addressMap.size() ) >= 0 ) { // Only executes if it's not large enough
-				addressMap.add( null );
+			while ( ( pid - this.addressMap.size() ) >= 0 ) { // Only executes if it's not large enough
+				this.addressMap.add( null );
 			}
 			processAddresses = new ArrayList<>();
 			this.addressMap.set( pid, processAddresses );
 		} else {
 			processAddresses = this.addressMap.get( pid );
 		}
-		//		try {
-		//			processAddresses = this.addressMap.get( pid );
-		//		} catch ( IndexOutOfBoundsException e ) {
-		//			processAddresses = new ArrayList<>();
-		//			while ( ( pid - addressMap.size() ) + 1 > 0 ) {
-		//				addressMap.add( null );
-		//			}
-		//			this.addressMap.set( pid, processAddresses );
-		//		}
 
 		while ( logicalAddress - processAddresses.size() + 1 > 0 ) {
 			processAddresses.add( null );
@@ -112,22 +112,22 @@ public class MMU {
 	 * @return The {@link Word} stored at the given physical address.
 	 * @throws InvalidAddressException Thrown if the requested address is outside of the scope of the RAM.
 	 */
-	public synchronized Word read( int physicalAddress ) throws InvalidAddressException {
+	protected synchronized Word read( int physicalAddress ) throws InvalidAddressException {
 		return this.RAM.read( physicalAddress );
 	}
 
 	/**
 	 * Reads the {@link Word} whose physical address corresponds to the given logical address for the given process.
 	 *
-	 * @param pid            The Process ID of the process whose memory is to be read.
+	 * @param pcb            The PCB of the process whose memory is to be read.
 	 * @param logicalAddress The logical address for the given process.
 	 * @return The {@link Word} stored in the physical location associated with the logical address of the given
 	 * process.
 	 * @throws InvalidAddressException Thrown if the logical address has not been mapped to a physical address.
 	 */
-	public synchronized Word read( int pid, int logicalAddress ) throws InvalidAddressException {
+	public synchronized Word read( PCB pcb, int logicalAddress ) throws InvalidAddressException {
 		try {
-			return this.RAM.read( this.addressMap.get( pid ).get( logicalAddress ) );
+			return this.RAM.read( this.addressMap.get( pcb.getPID() ).get( logicalAddress ) );
 		} catch ( IndexOutOfBoundsException | NullPointerException e ) {
 			throw new InvalidAddressException(
 					"The given logical address, " + logicalAddress + ", is not mapped to a physical address." );
@@ -141,30 +141,33 @@ public class MMU {
 	 * @param data            The information that is to be stored.
 	 * @throws InvalidAddressException Thrown if the requested address is outside of the scope of the RAM.
 	 */
-	public synchronized void write( int physicalAddress, Word data ) throws InvalidAddressException {
+	protected synchronized void write( int physicalAddress, Word data ) throws InvalidAddressException {
 		this.RAM.write( physicalAddress, data );
 	}
 
 	/**
 	 * Writes the given word to the given logical address for the given process.
 	 *
-	 * @param pid            The Process ID of the process whose memory is to be written to.
+	 * @param pcb            The PCB of the process whose memory is to be written to.
 	 * @param logicalAddress The logical address for the given process.
 	 * @param data           The information that is to be stored.
 	 * @throws InvalidAddressException Thrown if the logical address has not been mapped to a physical address.
 	 */
-	public synchronized void write( int pid, int logicalAddress, Word data ) throws InvalidAddressException {
-		this.RAM.write( this.addressMap.get( pid ).get( logicalAddress ), data );
+	public synchronized void write( PCB pcb, int logicalAddress, Word data ) throws InvalidAddressException {
+		this.RAM.write( this.addressMap.get( pcb.getPID() ).get( logicalAddress ), data );
 	}
 
 	/**
 	 * Un-maps the memory for a terminated process, freeing it up so that another can use it.
 	 *
-	 * @param pid The Process ID of the process whose memory is to be freed.
+	 * @param pcb The PCB of the process whose memory is to be freed.
 	 */
-	public synchronized void terminatePID( int pid ) {
-		System.out.println( "Removing process " + pid + " from RAM." );
-		if ( this.addressMap.size() > pid ) {
+	public synchronized void terminateProcessMemory( PCB pcb ) {
+		if ( pcb == null ) {
+			return;
+		}
+		int pid = pcb.getPID();
+		if ( this.addressMap.size() > pid && processMapped( pcb ) && this.addressMap.get( pid ) != null ) {
 			while ( !this.addressMap.get( pid ).isEmpty() ) {
 				this.freeAddresses.add( this.addressMap.get( pid ).remove( 0 ) );
 			}

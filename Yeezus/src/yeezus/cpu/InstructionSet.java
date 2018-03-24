@@ -2,6 +2,9 @@ package yeezus.cpu;
 
 /**
  * The given opcodes for the set of instructions to be performed by the {@link yeezus} Operating System.
+ *
+ * @author Mark Zeagler
+ * @version 1.0
  */
 public enum InstructionSet {
 
@@ -73,19 +76,19 @@ public enum InstructionSet {
 	 * Branches to an address when content of B-reg = D-reg.
 	 */
 	BEQ( 0x15 ), /**
-	 * Branches to an address when content of B-reg <> D-reg.
+	 * Branches to an address when content of B-reg &lt;&gt; D-reg.
 	 */
 	BNE( 0x16 ), /**
 	 * Branches to an address when content of B-reg = 0.
 	 */
 	BEZ( 0x17 ), /**
-	 * Branches to an address when content of B-reg <> 0.
+	 * Branches to an address when content of B-reg &lt;&gt; 0.
 	 */
 	BNZ( 0x18 ), /**
-	 * Branches to an address when content of B-reg > 0.
+	 * Branches to an address when content of B-reg &gt; 0.
 	 */
 	BGZ( 0x19 ), /**
-	 * Branches to an address when content of B-reg < 0.
+	 * Branches to an address when content of B-reg &lt; 0.
 	 */
 	BLZ( 0x1A );
 

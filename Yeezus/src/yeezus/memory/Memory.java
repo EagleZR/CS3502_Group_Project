@@ -1,9 +1,12 @@
 package yeezus.memory;
 
+import com.sun.istack.internal.NotNull;
+
 /**
- * The collective memory system of the OS, including the registers, RAM, and disk storage space.
+ * A storage mechanism for {@link Word}s in the {@link yeezus} operating system.
  *
- * @version 1.0
+ * @author Mark Zeagler
+ * @version 2.0
  */
 public class Memory {
 
@@ -11,12 +14,14 @@ public class Memory {
 
 	/**
 	 * Constructs a new memory.memory device with the given capacity.
+	 *
+	 * @param capacity The size of the memory to be created.
 	 */
 	public Memory( int capacity ) throws InvalidWordException {
 		this.storage = new Word[capacity];
+		Word zero = new Word( "0x00000000" );
 		for ( int i = 0; i < capacity; i++ ) {
-			String word = "0x00000000";
-			this.storage[i] = new Word( word );
+			this.storage[i] = zero;
 		}
 	}
 
@@ -25,17 +30,18 @@ public class Memory {
 	 *
 	 * @param physicalAddress The physical address of the location to be read.
 	 * @return The {@link Word} stored at the given physical address.
-	 * @throws InvalidAddressException Thrown if the physical address given is outside of the scope of this memory.memory.
+	 * @throws InvalidAddressException Thrown if the physical address given is outside of the scope of this
+	 *                                 memory.memory.
 	 */
-	public Word read( int physicalAddress ) throws InvalidAddressException {
-		if ( physicalAddress > storage.length ) {
+	public synchronized Word read( int physicalAddress ) throws InvalidAddressException {
+		if ( physicalAddress > this.storage.length ) {
 			throw new InvalidAddressException(
-					"Address: " + physicalAddress + " is too high. The capacity is: " + storage.length );
+					"Address: " + physicalAddress + " is too high. The capacity is: " + this.storage.length );
 		}
 		if ( physicalAddress < 0 ) {
-			throw new InvalidAddressException( "Can't have a negative physicalAddress." );
+			throw new InvalidAddressException( "Can't have a negative physicalAddress (" + physicalAddress + ")." );
 		}
-		return storage[physicalAddress];
+		return this.storage[physicalAddress];
 	}
 
 	/**
@@ -43,17 +49,18 @@ public class Memory {
 	 *
 	 * @param physicalAddress The location where the {@link Word} should be written.
 	 * @param word            The {@link Word} to be stored at the physical address.
-	 * @throws InvalidAddressException Thrown if the physical address given is outside of the scope of this memory.memory.
+	 * @throws InvalidAddressException Thrown if the physical address given is outside of the scope of this
+	 *                                 memory.memory.
 	 */
-	public void write( int physicalAddress, Word word ) throws InvalidAddressException {
-		if ( physicalAddress > storage.length ) {
+	public synchronized void write( int physicalAddress, @NotNull Word word ) throws InvalidAddressException {
+		if ( physicalAddress > this.storage.length ) {
 			throw new InvalidAddressException(
-					"Address: " + physicalAddress + " is too high. The capacity is: " + storage.length );
+					"Address: " + physicalAddress + " is too high. The capacity is: " + this.storage.length );
 		}
 		if ( physicalAddress < 0 ) {
 			throw new InvalidAddressException( "Can't have a negative physicalAddress" );
 		}
-		storage[physicalAddress] = word;
+		this.storage[physicalAddress] = word;
 	}
 
 	/**

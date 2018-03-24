@@ -15,7 +15,7 @@ public class Scheduler implements Runnable {
 	private TaskManager taskManager;
 	private CPUSchedulingPolicy schedulingMethod;
 
-	public Scheduler( MMU mmu, Memory disk, TaskManager taskManager, CPUSchedulingPolicy schedulingMethod ) {
+	Scheduler( MMU mmu, Memory disk, TaskManager taskManager, CPUSchedulingPolicy schedulingMethod ) {
 		this.mmu = mmu;
 		this.taskManager = taskManager;
 		this.disk = disk;
@@ -27,15 +27,15 @@ public class Scheduler implements Runnable {
 	 */
 	@Override public void run() {
 		// Remove terminated processes from the RAM
-		for ( PCB pcb : taskManager.getPCBs() ) {
-			int pid = pcb.getPID();
-			if ( pcb.getStatus() == PCB.Status.TERMINATED && this.mmu.processMapped( pid ) ) {
-				System.out.println( "Writing process " + pcb.getPID() + " back to disk." );
+		for ( PCB pcb : this.taskManager ) {
+			if ( pcb.getStatus() == PCB.Status.TERMINATED && this.mmu.processMapped( pcb ) ) {
 				try {
+					// Write process back to disk
 					for ( int i = 0; i < pcb.getTotalSize(); i++ ) {
-						this.disk.write( pcb.getStartDiskAddress() + i, this.mmu.read( pid, i ) );
+						this.disk.write( pcb.getStartDiskAddress() + i, this.mmu.read( pcb, i ) );
 					}
-					this.mmu.terminatePID( pid );
+					// Terminate the process's memory
+					this.mmu.terminateProcessMemory( pcb );
 				} catch ( InvalidAddressException e ) {
 					// Do nothing, process has already been removed
 				}
@@ -43,30 +43,32 @@ public class Scheduler implements Runnable {
 		}
 
 		// Add new process to MMU/Ready Queue
-		List<PCB> list = taskManager.getJobQueue();
+		List<PCB> list = this.taskManager.getJobQueue();
 
 		// Find next process
 		if ( list.size() > 0 ) {
 			PCB next = list.get( 0 );
-			if ( schedulingMethod == CPUSchedulingPolicy.Priority ) {
+			if ( this.schedulingMethod == CPUSchedulingPolicy.Priority ) {
 				//Find highest priority process
 				for ( PCB pcb : list ) {
 					if ( next.getPriority() < pcb.getPriority() ) {
 						next = pcb;
 					}
 				}
-				list.remove( next );
-			} else if ( schedulingMethod == CPUSchedulingPolicy.FCFS ) {
+			} else if ( this.schedulingMethod == CPUSchedulingPolicy.FCFS ) {
 				// Find the next loaded process
-				next = list.remove( 0 );
+				next = list.get( 0 );
 			}
 
+			// System.out.println( "Scheduling Process " + next.getPID() );
+
 			// Verify that the process's memory can be mapped
-			int totalSize = next.getTotalSize();
-			if ( mmu.mapMemory( next.getPID(), totalSize ) ) {
+			if ( this.mmu.mapMemory( next ) ) {
+				list.remove( next );
+				int totalSize = next.getTotalSize();
 				for ( int i = 0; i < totalSize; i++ ) {
 					try {
-						mmu.write( next.getPID(), i, disk.read( next.getStartDiskAddress() + i ) );
+						this.mmu.write( next, i, this.disk.read( next.getStartDiskAddress() + i ) );
 					} catch ( InvalidAddressException e ) {
 						e.printStackTrace();
 						System.err.println(
@@ -74,7 +76,7 @@ public class Scheduler implements Runnable {
 						System.exit( 1 );
 					}
 				}
-				taskManager.getReadyQueue().add( next );
+				this.taskManager.getReadyQueue().add( next );
 				next.setStatus( PCB.Status.READY );
 			}
 		}
