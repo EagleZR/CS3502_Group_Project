@@ -232,6 +232,9 @@ public class Main {
 			XSSFCell totalCell = row.createCell( x + 3, CellType.FORMULA );
 			XSSFCell executeCell = row.createCell( x + 4, CellType.NUMERIC );
 			XSSFCell ioCell = row.createCell( x + 5, CellType.NUMERIC );
+			XSSFCell cpuCell = row.createCell( x + 6, CellType.NUMERIC );
+			XSSFCell cacheCell = row.createCell( x + 7, CellType.NUMERIC );
+			XSSFCell ramCell = row.createCell( x + 8, CellType.NUMERIC );
 
 			pidCell.setCellValue( TaskManager.INSTANCE.getPCB( i ).getPID() );
 			waitCell.setCellValue( TaskManager.INSTANCE.getPCB( i ).getElapsedWaitTime() / timeConverter );
@@ -239,6 +242,9 @@ public class Main {
 			totalCell.setCellFormula( "$B$" + ( i + 1 ) + "+$C$" + ( i + 1 ) );
 			executeCell.setCellValue( TaskManager.INSTANCE.getPCB( i ).getExecutionCount() );
 			ioCell.setCellValue( TaskManager.INSTANCE.getPCB( i ).getNumIO() );
+			cpuCell.setCellValue( TaskManager.INSTANCE.getPCB( i ).getCPUID() );
+			cacheCell.setCellValue( ( (double) TaskManager.INSTANCE.getPCB( i ).getTotalSize() ) / this.cacheSize );
+			ramCell.setCellValue( ( (double) TaskManager.INSTANCE.getPCB( i ).getTotalSize() ) / this.ramSize );
 		}
 
 		// Write average rows
@@ -250,6 +256,8 @@ public class Main {
 			row.createCell( x + 3, CellType.FORMULA ).setCellFormula( "AVERAGE($D$2:$D$31)" );
 			row.createCell( x + 4, CellType.FORMULA ).setCellFormula( "AVERAGE($E$2:$E$31)" );
 			row.createCell( x + 5, CellType.FORMULA ).setCellFormula( "AVERAGE($F$2:$F$31)" );
+			row.createCell( x + 7, CellType.FORMULA ).setCellFormula( "AVERAGE($H$2:$H$31)" );
+			row.createCell( x + 8, CellType.FORMULA ).setCellFormula( "AVERAGE($I$2:$I$31)" );
 		}
 
 		table.setCellReferences( new AreaReference( "A1:F32", SpreadsheetVersion.EXCEL2007 ) );
@@ -275,7 +283,7 @@ public class Main {
 		long[] busyTimes = driver.getExecuteTimes();
 		long[] idleTimes = driver.getIdleTimes();
 
-		for ( int i = 0; i < this.numCPUs; i++ ) {
+		for ( int i = 0; i < ( this.numCPUs == 0 ? 1 : this.numCPUs ); i++ ) {
 			// Write to cells
 			XSSFRow row = sheet.getRow( table.getStartRowIndex() + i + 1 );
 			XSSFCell cpuidCell = row.createCell( x, CellType.NUMERIC );
@@ -289,15 +297,17 @@ public class Main {
 
 		// Write average rows
 		{ // To limit scope
-			XSSFRow row = sheet.getRow( table.getStartRowIndex() + 1 + numCPUs );
+			XSSFRow row = sheet.getRow( table.getStartRowIndex() + 1 + ( this.numCPUs == 0 ? 1 : this.numCPUs ) );
 			row.createCell( x, CellType.STRING ).setCellValue( "Average" );
-			row.createCell( x + 1, CellType.FORMULA ).setCellFormula( "AVERAGE($B$2:$B$31)" );
-			row.createCell( x + 2, CellType.FORMULA ).setCellFormula( "AVERAGE($C$2:$C$31)" );
+			row.createCell( x + 1, CellType.FORMULA )
+					.setCellFormula( "AVERAGE($L$2:$L$" + ( 1 + ( this.numCPUs == 0 ? 1 : this.numCPUs ) ) + ")" );
+			row.createCell( x + 2, CellType.FORMULA )
+					.setCellFormula( "AVERAGE($M$2:$M$" + ( 1 + ( this.numCPUs == 0 ? 1 : this.numCPUs ) ) + ")" );
 		}
 
 		for ( int i = 0; i < 15; i++ ) { // To clear out some old data
 			// Write to cells
-			XSSFRow row = sheet.getRow( table.getStartRowIndex() + numCPUs + i + 2 );
+			XSSFRow row = sheet.getRow( table.getStartRowIndex() + this.numCPUs + i + 2 );
 			XSSFCell cpuidCell = row.createCell( x, CellType.STRING );
 			XSSFCell busyCell = row.createCell( x + 1, CellType.STRING );
 			XSSFCell idleCell = row.createCell( x + 2, CellType.STRING );
@@ -307,7 +317,7 @@ public class Main {
 			idleCell.setCellValue( "" );
 		}
 
-		table.setCellReferences( new AreaReference( "H1:J" + ( this.numCPUs + 2 ), SpreadsheetVersion.EXCEL2007 ) );
+		table.setCellReferences( new AreaReference( "K1:M" + ( this.numCPUs + 2 ), SpreadsheetVersion.EXCEL2007 ) );
 
 		// Write to file and close
 		FileOutputStream outputStream = new FileOutputStream( outputFile );

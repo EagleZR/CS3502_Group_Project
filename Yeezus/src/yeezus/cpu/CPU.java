@@ -66,7 +66,7 @@ public class CPU implements Runnable {
 	 * @return The amount of time in nanoseconds that this CPU has been busy.
 	 */
 	public long getExecuteTime() {
-		return executeTime;
+		return this.executeTime;
 	}
 
 	/**
@@ -75,7 +75,7 @@ public class CPU implements Runnable {
 	 * @return The amount of time in nanoseconds that this CPU has been idling, without a process.
 	 */
 	public long getIdleTime() {
-		return idleTime;
+		return this.idleTime;
 	}
 
 	/**
@@ -145,14 +145,11 @@ public class CPU implements Runnable {
 	 * @param pcb The {@link PCB} of the new process to be run by this CPU.
 	 */
 	public synchronized void setProcess( @NotNull PCB pcb ) {
-		if ( this.pcb != null ) {
-			this.pcb.setCPUID( -1 );
-		}
 		this.pcb = pcb;
 		this.pcb.setCPUID( this.cpuid );
 		this.pcb.setStatus( PCB.Status.RUNNING );
 		setPC( 0 );
-		numProcesses++;
+		this.numProcesses++;
 	}
 
 	/**
