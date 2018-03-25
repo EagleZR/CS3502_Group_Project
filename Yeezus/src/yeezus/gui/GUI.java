@@ -98,6 +98,7 @@ public class GUI extends Application implements Updatable {
 				.decode( this.getClass().getClassLoader().getResource( "Kanye.png" ).getFile(), "UTF-8" ) ) ) );
 		primaryStage.getIcons().add( image );
 		primaryStage.setResizable( false );
+		primaryStage.setTitle( "YeezusOS" );
 		primaryStage.show();
 	}
 
