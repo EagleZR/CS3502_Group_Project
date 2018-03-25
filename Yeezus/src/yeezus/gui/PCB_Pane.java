@@ -5,15 +5,20 @@ import javafx.scene.layout.Pane;
 import javafx.scene.shape.Line;
 import yeezus.pcb.PCB;
 
-public class PCB_Pane extends Pane {
+/**
+ * @author Mark Zeagler
+ * @version 1.0
+ */
+public class PCB_Pane extends Pane implements Updatable {
 
 	private PCB pcb;
 	private Label statusLabel;
 	private Label runtimeLabel;
-	private Label waittimeLabel;
+	private Label waitTimeLabel;
 
-	public PCB_Pane( PCB pcb ) {
+	PCB_Pane( PCB pcb ) {
 		this.pcb = pcb;
+		this.prefWidthProperty().setValue( 100 );
 		setup();
 	}
 
@@ -71,11 +76,11 @@ public class PCB_Pane extends Pane {
 		label4.layoutYProperty().bind( label3.layoutYProperty().add( label3.heightProperty() ).add( 5 ) );
 		this.getChildren().add( label4 );
 
-		this.waittimeLabel = new Label();
-		this.waittimeLabel.layoutXProperty()
-				.bind( this.widthProperty().subtract( this.waittimeLabel.widthProperty() ).subtract( 5 ) );
-		this.waittimeLabel.layoutYProperty().bind( label4.layoutYProperty() );
-		this.getChildren().add( this.waittimeLabel );
+		this.waitTimeLabel = new Label();
+		this.waitTimeLabel.layoutXProperty()
+				.bind( this.widthProperty().subtract( this.waitTimeLabel.widthProperty() ).subtract( 5 ) );
+		this.waitTimeLabel.layoutYProperty().bind( label4.layoutYProperty() );
+		this.getChildren().add( this.waitTimeLabel );
 
 		// Line
 		Line line = new Line();
@@ -88,9 +93,9 @@ public class PCB_Pane extends Pane {
 		update();
 	}
 
-	public void update() {
+	@Override public void update() {
 		this.statusLabel.setText( this.pcb.getStatus().toString() );
 		this.runtimeLabel.setText( "" + this.pcb.getElapsedRunTime() );
-		this.waittimeLabel.setText( "" + this.pcb.getElapsedWaitTime() );
+		this.waitTimeLabel.setText( "" + this.pcb.getElapsedWaitTime() );
 	}
 }

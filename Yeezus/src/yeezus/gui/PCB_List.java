@@ -6,22 +6,27 @@ import javafx.scene.control.ListView;
 import yeezus.pcb.PCB;
 import yeezus.pcb.TaskManager;
 
-import java.util.ArrayList;
+import java.util.LinkedList;
 
-public class PCB_List extends ListView<PCB_Pane> {
+/**
+ * @author Mark Zeagler
+ * @version 1.0
+ */
+class PCB_List extends ListView<PCB_Pane> implements Updatable {
 
-	ObservableList<PCB_Pane> panes;
+	private ObservableList<PCB_Pane> panes;
 
-	public PCB_List( TaskManager taskManager ) {
-		ArrayList<PCB_Pane> pcbs = new ArrayList<>();
-		for ( PCB pcb : taskManager ) {
-			pcbs.add( new PCB_Pane( pcb ) );
-		}
-		this.panes = FXCollections.observableList( pcbs );
+	PCB_List() {
+		this.panes = FXCollections.observableList( new LinkedList<PCB_Pane>() );
 		this.setItems( this.panes );
+		update();
 	}
 
-	private void update() {
+	@Override public void update() {
+		this.panes.clear();
+		for ( PCB pcb : TaskManager.INSTANCE ) {
+			this.panes.add( new PCB_Pane( pcb ) );
+		}
 		for ( PCB_Pane pane : this.panes ) {
 			pane.update();
 		}

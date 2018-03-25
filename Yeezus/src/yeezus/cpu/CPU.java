@@ -27,6 +27,7 @@ public class CPU implements Runnable {
 	private ExecutableInstruction previousInstruction;
 	private ArrayList<String> log;
 	private int numProcesses = 0;
+	private int numInstructionsExecuted = 0;
 
 	/**
 	 * Constructs a new CPU from the given parameters.
@@ -59,6 +60,15 @@ public class CPU implements Runnable {
 	}
 
 	/**
+	 * Retrieves the number of instructions that this CPU has executed overall.
+	 *
+	 * @return The amount of times that this CPU has executed an instruction.
+	 */
+	public int getNumInstructionsExecuted() {
+		return this.numInstructionsExecuted;
+	}
+
+	/**
 	 * Retrieves the Program Counter for the Process being executed by this CPU.
 	 *
 	 * @return The Program Counter of the Process in this CPU.
@@ -79,6 +89,11 @@ public class CPU implements Runnable {
 		}
 	}
 
+	/**
+	 * Retrieves the number of processes that this CPU has worked on.
+	 *
+	 * @return The number of different processes that this CPU has worked on.
+	 */
 	public int getNumProcesses() {
 		return this.numProcesses;
 	}
@@ -115,7 +130,6 @@ public class CPU implements Runnable {
 		this.pcb.setCPUID( this.cpuid );
 		this.pcb.setStatus( PCB.Status.RUNNING );
 		setPC( 0 );
-		this.numProcesses++;
 	}
 
 	/**
@@ -146,11 +160,13 @@ public class CPU implements Runnable {
 
 				// Execute
 				getProcess().incExecutionCount();
+				this.numInstructionsExecuted++;
 
 				if ( executableInstruction.type == InstructionSet.HLT ) {
 					getProcess().setStatus(
 							PCB.Status.TERMINATED ); // Make sure this is the last call to getProcess() this loop
 					this.previousInstruction = null;
+					this.numProcesses++;
 					this.log.clear();
 				} else {
 					if ( executableInstruction.getClass() == ExecutableInstruction.IOExecutableInstruction.class ) {

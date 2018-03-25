@@ -199,4 +199,8 @@ public class ThreadedDriver extends AbstractDriver {
 		}
 	}
 
+	@Override public CPU[] getCPUs() {
+		return this.cpus;
+	}
+
 }

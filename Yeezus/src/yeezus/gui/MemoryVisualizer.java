@@ -12,12 +12,12 @@ import java.util.ArrayList;
  * @author Mark Zeagler
  * @version 1.0
  */
-public class MemoryVisualizer extends ListView<WordVisualizer> { // TODO Use ListView so the focus can be set
+public class MemoryVisualizer extends ListView<WordVisualizer> implements Updatable {
 
 	private Memory memory;
 	private ObservableList<WordVisualizer> wordVisualizers;
 
-	public MemoryVisualizer( Memory memory ) throws InvalidAddressException {
+	MemoryVisualizer( Memory memory ) throws InvalidAddressException {
 		this.memory = memory;
 		setup();
 	}
@@ -33,13 +33,13 @@ public class MemoryVisualizer extends ListView<WordVisualizer> { // TODO Use Lis
 		update();
 	}
 
-	public void update() throws InvalidAddressException {
+	@Override public void update() throws InvalidAddressException {
 		for ( int i = 0; i < this.memory.getCapacity(); i++ ) {
 			this.wordVisualizers.get( i ).update( this.memory.read( i ) );
 		}
 	}
 
-	public void setMemory( Memory memory ) {
+	void setMemory( Memory memory ) {
 		this.memory = memory;
 		update();
 	}

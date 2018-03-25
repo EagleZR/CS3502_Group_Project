@@ -1,6 +1,7 @@
 package yeezus.driver;
 
 import com.sun.istack.internal.NotNull;
+import yeezus.cpu.CPU;
 import yeezus.memory.MMU;
 import yeezus.memory.Memory;
 import yeezus.pcb.TaskManager;
@@ -74,5 +75,7 @@ public abstract class AbstractDriver {
 	public Memory getRAM() {
 		return this.RAM;
 	}
+
+	public abstract CPU[] getCPUs();
 
 }

@@ -106,6 +106,12 @@ public class Driver extends AbstractDriver {
 		}
 	}
 
+	@Override public CPU[] getCPUs() {
+		CPU[] cpu = new CPU[1];
+		cpu[0] = this.cpu;
+		return cpu;
+	}
+
 	public String getProcPerCPU() {
 		return "\nCPU: 0 received " + this.cpu.getNumProcesses();
 	}

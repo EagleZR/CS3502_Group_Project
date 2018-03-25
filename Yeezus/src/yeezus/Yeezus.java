@@ -60,7 +60,7 @@ public class Yeezus implements Runnable {
 		this( 0, policy, diskSize, ramSize, cacheSize, registerSize, false );
 	}
 
-	private Yeezus( int numCPUs, @NotNull CPUSchedulingPolicy policy, int diskSize, int ramSize, int cacheSize,
+	public Yeezus( int numCPUs, @NotNull CPUSchedulingPolicy policy, int diskSize, int ramSize, int cacheSize,
 			int registerSize, boolean debugging ) throws Exception {
 		this.numCPUs = numCPUs;
 		this.policy = policy;
@@ -105,7 +105,10 @@ public class Yeezus implements Runnable {
 		for ( CPUSchedulingPolicy policy : CPUSchedulingPolicy.values() ) {
 			for ( int numCPUs : cpuSet ) {
 				try {
-					new Yeezus( numCPUs, policy, DISK_SIZE, RAM_SIZE, CACHE_SIZE, REGISTER_SIZE, false ).run();
+					Yeezus system = new Yeezus( numCPUs, policy, DISK_SIZE, RAM_SIZE, CACHE_SIZE, REGISTER_SIZE,
+							false );
+					system.run();
+					system.printData();
 					CPU.reset();
 					TaskManager.INSTANCE.reset();
 					Driver.reset();
@@ -146,11 +149,9 @@ public class Yeezus implements Runnable {
 
 		System.out
 				.println( "The system completed in " + ( this.endTime - this.startTime ) / 1000000 + " milliseconds." );
-
-		printData();
 	}
 
-	private void printData() {
+	public void printData() {
 		// Print out the disk
 		try {
 			File output = new File( "output/" + this.policy + "_" + this.numCPUs + "_Output_File.txt" );
@@ -231,8 +232,6 @@ public class Yeezus implements Runnable {
 
 			System.out.println(
 					"The system completed in " + ( this.endTime - this.startTime ) / 1000000 + " milliseconds." );
-
-			printData();
 		}
 	}
 
@@ -436,5 +435,9 @@ public class Yeezus implements Runnable {
 
 	public Memory[] getRegisters() {
 		return this.registers;
+	}
+
+	public CPU[] getCPUs() {
+		return this.driver.getCPUs();
 	}
 }
