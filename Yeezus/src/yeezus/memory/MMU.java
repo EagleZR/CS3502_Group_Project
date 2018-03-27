@@ -67,7 +67,11 @@ public class MMU {
 	 * @return {@code true} if the Process ID is associated with any memory mappings in RAM.
 	 */
 	public synchronized boolean processMapped( PCB pcb ) {
-		return this.addressMap.get( pcb.getPID() ) != null;
+		try {
+			return this.addressMap.get( pcb.getPID() ) != null;
+		} catch ( Exception e ) {
+			return false;
+		}
 	}
 
 	/**

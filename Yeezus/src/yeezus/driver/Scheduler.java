@@ -60,7 +60,7 @@ public class Scheduler implements Runnable {
 				next = list.get( 0 );
 			} else if (this.schedulingMethod == CPUSchedulingPolicy.SJF){
 				for( PCB pcb : list){
-					if(next.getInstructionsLength() < pcb.getInstructionsLength())
+					if ( next.getInstructionsLength() > pcb.getInstructionsLength() )
 						next  = pcb;
 				}
 			}
