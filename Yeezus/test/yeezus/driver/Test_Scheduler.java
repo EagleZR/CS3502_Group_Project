@@ -13,10 +13,11 @@ import java.net.URLDecoder;
 import java.util.Objects;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 /**
  * @author Mark Zeagler
- * @version 1.0
+ * @version 2.0
  */
 public class Test_Scheduler {
 
@@ -51,6 +52,23 @@ public class Test_Scheduler {
 		PCB pcb = this.taskManager.getPCB( 8 );
 		assertEquals( pcb, this.taskManager.getReadyQueue().peek() );
 		assertEquals( PCB.Status.READY, pcb.getStatus() );
+	}
+
+	@Test public void testSJF() {
+		Scheduler scheduler = new Scheduler( this.mmu, this.disk, this.taskManager, CPUSchedulingPolicy.SJF );
+		scheduler.run();
+		int[] possibleJobs = { 4, 7, 8, 14, 16, 21, 26, 30 }; // Each job has the same length
+		PCB mmuPCB = null;
+		PCB readyQPCB = this.taskManager.getReadyQueue().remove();
+		for ( int job : possibleJobs ) {
+			PCB pcb = this.taskManager.getPCB( job );
+			if ( this.mmu.processMapped( pcb ) ) {
+				mmuPCB = pcb;
+			}
+		}
+		assertNotEquals( "The PCB was not loaded into the MMU.", null, mmuPCB );
+		assertEquals( "The same PCB was not loaded into both the Ready Queue and the MMU", mmuPCB, readyQPCB );
+		assertEquals( PCB.Status.READY, readyQPCB.getStatus() );
 	}
 
 	@After public void tearDown() {

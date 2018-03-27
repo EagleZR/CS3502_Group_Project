@@ -5,7 +5,7 @@ package yeezus.driver;
  * its processes by.
  *
  * @author Mark Zeagler
- * @version 1.0
+ * @version 2.0
  */
 public enum CPUSchedulingPolicy {
 	/**
@@ -15,9 +15,9 @@ public enum CPUSchedulingPolicy {
 	FCFS, /**
 	 * The processes with the highest priority will be executed first.
 	 */
-	Priority//,
+	Priority,
 	//	/**
 	//	* <p>Shortest Job First</p><p>The processes with the shortest burt times will be executed first.</p>
 	//	*/
-	//	 SJF
+	SJF
 }
