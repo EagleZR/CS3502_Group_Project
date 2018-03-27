@@ -123,9 +123,6 @@ public class CPU implements Runnable {
 	 * @param pcb The {@link PCB} of the new process to be run by this CPU.
 	 */
 	public synchronized void setProcess( @NotNull PCB pcb ) {
-		if ( this.pcb != null ) {
-			this.pcb.setCPUID( -1 );
-		}
 		this.pcb = pcb;
 		this.pcb.setCPUID( this.cpuid );
 		this.pcb.setStatus( PCB.Status.RUNNING );
