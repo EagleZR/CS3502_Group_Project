@@ -58,6 +58,11 @@ public class Scheduler implements Runnable {
 			} else if ( this.schedulingMethod == CPUSchedulingPolicy.FCFS ) {
 				// Find the next loaded process
 				next = list.get( 0 );
+			} else if (this.schedulingMethod == CPUSchedulingPolicy.SJF){
+				for( PCB pcb : list){
+					if(next.getInstructionsLength() < pcb.getInstructionsLength())
+						next  = pcb;
+				}
 			}
 
 			// System.out.println( "Scheduling Process " + next.getPID() );

@@ -16,8 +16,8 @@ public enum CPUSchedulingPolicy {
 	 * The processes with the highest priority will be executed first.
 	 */
 	Priority,
-	//	/**
-	//	* <p>Shortest Job First</p><p>The processes with the shortest burt times will be executed first.</p>
-	//	*/
+		/**
+		* <p>Shortest Job First</p><p>The processes with the shortest burt times will be executed first.</p>
+		*/
 	SJF
 }
