@@ -21,7 +21,7 @@ public class Test_Dispatcher {
 
 	@Before public void setup() {
 		this.taskManager = TaskManager.INSTANCE;
-		this.mmu = new MMU( new Memory( 1024 ) );
+		this.mmu = new MMU( new Memory( 2048 ), new Memory( 1024 ) );
 		this.cpus = new CPU[1];
 		this.cpus[0] = new CPU( 0, this.mmu, 16, 100 );
 		this.dispatcher = new Dispatcher( this.taskManager, this.cpus, this.mmu );

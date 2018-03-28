@@ -57,7 +57,9 @@ public class Test_Driver {
 	}
 
 	@Test public void runFCFS() throws Exception {
-		new Driver( 1, this.disk, 16, 100, 100, CPUSchedulingPolicy.FCFS ).run();
+		CPUSchedulingPolicy schedulingPolicy = CPUSchedulingPolicy.FCFS;
+		TaskManager.INSTANCE.createReadyQueue( schedulingPolicy.getComparator() );
+		new Driver( 1, this.disk, 16, 100, 100, schedulingPolicy ).run();
 		// Print the disk contents for manual verification
 		File output = new File( "output/FCFS_Output_Test_File.txt" );
 		output.getParentFile().mkdirs();
@@ -81,7 +83,35 @@ public class Test_Driver {
 	}
 
 	@Test public void runPriority() throws Exception {
-		new Driver( 1, this.disk, 16, 100, 100, CPUSchedulingPolicy.Priority ).run();
+		CPUSchedulingPolicy schedulingPolicy = CPUSchedulingPolicy.Priority;
+		TaskManager.INSTANCE.createReadyQueue( schedulingPolicy.getComparator() );
+		new Driver( 1, this.disk, 16, 100, 100, schedulingPolicy ).run();
+		// Print the disk contents for manual verification
+		File output = new File( "output/Priority_Output_Test_File.txt" );
+		output.getParentFile().mkdirs();
+		if ( output.exists() || output.createNewFile() ) {
+			PrintStream out = new PrintStream( new FileOutputStream( output ) );
+			for ( int i = 0; i < this.disk.getCapacity(); i++ ) {
+				out.println( this.disk.read( i ) );
+			}
+		}
+		assertEquals( this.disk.read( 43 ).getData(), 228 );
+		// Check if any of them are not equal, indicating that some change has been made
+		for ( int i = 0; i < this.disk.getCapacity(); i++ ) {
+			if ( !this.controlDisk.read( i ).equals( this.disk.read( i ) ) ) {
+				System.out.println(
+						"Data change at address " + i + ".\tControl: " + this.controlDisk.read( i ) + ", Disk: "
+								+ this.disk.read( i ) );
+				return;
+			}
+		}
+		fail();
+	}
+
+	@Test public void runSJF() throws Exception {
+		CPUSchedulingPolicy schedulingPolicy = CPUSchedulingPolicy.SJF;
+		TaskManager.INSTANCE.createReadyQueue( schedulingPolicy.getComparator() );
+		new Driver( 1, this.disk, 16, 100, 100, schedulingPolicy ).run();
 		// Print the disk contents for manual verification
 		File output = new File( "output/Priority_Output_Test_File.txt" );
 		output.getParentFile().mkdirs();

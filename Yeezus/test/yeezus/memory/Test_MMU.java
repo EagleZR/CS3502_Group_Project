@@ -12,7 +12,7 @@ public class Test_MMU {
 	private MMU mmu;
 
 	@Before public void setup() {
-		this.mmu = new MMU( new Memory( 1024 ) );
+		this.mmu = new MMU( new Memory( 2048 ), new Memory( 1024 ) );
 	}
 
 	@Test public void testMapMemory() {

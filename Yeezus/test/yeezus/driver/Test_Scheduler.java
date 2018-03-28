@@ -30,14 +30,16 @@ public class Test_Scheduler {
 		this.taskManager = TaskManager.INSTANCE;
 		this.disk = new Memory( 2048 );
 		this.RAM = new Memory( 1024 );
-		this.mmu = new MMU( this.RAM );
+		this.mmu = new MMU( this.disk, this.RAM );
 		new Loader( this.taskManager, new File( ( URLDecoder.decode(
 				Objects.requireNonNull( this.getClass().getClassLoader().getResource( "Program-File.txt" ) ).getFile(),
 				"UTF-8" ) ) ), this.disk );
 	}
 
 	@Test public void testFCFS() { // Job 1
-		Scheduler scheduler = new Scheduler( this.mmu, this.disk, this.taskManager, CPUSchedulingPolicy.FCFS );
+		CPUSchedulingPolicy schedulingPolicy = CPUSchedulingPolicy.FCFS;
+		Scheduler scheduler = new Scheduler( this.mmu, this.disk, this.taskManager, schedulingPolicy );
+		this.taskManager.createReadyQueue( schedulingPolicy.getComparator() );
 		scheduler.run();
 		assertEquals( "0xC050005C", this.mmu.read( TaskManager.INSTANCE.getPCB( 1 ), 0 ).toString() );
 		PCB pcb = this.taskManager.getPCB( 1 );
@@ -46,7 +48,9 @@ public class Test_Scheduler {
 	}
 
 	@Test public void testPriority() {
-		Scheduler scheduler = new Scheduler( this.mmu, this.disk, this.taskManager, CPUSchedulingPolicy.Priority );
+		CPUSchedulingPolicy schedulingPolicy = CPUSchedulingPolicy.Priority;
+		Scheduler scheduler = new Scheduler( this.mmu, this.disk, this.taskManager, schedulingPolicy );
+		this.taskManager.createReadyQueue( schedulingPolicy.getComparator() );
 		scheduler.run();
 		assertEquals( "0xC050004C", this.mmu.read( TaskManager.INSTANCE.getPCB( 8 ), 0 ).toString() );
 		PCB pcb = this.taskManager.getPCB( 8 );
@@ -55,7 +59,9 @@ public class Test_Scheduler {
 	}
 
 	@Test public void testSJF() {
-		Scheduler scheduler = new Scheduler( this.mmu, this.disk, this.taskManager, CPUSchedulingPolicy.SJF );
+		CPUSchedulingPolicy schedulingPolicy = CPUSchedulingPolicy.SJF;
+		Scheduler scheduler = new Scheduler( this.mmu, this.disk, this.taskManager, schedulingPolicy );
+		this.taskManager.createReadyQueue( schedulingPolicy.getComparator() );
 		scheduler.run();
 		int[] possibleJobs = { 4, 7, 8, 14, 16, 21, 26, 30 }; // Each job has the same length
 		PCB mmuPCB = null;

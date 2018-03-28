@@ -6,6 +6,7 @@ import yeezus.memory.Memory;
 import yeezus.pcb.PCB;
 import yeezus.pcb.TaskManager;
 
+import java.util.Comparator;
 import java.util.List;
 
 public class Scheduler implements Runnable {
@@ -48,6 +49,13 @@ public class Scheduler implements Runnable {
 		// Find next process
 		if ( list.size() > 0 ) {
 			PCB next = list.get( 0 );
+			Comparator<PCB> comparator = this.schedulingMethod.getComparator();
+			for ( PCB pcb : list ) {
+				if ( comparator.compare( pcb, next ) < 0 ) {
+					next = pcb;
+				}
+			}
+			/*
 			if ( this.schedulingMethod == CPUSchedulingPolicy.Priority ) {
 				//Find highest priority process
 				for ( PCB pcb : list ) {
@@ -63,7 +71,7 @@ public class Scheduler implements Runnable {
 					if ( next.getInstructionsLength() > pcb.getInstructionsLength() )
 						next  = pcb;
 				}
-			}
+				*/
 
 			// System.out.println( "Scheduling Process " + next.getPID() );
 

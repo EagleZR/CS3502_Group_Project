@@ -64,10 +64,11 @@ public class Driver {
 		this.registerSize = registerSize;
 		this.cacheSize = cacheSize;
 
-		MMU mmu = new MMU( new Memory( ramSize ) );
+		MMU mmu = new MMU( disk, new Memory( ramSize ) );
 
 		this.cpus = new CPU[numCPUs];
 
+		TaskManager.INSTANCE.createReadyQueue( schedulingPolicy.getComparator() );
 		this.scheduler = new Scheduler( mmu, disk, taskManager, schedulingPolicy );
 		this.dispatcher = new Dispatcher( taskManager, this.cpus, mmu );
 
@@ -107,11 +108,11 @@ public class Driver {
 	}
 
 	public long[] getIdleTimes() {
-		return idleTimes;
+		return this.idleTimes;
 	}
 
 	public long[] getExecuteTimes() {
-		return executeTimes;
+		return this.executeTimes;
 	}
 
 	/**
@@ -198,15 +199,15 @@ public class Driver {
 
 		// Determine idle/execute times
 		for ( int i = 0; i < this.cpus.length; i++ ) {
-			idleTimes[i] = this.cpus[i].getIdleTime();
-			executeTimes[i] = this.cpus[i].getExecuteTime();
+			this.idleTimes[i] = this.cpus[i].getIdleTime();
+			this.executeTimes[i] = this.cpus[i].getExecuteTime();
 		}
 	}
 
 	public String getProcPerCPU() {
 		String s = "";
-		for ( int i = 0; i < cpus.length; i++ ) {
-			s += "\nCPU: " + i + " received " + cpus[i].getNumProcesses();
+		for ( int i = 0; i < this.cpus.length; i++ ) {
+			s += "\nCPU: " + i + " received " + this.cpus[i].getNumProcesses();
 		}
 		return s;
 	}

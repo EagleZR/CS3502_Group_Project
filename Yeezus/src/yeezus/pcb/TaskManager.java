@@ -4,7 +4,7 @@ import yeezus.DuplicateIDException;
 import yeezus.driver.Loader;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.PriorityBlockingQueue;
 import java.util.function.Consumer;
 
 /**
@@ -33,19 +33,33 @@ public enum TaskManager implements Iterable<PCB> {
 
 	private final List<PCB> PCBs = new ArrayList<>();
 	private final List<PCB> jobQueue = Collections.synchronizedList( new ArrayList<PCB>() );
-	private final Queue<PCB> readyQueue = new ConcurrentLinkedQueue<>();
+	private PriorityBlockingQueue<PCB> readyQueue = null;
 
 	/**
-	 * <p>Retrieves the Ready Queue for the system. The Ready Queue is a {@link Queue} of all {@link PCB}s associated
-	 * with processes that are ready to run.</p><p>For a list of all processes waiting to be run, use {@link
-	 * TaskManager#getJobQueue()}. For a list of all {@link PCB}s of all processes, including those that have not yet
-	 * completed, those that are currently running, and those that have already been completed, use {@link
+	 * <p>Retrieves the Ready Queue for the system. The Ready Queue is a {@link PriorityBlockingQueue} of all {@link
+	 * PCB}s associated with processes that are ready to run.</p><p>For a list of all processes waiting to be run, use
+	 * {@link TaskManager#getJobQueue()}. For a list of all {@link PCB}s of all processes, including those that have not
+	 * yet completed, those that are currently running, and those that have already been completed, use {@link
 	 * TaskManager#getPCBs()}.</p>
 	 *
-	 * @return A {@link Queue} of all {@link PCB}s associated with processes that are ready to be run. They should
-	 * already be in order based on the current scheduling policy.
+	 * @return A {@link PriorityBlockingQueue} of all {@link PCB}s associated with processes that are ready to be run.
+	 * They should already be in order based on the current scheduling policy. <p><b>NOTE:</b> If the returned value is
+	 * null, check if the queue has been created yet using {@link TaskManager#createReadyQueue(Comparator)}.</p>
 	 */
-	public Queue<PCB> getReadyQueue() {
+	public PriorityBlockingQueue<PCB> getReadyQueue() {
+		return this.readyQueue;
+
+	}
+
+	/**
+	 * Constructs a new {@link PriorityBlockingQueue} using the given {@link Comparator}. This is a thread-safe
+	 * implementation of the queue that organizes by priority according to the comparator.
+	 *
+	 * @param comparator The comparator to be used in the new queue.
+	 * @return The newly-created queue.
+	 */
+	public PriorityBlockingQueue<PCB> createReadyQueue( Comparator<PCB> comparator ) {
+		this.readyQueue = new PriorityBlockingQueue<>( this.PCBs.size(), comparator );
 		return this.readyQueue;
 	}
 
@@ -163,7 +177,7 @@ public enum TaskManager implements Iterable<PCB> {
 
 			@Override public void forEachRemaining( Consumer<? super PCB> action ) {
 				for ( ; this.i < TaskManager.INSTANCE.getPCBs().size(); this.i++ ) {
-					action.accept( TaskManager.INSTANCE.getPCB( i ) );
+					action.accept( TaskManager.INSTANCE.getPCB( this.i ) );
 				}
 			}
 
