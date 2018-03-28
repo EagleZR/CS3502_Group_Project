@@ -14,22 +14,25 @@ import java.util.ArrayList;
  */
 public class MMU {
 
-	private ArrayList<ArrayList<Integer>> addressMap;
-	private ArrayList<Integer> freeAddresses;
-	private Memory RAM;
+	private static final int FRAME_SIZE = 4;
+	private ArrayList<ArrayList<Integer>> frameMap;
+	private ArrayList<Integer> freeFrames;
+	private Memory RAM, disk;
 
 	/**
 	 * Constructs a new MMU around the given RAM.
 	 *
-	 * @param RAM The RAM this MMU is meant to manage.
+	 * @param disk The RAM this MMU is meant to manage.
+	 * @param RAM  The RAM this MMU is meant to manage.
 	 */
-	public MMU( Memory RAM ) {
+	public MMU( Memory disk, Memory RAM ) {
 		this.RAM = RAM;
-		this.freeAddresses = new ArrayList<>();
-		for ( int i = 0; i < RAM.getCapacity(); i++ ) {
-			this.freeAddresses.add( i );
+		this.disk = disk;
+		this.freeFrames = new ArrayList<>();
+		for ( int i = 0; i < RAM.getCapacity(); i += FRAME_SIZE ) {
+			this.freeFrames.add( i );
 		}
-		this.addressMap = new ArrayList<>();
+		this.frameMap = new ArrayList<>();
 	}
 
 	/**
@@ -39,25 +42,8 @@ public class MMU {
 	 * @return {@code true} if the memory was successfully mapped for the process.
 	 */
 	public synchronized boolean mapMemory( PCB pcb ) {
-		if ( pcb == null ) {
-			return false;
-		}
-
-		int pid = pcb.getPID();
-		int size = pcb.getTotalSize();
-
-		if ( size > this.freeAddresses.size() ) {
-			return false;
-		}
-		try {
-			for ( int i = 0; i < size; i++ ) {
-				mapAddress( pid, i );
-			}
-			return true;
-		} catch ( InvalidAddressException e ) {
-			terminateProcessMemory( pcb );
-			return false;
-		}
+		// TODO Map the process disk addresses to pages
+		return false;
 	}
 
 	/**
@@ -68,45 +54,10 @@ public class MMU {
 	 */
 	public synchronized boolean processMapped( PCB pcb ) {
 		try {
-			return this.addressMap.get( pcb.getPID() ) != null;
+			return this.frameMap.get( pcb.getPID() ) != null;
 		} catch ( Exception e ) {
 			return false;
 		}
-	}
-
-	/**
-	 * {@code @Deprecated} Don't use this anymore. Use {@link MMU#mapMemory(PCB)} instead.
-	 *
-	 * @param pid            The Process ID of the process whose memory is to be mapped.
-	 * @param logicalAddress The logical address of the memory as recognized by the process that owns it.
-	 * @throws InvalidAddressException Thrown if the physical memory is out of room.
-	 */
-	private void mapAddress( int pid, int logicalAddress ) throws InvalidAddressException {
-		if ( this.freeAddresses.size() > 0 ) {
-			mapAddress( pid, logicalAddress, this.freeAddresses.remove( 0 ) );
-		} else {
-			throw new InvalidAddressException( "Not really invalid, we've just run out of memory..." );
-		}
-	}
-
-	private void mapAddress( int pid, int logicalAddress, int physicalAddress ) {
-		ArrayList<Integer> processAddresses;
-
-		if ( pid >= this.addressMap.size() || this.addressMap.get( pid ) == null ) {
-			while ( ( pid - this.addressMap.size() ) >= 0 ) { // Only executes if it's not large enough
-				this.addressMap.add( null );
-			}
-			processAddresses = new ArrayList<>();
-			this.addressMap.set( pid, processAddresses );
-		} else {
-			processAddresses = this.addressMap.get( pid );
-		}
-
-		while ( logicalAddress - processAddresses.size() + 1 > 0 ) {
-			processAddresses.add( null );
-		}
-
-		processAddresses.set( logicalAddress, physicalAddress );
 	}
 
 	/**
@@ -131,7 +82,7 @@ public class MMU {
 	 */
 	public synchronized Word read( PCB pcb, int logicalAddress ) throws InvalidAddressException {
 		try {
-			return this.RAM.read( this.addressMap.get( pcb.getPID() ).get( logicalAddress ) );
+			return this.RAM.read( this.frameMap.get( pcb.getPID() ).get( logicalAddress ) );
 		} catch ( IndexOutOfBoundsException | NullPointerException e ) {
 			throw new InvalidAddressException(
 					"The given logical address, " + logicalAddress + ", is not mapped to a physical address." );
@@ -158,7 +109,7 @@ public class MMU {
 	 * @throws InvalidAddressException Thrown if the logical address has not been mapped to a physical address.
 	 */
 	public synchronized void write( PCB pcb, int logicalAddress, Word data ) throws InvalidAddressException {
-		this.RAM.write( this.addressMap.get( pcb.getPID() ).get( logicalAddress ), data );
+		this.RAM.write( this.frameMap.get( pcb.getPID() ).get( logicalAddress ), data );
 	}
 
 	/**
@@ -171,11 +122,11 @@ public class MMU {
 			return;
 		}
 		int pid = pcb.getPID();
-		if ( this.addressMap.size() > pid && processMapped( pcb ) && this.addressMap.get( pid ) != null ) {
-			while ( !this.addressMap.get( pid ).isEmpty() ) {
-				this.freeAddresses.add( this.addressMap.get( pid ).remove( 0 ) );
+		if ( this.frameMap.size() > pid && processMapped( pcb ) && this.frameMap.get( pid ) != null ) {
+			while ( !this.frameMap.get( pid ).isEmpty() ) {
+				this.freeFrames.add( this.frameMap.get( pid ).remove( 0 ) );
 			}
-			this.addressMap.set( pid, null );
+			this.frameMap.set( pid, null );
 		}
 	}
 }
