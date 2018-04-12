@@ -4,6 +4,8 @@ import com.sun.istack.internal.NotNull;
 import com.sun.istack.internal.Nullable;
 import yeezus.memory.Memory;
 
+import java.util.Iterator;
+
 /**
  * A class to hold various information relating to the processes run by the Yeezus Operating System. The data held by
  * these instances are to be used by the {@link yeezus.driver.Driver} and related classes for their interactions with
@@ -20,6 +22,7 @@ public class PCB {
 	private long clock, elapsedWaitTime, elapsedRunTime;
 	private Status status;
 	private Memory cache, registers;
+	private PageTable pageTable = null;
 
 	/**
 	 * Constructs a PCB with the given characteristics.
@@ -312,6 +315,24 @@ public class PCB {
 	}
 
 	/**
+	 * Generates a new page table, replacing the old one if it exists.
+	 *
+	 * @param pageSize The page size of the memory, which determines the number of pages this process will allocate.
+	 */
+	public void generatePageTable( int pageSize ) {
+		this.pageTable = new PageTable( (int) Math.ceil( (double) getTotalSize() / pageSize ) );
+	}
+
+	/**
+	 * Retrieves the current page table, if it exists.
+	 *
+	 * @return The current page table, or {@code null} if it has not yet been generated.
+	 */
+	public PageTable getPageTable() {
+		return this.pageTable;
+	}
+
+	/**
 	 * <p>An enumeration of the different statuses that this process will set as. </p> <p>{@link Status#NEW}: Indicates
 	 * that the process has been created, but is not yet ready to be run.</p><p>{@link Status#READY}: Indicates that the
 	 * process has been loaded into RAM and is ready to be run.</p><p>{@link Status#RUNNING}: Indicates that the process
@@ -336,5 +357,51 @@ public class PCB {
 		 * Indicates that the process has completed its execution.
 		 */
 		TERMINATED
+	}
+
+	public static class PageTable implements Iterable<Integer> {
+		Page[] pages;
+
+		private PageTable( int size ) {
+			this.pages = new Page[size];
+		}
+
+		public synchronized int getAddress( int pageNumber ) {
+			Page page = this.pages[pageNumber];
+			return ( page.isValid ? page.physicalAddress : -1 );
+		}
+
+		public synchronized void setAddress( int pageNumber, int address ) {
+			Page page = this.pages[pageNumber];
+			page.physicalAddress = address;
+			page.isValid = true;
+		}
+
+		public synchronized void clearAddress( int pageNumber ) {
+			this.pages[pageNumber].isValid = false;
+		}
+
+		@Override public Iterator<Integer> iterator() {
+			return new Iterator<Integer>() {
+				int index = 0;
+
+				@Override public boolean hasNext() {
+					return this.index < PageTable.this.pages.length - 1;
+				}
+
+				@Override public Integer next() {
+					return getAddress( this.index++ );
+				}
+
+				public int getIndex() {
+					return this.index;
+				}
+			};
+		}
+	}
+
+	private class Page {
+		private int physicalAddress;
+		private boolean isValid = false;
 	}
 }
