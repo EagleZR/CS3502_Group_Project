@@ -3,6 +3,7 @@ package yeezus.driver;
 import com.sun.istack.internal.NotNull;
 import yeezus.DuplicateIDException;
 import yeezus.cpu.CPU;
+import yeezus.cpu.DMAChannel;
 import yeezus.memory.InvalidWordException;
 import yeezus.memory.MMU;
 import yeezus.memory.Memory;
@@ -25,10 +26,12 @@ public class Driver {
 	private static Loader loader;
 	private static TaskManager taskManager;
 	private final int registerSize, cacheSize, ramSize;
+	private DMAChannel dmaChannel;
 	private Scheduler scheduler;
 	private Dispatcher dispatcher;
 	private CPU[] cpus;
 	private Thread[] threads;
+	private Thread dmaChannelThread;
 	private Memory disk;
 	private long[] idleTimes, executeTimes;
 
@@ -69,15 +72,17 @@ public class Driver {
 		this.cpus = new CPU[numCPUs];
 
 		TaskManager.INSTANCE.createReadyQueue( schedulingPolicy.getComparator() );
-		this.scheduler = new Scheduler( mmu, disk, taskManager, schedulingPolicy );
-		this.dispatcher = new Dispatcher( taskManager, this.cpus, mmu );
+		this.scheduler = new Scheduler( mmu, taskManager, schedulingPolicy, numCPUs );
+		this.dispatcher = new Dispatcher( taskManager, this.cpus );
+		this.dmaChannel = new DMAChannel( mmu, 8, true );
+		this.dmaChannelThread = new Thread( this.dmaChannel );
 
 		// Create threads
 		this.threads = new Thread[this.cpus.length];
 
 		// Create CPUs
 		for ( int i = 0; i < this.cpus.length; i++ ) {
-			CPU cpu = new CPU( i, mmu, registerSize, cacheSize );
+			CPU cpu = new CPU( i, this.dmaChannel, mmu, registerSize, cacheSize );
 			this.cpus[i] = cpu;
 			this.threads[i] = new Thread( this.cpus[i] );
 			this.threads[i].setUncaughtExceptionHandler( ( t, e ) -> {
@@ -123,6 +128,7 @@ public class Driver {
 	 */
 	public void run() throws InterruptedException {
 		// Start threads
+		this.dmaChannelThread.start();
 		for ( int i = 0; i < this.cpus.length; i++ ) {
 			this.threads[i].start();
 		}
@@ -153,6 +159,8 @@ public class Driver {
 			}
 		}
 
+		// Signal Threads to shutdown
+		this.dmaChannel.scheduleShutdown();
 		for ( CPU cpu : this.cpus ) {
 			cpu.signalShutdown();
 			synchronized ( cpu ) {
@@ -161,6 +169,7 @@ public class Driver {
 		}
 
 		// Wait for the threads
+		this.dmaChannelThread.join();
 		boolean[] joined = new boolean[this.threads.length];
 		for ( int i = 0; i < joined.length; i++ ) {
 			joined[i] = false;
@@ -205,11 +214,11 @@ public class Driver {
 	}
 
 	public String getProcPerCPU() {
-		String s = "";
+		StringBuilder s = new StringBuilder();
 		for ( int i = 0; i < this.cpus.length; i++ ) {
-			s += "\nCPU: " + i + " received " + this.cpus[i].getNumProcesses();
+			s.append( "\nCPU: " ).append( i ).append( " received " ).append( this.cpus[i].getNumProcesses() );
 		}
-		return s;
+		return s.toString();
 	}
 
 	/**

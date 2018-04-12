@@ -26,6 +26,17 @@ public class Memory {
 	}
 
 	/**
+	 * Returns the page number that a given address should be contained in using a given page size.
+	 *
+	 * @param address  The address whose containing page number is to be determined.
+	 * @param pageSize The size of the pages used by this system.
+	 * @return The page number of the page which contains the given address,
+	 */
+	public static int getPageNumber( int address, int pageSize ) {
+		return (int) Math.floor( (double) address / pageSize );
+	}
+
+	/**
 	 * Retrieves the data from the given physicalAddress as a {@link Word}.
 	 *
 	 * @param physicalAddress The physical address of the location to be read.

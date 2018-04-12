@@ -33,7 +33,7 @@ public class Main {
 	// Memory Data
 	private final static int DISK_SIZE = 2048;
 	private final static int RAM_SIZE = 1024;
-	private final static int CACHE_SIZE = 100;
+	private final static int CACHE_SIZE = 20;
 	private final static int REGISTER_SIZE = 16;
 
 	// Instance variables

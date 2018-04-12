@@ -1,26 +1,28 @@
 package yeezus.driver;
 
-import yeezus.memory.InvalidAddressException;
 import yeezus.memory.MMU;
-import yeezus.memory.Memory;
 import yeezus.pcb.PCB;
 import yeezus.pcb.TaskManager;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 
 public class Scheduler implements Runnable {
 
+	private final int NUM_CPUS; // Used to limit the amount of processes added to RAM to help limit deadlock
 	private MMU mmu;
-	private Memory disk;
 	private TaskManager taskManager;
 	private CPUSchedulingPolicy schedulingMethod;
+	private ArrayList<PCB> inRAM;
 
-	Scheduler( MMU mmu, Memory disk, TaskManager taskManager, CPUSchedulingPolicy schedulingMethod ) {
+	Scheduler( MMU mmu, TaskManager taskManager, CPUSchedulingPolicy schedulingMethod, int numCPUs ) {
 		this.mmu = mmu;
 		this.taskManager = taskManager;
-		this.disk = disk;
 		this.schedulingMethod = schedulingMethod;
+		this.inRAM = new ArrayList<>();
+		this.NUM_CPUS = numCPUs;
 	}
 
 	/**
@@ -28,69 +30,46 @@ public class Scheduler implements Runnable {
 	 */
 	@Override public void run() {
 		// Remove terminated processes from the RAM
-		for ( PCB pcb : this.taskManager ) {
+		for ( PCB pcb : this.inRAM ) {
 			if ( pcb.getStatus() == PCB.Status.TERMINATED && this.mmu.processMapped( pcb ) ) {
-				try {
-					// Write process back to disk
-					for ( int i = 0; i < pcb.getTotalSize(); i++ ) {
-						this.disk.write( pcb.getStartDiskAddress() + i, this.mmu.read( pcb, i ) );
+				PCB.PageTable pageTable = pcb.getPageTable();
+				int i = 0;
+				for ( Iterator<Integer> iterator = pageTable.iterator(); iterator.hasNext(); i++ ) {
+					int address = iterator.next();
+					if ( address != -1 ) {
+						this.mmu.writePage( pcb, i );
 					}
-					// Terminate the process's memory
-					this.mmu.terminateProcessMemory( pcb );
-				} catch ( InvalidAddressException e ) {
-					// Do nothing, process has already been removed
 				}
+				this.mmu.terminateProcessMemory( pcb );
+				this.inRAM.remove( pcb );
 			}
 		}
 
-		// Add new process to MMU/Ready Queue
-		List<PCB> list = this.taskManager.getJobQueue();
+		// TODO Handle page faults
 
-		// Find next process
-		if ( list.size() > 0 ) {
-			PCB next = list.get( 0 );
-			Comparator<PCB> comparator = this.schedulingMethod.getComparator();
-			for ( PCB pcb : list ) {
-				if ( comparator.compare( pcb, next ) < 0 ) {
-					next = pcb;
-				}
-			}
-			/*
-			if ( this.schedulingMethod == CPUSchedulingPolicy.Priority ) {
-				//Find highest priority process
-				for ( PCB pcb : list ) {
-					if ( next.getPriority() < pcb.getPriority() ) {
+		// Limit the number of loaded processes to reduce chances of deadlock
+		if ( this.inRAM.size() < this.NUM_CPUS * 2 ) {
+			// Add new process to MMU/Ready Queue
+			List<PCB> jobQueue = this.taskManager.getJobQueue();
+
+			// Find next process
+			if ( jobQueue.size() > 0 ) {
+				PCB next = jobQueue.get( 0 );
+				Comparator<PCB> comparator = this.schedulingMethod.getComparator();
+				for ( PCB pcb : jobQueue ) {
+					if ( comparator.compare( pcb, next ) < 0 ) {
 						next = pcb;
 					}
 				}
-			} else if ( this.schedulingMethod == CPUSchedulingPolicy.FCFS ) {
-				// Find the next loaded process
-				next = list.get( 0 );
-			} else if (this.schedulingMethod == CPUSchedulingPolicy.SJF){
-				for( PCB pcb : list){
-					if ( next.getInstructionsLength() > pcb.getInstructionsLength() )
-						next  = pcb;
-				}
-				*/
 
-			// System.out.println( "Scheduling Process " + next.getPID() );
-
-			// Verify that the process's memory can be mapped
-			if ( this.mmu.mapMemory( next ) ) {
-				list.remove( next );
-				int totalSize = next.getTotalSize();
-				for ( int i = 0; i < totalSize; i++ ) {
-					try {
-						this.mmu.write( next, i, this.disk.read( next.getStartDiskAddress() + i ) );
-					} catch ( InvalidAddressException e ) {
-						e.printStackTrace();
-						System.err.println(
-								"Fatal error. The addresses have already been mapped, so there should be no issues writing. Check the PCB.getTotalSize() method's calculation." );
-						System.exit( 1 );
-					}
+				// Verify that the process's memory can be mapped
+				if ( this.mmu.mapMemory( next ) ) {
+					jobQueue.remove( next );
+					// TODO Write 4 pages to RAM (do in MMU.mapMemory?)
+					this.inRAM.add( next );
+					this.taskManager.getReadyQueue().add( next );
+					next.setStatus( PCB.Status.READY );
 				}
-				this.taskManager.getReadyQueue().add( next );
-				next.setStatus( PCB.Status.READY );
 			}
 		}
 	}

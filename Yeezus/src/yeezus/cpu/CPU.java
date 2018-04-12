@@ -19,7 +19,8 @@ public class CPU implements Runnable {
 
 	private static final ArrayList<Integer> cpuids = new ArrayList<>();
 	private final int cpuid;
-	private final Memory registers, cache;
+	private final Memory registers;
+	private final Cache cache;
 	private DMAChannel dmaChannel;
 	private PCB pcb;
 	private int pc;
@@ -34,12 +35,12 @@ public class CPU implements Runnable {
 	 * Constructs a new CPU from the given parameters.
 	 *
 	 * @param cpuid        The ID of the new CPU. <b>NOTE: This must be a unique value.</b>
-	 * @param mmu          The MMU that manages this system's RAM.
+	 * @param dmaChannel   The DMA Channel through which this CPU will input/output.
 	 * @param registerSize The amount of registers to be used by this CPU.
 	 * @param cacheSize    The size of the cache to be used by this CPU.
 	 * @throws DuplicateIDException Thrown if the given CPU ID is not unique.
 	 */
-	public CPU( int cpuid, @NotNull MMU mmu, int registerSize, int cacheSize )
+	public CPU( int cpuid, @NotNull DMAChannel dmaChannel, @NotNull MMU mmu, int registerSize, int cacheSize )
 			throws DuplicateIDException, InvalidWordException {
 		if ( cpuids.contains( cpuid ) ) {
 			throw new DuplicateIDException( "The CPU ID " + cpuid + " already exists in this system." );
@@ -47,9 +48,9 @@ public class CPU implements Runnable {
 		this.cpuid = cpuid;
 		cpuids.add( cpuid );
 
+		this.dmaChannel = dmaChannel;
 		this.registers = new Memory( registerSize );
-		this.cache = new Memory( cacheSize );
-		this.dmaChannel = new DMAChannel( mmu, this.registers );
+		this.cache = new Cache( cacheSize, mmu );
 		this.log = new ArrayList<>();
 	}
 
@@ -139,8 +140,8 @@ public class CPU implements Runnable {
 	}
 
 	/**
-	 * <p>Sets a new process for this CPU.</p><p><b>NOTE:</b> It is imperative that {@link Object#notify()} be called on
-	 * this CPU instance after using this method, or the thread it runs on will continue to sleep.</p>
+	 * <p>Sets a new process for this CPU.</p><p><b>NOTE:</b> It is imperative that {@link Object#notify()} be called
+	 * on this CPU instance after using this method, or the thread it runs on will continue to sleep.</p>
 	 *
 	 * @param pcb The {@link PCB} of the new process to be run by this CPU.
 	 */
@@ -177,25 +178,35 @@ public class CPU implements Runnable {
 					// Fetch
 					Word instruction = this.cache.read( getPC() );
 					setPC( getPC() + 1 );
+					// TODO Handle page faults?
 
 					// Decode
 					ExecutableInstruction executableInstruction = decode( instruction );
 
 					// Execute
-					getProcess().incExecutionCount();
-
 					if ( executableInstruction.type == InstructionSet.HLT ) {
+						getProcess().incExecutionCount();
 						getProcess().setStatus(
 								PCB.Status.TERMINATED ); // Make sure this is the last call to getProcess() this loop
 						this.previousInstruction = null;
 						this.log.clear();
 					} else {
 						if ( executableInstruction.getClass() == ExecutableInstruction.IOExecutableInstruction.class ) {
-							this.dmaChannel
-									.handle( (ExecutableInstruction.IOExecutableInstruction) executableInstruction,
-											getProcess() );
+							// First try to retrieve input from the DMA Channel if there is any, and if not, schedule the input to be retrieved
+							if ( !this.dmaChannel.retrieveInput(
+									(ExecutableInstruction.IOExecutableInstruction) executableInstruction, getProcess(),
+									this.registers ) ) {
+								// Schedule the I/O with the DMA Channel and set the PCB status to WAITING
+								this.dmaChannel
+										.handle( (ExecutableInstruction.IOExecutableInstruction) executableInstruction,
+												getProcess(), this.registers );
+								this.pcb.setStatus( PCB.Status.WAITING );
+							} else {
+								getProcess().incExecutionCount();
+							}
 						} else {
 							executableInstruction.run();
+							getProcess().incExecutionCount();
 						}
 						this.previousInstruction = executableInstruction;
 						this.log.add( generateSimpleDump() );
@@ -238,8 +249,14 @@ public class CPU implements Runnable {
 		}
 
 		if ( executableInstruction.getClass() == ExecutableInstruction.IOExecutableInstruction.class ) {
-			this.dmaChannel
-					.handle( (ExecutableInstruction.IOExecutableInstruction) executableInstruction, getProcess() );
+			if ( !this.dmaChannel
+					.retrieveInput( (ExecutableInstruction.IOExecutableInstruction) executableInstruction, getProcess(),
+							this.registers ) ) {
+				this.dmaChannel
+						.handle( (ExecutableInstruction.IOExecutableInstruction) executableInstruction, getProcess(),
+								this.registers );
+				this.pcb.setStatus( PCB.Status.WAITING );
+			}
 		} else {
 			executableInstruction.run();
 		}
@@ -259,7 +276,7 @@ public class CPU implements Runnable {
 	 *
 	 * @return The cache used by this CPU.
 	 */
-	public Memory getCache() {
+	public Cache getCache() {
 		return this.cache;
 	}
 
