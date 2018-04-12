@@ -45,7 +45,15 @@ public class Scheduler implements Runnable {
 			}
 		}
 
-		// TODO Handle page faults
+		// Handle page faults
+		List<MMU.PageFault> pageFaults = this.mmu.getPageFaults();
+		for ( MMU.PageFault pageFault : pageFaults ) {
+			PCB pcb = pageFault.getPCB();
+			this.mmu.loadPage( pcb, pageFault.getPageNumber() );
+			pageFaults.remove( pageFault );
+			pcb.setStatus( PCB.Status.READY );
+			this.taskManager.getReadyQueue().add( pcb );
+		}
 
 		// Limit the number of loaded processes to reduce chances of deadlock
 		if ( this.inRAM.size() < this.NUM_CPUS * 2 ) {

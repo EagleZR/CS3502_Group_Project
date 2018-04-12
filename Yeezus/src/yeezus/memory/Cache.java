@@ -8,10 +8,11 @@ import yeezus.pcb.PCB;
  * @author Mark Zeagler
  * @version 1.0
  */
-public class Cache extends Memory {
+public class Cache {
 
 	private final int TEMP_BUFF_SIZE = 12; // The last 12 words of memory are the Temp Buffer
 	private final MMU mmu;
+	private Memory storage;
 	private int[] containedPages;
 	private int oldestPage;
 
@@ -21,20 +22,10 @@ public class Cache extends Memory {
 	 * @param capacity The size of the memory to be created.
 	 */
 	public Cache( int capacity, MMU mmu ) throws InvalidWordException {
-		super( capacity );
+		this.storage = new Memory( capacity );
 		this.mmu = mmu;
 		this.containedPages = new int[(int) Math.ceil( ( (double) capacity - this.TEMP_BUFF_SIZE ) / MMU.FRAME_SIZE )];
 		this.oldestPage = 0;
-	}
-
-	@Override public synchronized void write( int physicalAddress, Word word ) {
-		System.out.println( "Please don't use Cache.write(int, Word) unless you're testing..." );
-		super.write( physicalAddress, word );
-	}
-
-	@Override public synchronized Word read( int physicalAddress ) {
-		System.out.println( "Please don't use Cache.read(int) unless you're testing..." );
-		return super.read( physicalAddress );
 	}
 
 	public synchronized void write( PCB pcb, int logicalAddress, Word word ) throws InvalidAddressException {
@@ -49,7 +40,7 @@ public class Cache extends Memory {
 			throw new InvalidAddressException( "The address " + logicalAddress
 					+ " is not in the temp buffer. The cache cannot be written to at this location." );
 		}
-		super.write( logicalAddress - tempBufferLogicalAddress + getTempBufferStartAddress(), word );
+		this.storage.write( logicalAddress - tempBufferLogicalAddress + getTempBufferStartAddress(), word );
 	}
 
 	public synchronized Word read( PCB pcb, int logicalAddress ) throws InvalidAddressException, MMU.PageFault {
@@ -63,7 +54,7 @@ public class Cache extends Memory {
 		}
 		if ( logicalAddress < pcb.getInstructionsLength() ) { // If address is an instruction
 			// Get page number
-			int page = getPageNumber( logicalAddress, MMU.FRAME_SIZE );
+			int page = Memory.getPageNumber( logicalAddress, MMU.FRAME_SIZE );
 			int startAddress = getStartAddress( page );
 			if ( startAddress == -1 ) { // Load page if not present
 				loadPage( pcb, page );
@@ -72,9 +63,9 @@ public class Cache extends Memory {
 			// Get offset
 			int offset = logicalAddress % MMU.FRAME_SIZE;
 			// Relay data
-			return super.read( startAddress % offset );
+			return this.storage.read( startAddress % offset );
 		} else { // If address is in temp buffer
-			return super.read( logicalAddress - tempBufferLogicalAddress + getTempBufferStartAddress() );
+			return this.storage.read( logicalAddress - tempBufferLogicalAddress + getTempBufferStartAddress() );
 		}
 	}
 
@@ -88,7 +79,7 @@ public class Cache extends Memory {
 	}
 
 	private int getTempBufferStartAddress() {
-		return this.getCapacity() - this.TEMP_BUFF_SIZE;
+		return this.storage.getCapacity() - this.TEMP_BUFF_SIZE;
 	}
 
 	public synchronized void loadPage( PCB pcb, int pageNumber ) throws MMU.PageFault {
@@ -96,7 +87,7 @@ public class Cache extends Memory {
 		int startAddress = ++this.oldestPage % this.containedPages.length;
 		this.containedPages[startAddress] = pageNumber;
 		for ( int i = 0; i < page.length; i++ ) {
-			super.write( startAddress + i, page[i] );
+			this.storage.write( startAddress + i, page[i] );
 		}
 	}
 

@@ -179,18 +179,22 @@ public class MMU {
 	/**
 	 * Loads a given page, identified by page number and PCB, into RAM.
 	 *
-	 * @param pcb            The PCB of the data to be loaded into RAM.
-	 * @param logicalAddress The logical address of the data to be loaded into RAM.
+	 * @param pcb        The PCB of the data to be loaded into RAM.
+	 * @param pageNumber The page number of the data to be loaded into RAM.
 	 */
-	public synchronized void loadPage( PCB pcb, int logicalAddress ) {
-		int pageNumber = (int) Math.floor( (double) logicalAddress / FRAME_SIZE );
-		PCB.PageTable pageTable = pcb.getPageTable();
-		int physicalDiskAddress = pcb.getStartDiskAddress() + logicalAddress;
-		int physicalRAMAddress = this.pool.remove( 0 );
-		for ( int i = 0; i < FRAME_SIZE; i++ ) {
-			this.RAM.write( physicalRAMAddress + i, this.disk.read( physicalDiskAddress + i ) );
+	public synchronized boolean loadPage( PCB pcb, int pageNumber ) {
+		if ( this.pool.size() > 0 ) {
+			PCB.PageTable pageTable = pcb.getPageTable();
+			int physicalDiskAddress = pcb.getStartDiskAddress() + pageNumber * FRAME_SIZE;
+			int physicalRAMAddress = this.pool.remove( 0 );
+			for ( int i = 0; i < FRAME_SIZE; i++ ) {
+				this.RAM.write( physicalRAMAddress + i, this.disk.read( physicalDiskAddress + i ) );
+			}
+			pageTable.setAddress( pageNumber, physicalRAMAddress );
+			return true;
+		} else {
+			return false;
 		}
-		pageTable.setAddress( pageNumber, physicalRAMAddress );
 	}
 
 	/**
@@ -234,7 +238,7 @@ public class MMU {
 	//	public void handlePageFaults() { // TODO Handle in Scheduler
 	//		while ( !this.pageFaults.isEmpty() && !this.pool.isEmpty() ) {
 	//			PageFault pageFault = this.pageFaults.get( 0 );
-	//			loadPage( pageFault.getPcb(), pageFault.getPageNumber() );
+	//			loadPage( pageFault.getPCB(), pageFault.getPageNumber() );
 	//			// TODO Remove from waiting queue, add to ready queue?
 	//		}
 	//	}
@@ -259,7 +263,7 @@ public class MMU {
 			this.pageNumber = pageNumber;
 		}
 
-		public PCB getPcb() {
+		public PCB getPCB() {
 			return this.pcb;
 		}
 

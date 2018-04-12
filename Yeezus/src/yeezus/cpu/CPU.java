@@ -175,41 +175,45 @@ public class CPU implements Runnable {
 					printDump();
 					getProcess().setStatus( PCB.Status.TERMINATED );
 				} else {
-					// Fetch
-					Word instruction = this.cache.read( getPC() );
-					setPC( getPC() + 1 );
-					// TODO Handle page faults?
+					try {
+						// Fetch
+						Word instruction = this.cache.read( getProcess(), getPC() );
+						setPC( getPC() + 1 );
 
-					// Decode
-					ExecutableInstruction executableInstruction = decode( instruction );
+						// Decode
+						ExecutableInstruction executableInstruction = decode( instruction );
 
-					// Execute
-					if ( executableInstruction.type == InstructionSet.HLT ) {
-						getProcess().incExecutionCount();
-						getProcess().setStatus(
-								PCB.Status.TERMINATED ); // Make sure this is the last call to getProcess() this loop
-						this.previousInstruction = null;
-						this.log.clear();
-					} else {
-						if ( executableInstruction.getClass() == ExecutableInstruction.IOExecutableInstruction.class ) {
-							// First try to retrieve input from the DMA Channel if there is any, and if not, schedule the input to be retrieved
-							if ( !this.dmaChannel.retrieveInput(
-									(ExecutableInstruction.IOExecutableInstruction) executableInstruction, getProcess(),
-									this.registers ) ) {
-								// Schedule the I/O with the DMA Channel and set the PCB status to WAITING
-								this.dmaChannel
-										.handle( (ExecutableInstruction.IOExecutableInstruction) executableInstruction,
-												getProcess(), this.registers );
-								this.pcb.setStatus( PCB.Status.WAITING );
+						// Execute
+						if ( executableInstruction.type == InstructionSet.HLT ) {
+							getProcess().incExecutionCount();
+							getProcess().setStatus(
+									PCB.Status.TERMINATED ); // Make sure this is the last call to getProcess() this loop
+							this.previousInstruction = null;
+							this.log.clear();
+						} else {
+							if ( executableInstruction.getClass()
+									== ExecutableInstruction.IOExecutableInstruction.class ) {
+								// First try to retrieve input from the DMA Channel if there is any, and if not, schedule the input to be retrieved
+								if ( !this.dmaChannel.retrieveInput(
+										(ExecutableInstruction.IOExecutableInstruction) executableInstruction,
+										getProcess(), this.registers ) ) {
+									// Schedule the I/O with the DMA Channel and set the PCB status to WAITING
+									this.dmaChannel.handle(
+											(ExecutableInstruction.IOExecutableInstruction) executableInstruction,
+											getProcess(), this.registers );
+									getProcess().setStatus( PCB.Status.WAITING );
+								} else {
+									getProcess().incExecutionCount();
+								}
 							} else {
+								executableInstruction.run();
 								getProcess().incExecutionCount();
 							}
-						} else {
-							executableInstruction.run();
-							getProcess().incExecutionCount();
+							this.previousInstruction = executableInstruction;
+							this.log.add( generateSimpleDump() );
 						}
-						this.previousInstruction = executableInstruction;
-						this.log.add( generateSimpleDump() );
+					} catch ( MMU.PageFault pageFault ) {
+						getProcess().setStatus( PCB.Status.WAITING ); // Set to waiting so the Dispatcher will swap it
 					}
 				}
 			}
@@ -235,30 +239,33 @@ public class CPU implements Runnable {
 			// Do nothing
 			return;
 		}
-		// Fetch
-		Word instruction = this.cache.read( getPC() );
-		setPC( getPC() + 1 );
+		try {
+			// Fetch
+			Word instruction = this.cache.read( getProcess(), getPC() );
+			setPC( getPC() + 1 );
 
-		// Decode
-		ExecutableInstruction executableInstruction = decode( instruction );
+			// Decode
+			ExecutableInstruction executableInstruction = decode( instruction );
 
-		// Execute
-		if ( executableInstruction.type == InstructionSet.HLT ) {
-			getProcess().setStatus( PCB.Status.TERMINATED );
-			return;
-		}
-
-		if ( executableInstruction.getClass() == ExecutableInstruction.IOExecutableInstruction.class ) {
-			if ( !this.dmaChannel
-					.retrieveInput( (ExecutableInstruction.IOExecutableInstruction) executableInstruction, getProcess(),
-							this.registers ) ) {
-				this.dmaChannel
-						.handle( (ExecutableInstruction.IOExecutableInstruction) executableInstruction, getProcess(),
-								this.registers );
-				this.pcb.setStatus( PCB.Status.WAITING );
+			// Execute
+			if ( executableInstruction.type == InstructionSet.HLT ) {
+				getProcess().setStatus( PCB.Status.TERMINATED );
+				return;
 			}
-		} else {
-			executableInstruction.run();
+
+			if ( executableInstruction.getClass() == ExecutableInstruction.IOExecutableInstruction.class ) {
+				if ( !this.dmaChannel
+						.retrieveInput( (ExecutableInstruction.IOExecutableInstruction) executableInstruction,
+								getProcess(), this.registers ) ) {
+					this.dmaChannel.handle( (ExecutableInstruction.IOExecutableInstruction) executableInstruction,
+							getProcess(), this.registers );
+					getProcess().setStatus( PCB.Status.WAITING );
+				}
+			} else {
+				executableInstruction.run();
+			}
+		} catch ( MMU.PageFault pageFault ) {
+			getProcess().setStatus( PCB.Status.WAITING );
 		}
 	}
 
@@ -294,7 +301,8 @@ public class CPU implements Runnable {
 		if ( signature == 0x00000000 ) {
 			return new ExecutableInstruction.ArithmeticExecutableInstruction( word, this.registers );
 		} else if ( signature == 0x40000000 ) {
-			return new ExecutableInstruction.ConditionalExecutableInstruction( word, this.registers, this.cache, this );
+			return new ExecutableInstruction.ConditionalExecutableInstruction( word, this.registers, this.cache, this,
+					getProcess() );
 		} else if ( signature == 0x80000000 ) {
 			return new ExecutableInstruction.UnconditionalJumpExecutableInstruction( word, this.registers, this );
 		} else {

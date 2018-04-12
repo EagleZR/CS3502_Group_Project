@@ -36,9 +36,9 @@ public class Test_Scheduler {
 				"UTF-8" ) ) ), this.disk );
 	}
 
-	@Test public void testFCFS() { // Job 1
+	@Test public void testFCFS() throws Throwable { // Job 1
 		CPUSchedulingPolicy schedulingPolicy = CPUSchedulingPolicy.FCFS;
-		Scheduler scheduler = new Scheduler( this.mmu, this.disk, this.taskManager, schedulingPolicy );
+		Scheduler scheduler = new Scheduler( this.mmu, this.taskManager, schedulingPolicy, 1 );
 		this.taskManager.createReadyQueue( schedulingPolicy.getComparator() );
 		scheduler.run();
 		assertEquals( "0xC050005C", this.mmu.read( TaskManager.INSTANCE.getPCB( 1 ), 0 ).toString() );
@@ -47,9 +47,9 @@ public class Test_Scheduler {
 		assertEquals( PCB.Status.READY, pcb.getStatus() );
 	}
 
-	@Test public void testPriority() {
+	@Test public void testPriority() throws Throwable {
 		CPUSchedulingPolicy schedulingPolicy = CPUSchedulingPolicy.Priority;
-		Scheduler scheduler = new Scheduler( this.mmu, this.disk, this.taskManager, schedulingPolicy );
+		Scheduler scheduler = new Scheduler( this.mmu, this.taskManager, schedulingPolicy, 1 );
 		this.taskManager.createReadyQueue( schedulingPolicy.getComparator() );
 		scheduler.run();
 		assertEquals( "0xC050004C", this.mmu.read( TaskManager.INSTANCE.getPCB( 8 ), 0 ).toString() );
@@ -60,7 +60,7 @@ public class Test_Scheduler {
 
 	@Test public void testSJF() {
 		CPUSchedulingPolicy schedulingPolicy = CPUSchedulingPolicy.SJF;
-		Scheduler scheduler = new Scheduler( this.mmu, this.disk, this.taskManager, schedulingPolicy );
+		Scheduler scheduler = new Scheduler( this.mmu, this.taskManager, schedulingPolicy, 1 );
 		this.taskManager.createReadyQueue( schedulingPolicy.getComparator() );
 		scheduler.run();
 		int[] possibleJobs = { 4, 7, 8, 14, 16, 21, 26, 30 }; // Each job has the same length

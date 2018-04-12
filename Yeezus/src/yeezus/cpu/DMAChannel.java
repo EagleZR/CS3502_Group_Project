@@ -128,7 +128,7 @@ public class DMAChannel implements Runnable {
 						success = true;
 					}
 				} catch ( MMU.PageFault pageFault ) {
-					// TODO Handle page faults in DMA Channel
+					// Do nothing? DMA Channel will register the fault to be handled later, and the process is already waiting
 				}
 
 				// Remove jobs if they were successfully completed

@@ -15,7 +15,7 @@ public class Test_MMU {
 		this.mmu = new MMU( new Memory( 2048 ), new Memory( 1024 ) );
 	}
 
-	@Test public void testMapMemory() {
+	@Test public void testMapMemory() throws Throwable {
 		TaskManager.INSTANCE.addPCB( 1, 21, 32, 32, 32, 32, 1 );
 		// Map 100 addresses to process 0
 		assertTrue( this.mmu.mapMemory( TaskManager.INSTANCE.getPCB( 1 ) ) );
@@ -57,7 +57,7 @@ public class Test_MMU {
 		assertFalse( this.mmu.mapMemory( TaskManager.INSTANCE.getPCB( 2 ) ) );
 	}
 
-	@Test public void testTerminate() {
+	@Test public void testTerminate() throws Throwable {
 		TaskManager.INSTANCE.addPCB( 1, 0, 1024, 0, 0, 0, 1 );
 		assertTrue( this.mmu.mapMemory( TaskManager.INSTANCE.getPCB( 1 ) ) );
 		this.mmu.terminateProcessMemory( TaskManager.INSTANCE.getPCB( 1 ) );

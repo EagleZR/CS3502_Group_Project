@@ -4,6 +4,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import yeezus.cpu.CPU;
+import yeezus.cpu.DMAChannel;
 import yeezus.memory.MMU;
 import yeezus.memory.Memory;
 import yeezus.memory.Word;
@@ -19,12 +20,13 @@ public class Test_Dispatcher {
 	private CPU[] cpus;
 	private Dispatcher dispatcher;
 
-	@Before public void setup() {
+	@Before public void setup() throws Throwable {
 		this.taskManager = TaskManager.INSTANCE;
 		this.mmu = new MMU( new Memory( 2048 ), new Memory( 1024 ) );
 		this.cpus = new CPU[1];
-		this.cpus[0] = new CPU( 0, this.mmu, 16, 100 );
-		this.dispatcher = new Dispatcher( this.taskManager, this.cpus, this.mmu );
+		DMAChannel dmaChannel = new DMAChannel( this.mmu, 8, true );
+		this.cpus[0] = new CPU( 0, dmaChannel, this.mmu, 16, 100 );
+		this.dispatcher = new Dispatcher( this.taskManager, this.cpus );
 		this.taskManager.addPCB( 1, 0, 10, 14, 20, 10, 1 );
 		this.taskManager.getReadyQueue().add( this.taskManager.getPCB( 1 ) );
 		PCB pcb = this.taskManager.getPCB( 1 );
@@ -54,7 +56,7 @@ public class Test_Dispatcher {
 	}
 
 	// Test that cache is loaded
-	@Test public void testLoadCache() {
+	@Test public void testLoadCache() throws Throwable {
 		PCB pcb = this.taskManager.getPCB( 1 );
 		Memory cache = this.cpus[0].getCache();
 		for ( int i = 0; i < pcb.getTotalSize(); i++ ) {
@@ -63,7 +65,7 @@ public class Test_Dispatcher {
 	}
 
 	// Add another process to the ready queue, and check that the two are swapped
-	public void testSwap() { // TODO Re-enable when we actually need to swap
+	public void testSwap() throws Throwable { // TODO Re-enable when we actually need to swap
 		// Run several cycles to increment counter
 		for ( int i = 0; i < 4; i++ ) { // Move counter to 4
 			this.cpus[0].debugRun();

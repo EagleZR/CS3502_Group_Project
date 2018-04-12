@@ -138,7 +138,6 @@ public class Driver {
 		while ( !jobsDone ) { // Loop through Scheduler/Dispatcher
 			this.scheduler.run();
 			this.dispatcher.run();
-			// TODO Handle interrupts
 
 			jobsDone = true;
 			for ( PCB pcb : TaskManager.INSTANCE ) {

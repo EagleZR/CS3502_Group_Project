@@ -1,10 +1,8 @@
 package yeezus.cpu;
 
 import com.sun.istack.internal.NotNull;
-import yeezus.memory.InvalidAddressException;
-import yeezus.memory.InvalidWordException;
-import yeezus.memory.Memory;
-import yeezus.memory.Word;
+import yeezus.memory.*;
+import yeezus.pcb.PCB;
 
 import static yeezus.cpu.InstructionSet.values;
 
@@ -125,15 +123,17 @@ abstract class ExecutableInstruction implements Runnable {
 		CPU cpu;
 		// The data retrieved from the instruction
 		private int bReg, dReg, data;
-		private Memory cache;
+		private Cache cache;
+		private PCB pcb;
 
 		// Interprets the given instruction into a form that can be executed by the system.
-		ConditionalExecutableInstruction( @NotNull Word instruction, @NotNull Memory registers, @NotNull Memory cache,
-				@NotNull CPU cpu ) throws InvalidInstructionException {
+		ConditionalExecutableInstruction( @NotNull Word instruction, @NotNull Memory registers, @NotNull Cache cache,
+				@NotNull CPU cpu, @NotNull PCB pcb ) throws InvalidInstructionException {
 			super( instruction, registers );
 
 			this.cache = cache;
 			this.cpu = cpu;
+			this.pcb = pcb;
 
 			// Find B-reg
 			int bRegMask = 0x00F00000;
@@ -151,67 +151,70 @@ abstract class ExecutableInstruction implements Runnable {
 
 		// Executes the actions specified by this instruction
 		@Override public void run() throws InvalidWordException, InvalidAddressException {
-			// System.out.println("Executing: " + this.type + ", " + this.bReg + "(" + this.registers.read( bReg ).getData() + "), "+ this.dReg + "(" + this.registers.read( dReg ).getData() + "), " + this.data );
-			switch ( this.type ) {
-				case ST: // Stores content of a reg.  into an address
-					this.cache.write( ( this.data + (int) this.registers.read( this.dReg ).getData() ) / 4,
-							this.registers.read( this.bReg ) );
-					break;
-				case LW: // Loads the content of an address into a reg.
-					this.registers.write( this.dReg,
-							this.cache.read( ( this.data + (int) this.registers.read( this.bReg ).getData() ) / 4 ) );
-					break;
-				case MOVI: // Transfers address/data directly into a register
-					this.registers.write( this.dReg, new Word( this.data ) );
-					break;
-				case ADDI: // Adds a data value directly to the content of a register
-					this.registers
-							.write( this.dReg, new Word( this.registers.read( this.dReg ).getData() + this.data ) );
-					break;
-				case MULI: // Multiplies a data value directly with the content of a register
-					this.registers
-							.write( this.dReg, new Word( this.registers.read( this.dReg ).getData() * this.data ) );
-					break;
-				case DIVI: // Divides a data directly to the content of a register
-					this.registers
-							.write( this.dReg, new Word( this.registers.read( this.dReg ).getData() / this.data ) );
-					break;
-				case LDI: // Loads a data/address directly to the content of a register
-					this.registers.write( this.dReg, new Word( this.data ) );
-					break;
-				case SLTI:// Sets the D-reg to 1 if  first S-reg is less than a data; 0 otherwise
-					super.registers.write( this.dReg,
-							new Word( ( super.registers.read( this.bReg ).getData() < this.data ? 1 : 0 ) ) );
-					break;
-				case BEQ: // Branches to an address when content of B-reg = D-reg
-					this.cpu.setPC(
-							this.registers.read( this.bReg ).getData() == this.registers.read( this.dReg ).getData() ?
-									this.data / 4 :
-									this.cpu.getPC() );
-					break;
-				case BNE: // Branches to an address when content of B-reg <> D-reg
-					this.cpu.setPC(
-							this.registers.read( this.bReg ).getData() != this.registers.read( this.dReg ).getData() ?
-									this.data / 4 :
-									this.cpu.getPC() );
-					break;
-				case BEZ: // Branches to an address when content of B-reg = 0
-					this.cpu.setPC(
-							this.registers.read( this.bReg ).getData() == 0 ? this.data / 4 : this.cpu.getPC() );
-					break;
-				case BNZ: // Branches to an address when content of B-reg <> 0
-					this.cpu.setPC(
-							this.registers.read( this.bReg ).getData() != 0 ? this.data / 4 : this.cpu.getPC() );
-					break;
-				case BGZ: // Branches to an address when content of B-reg > 0
-					this.cpu.setPC( this.registers.read( this.bReg ).getData() > 0 ? this.data / 4 : this.cpu.getPC() );
-					break;
-				case BLZ: // Branches to an address when content of B-reg < 0
-					this.cpu.setPC( this.registers.read( this.bReg ).getData() < 0 ? this.data / 4 : this.cpu.getPC() );
-					break;
-				case NOP: // Does nothing and moves to next instruction
-					// Do nothing
-					break;
+			try {
+				switch ( this.type ) {
+					case ST: // Stores content of a reg.  into an address
+						this.cache
+								.write( this.pcb, ( this.data + (int) this.registers.read( this.dReg ).getData() ) / 4,
+										this.registers.read( this.bReg ) );
+						break;
+					case LW: // Loads the content of an address into a reg.
+						this.registers.write( this.dReg, this.cache.read( this.pcb,
+								( this.data + (int) this.registers.read( this.bReg ).getData() ) / 4 ) );
+						break;
+					case MOVI: // Transfers address/data directly into a register
+						this.registers.write( this.dReg, new Word( this.data ) );
+						break;
+					case ADDI: // Adds a data value directly to the content of a register
+						this.registers
+								.write( this.dReg, new Word( this.registers.read( this.dReg ).getData() + this.data ) );
+						break;
+					case MULI: // Multiplies a data value directly with the content of a register
+						this.registers
+								.write( this.dReg, new Word( this.registers.read( this.dReg ).getData() * this.data ) );
+						break;
+					case DIVI: // Divides a data directly to the content of a register
+						this.registers
+								.write( this.dReg, new Word( this.registers.read( this.dReg ).getData() / this.data ) );
+						break;
+					case LDI: // Loads a data/address directly to the content of a register
+						this.registers.write( this.dReg, new Word( this.data ) );
+						break;
+					case SLTI:// Sets the D-reg to 1 if  first S-reg is less than a data; 0 otherwise
+						super.registers.write( this.dReg,
+								new Word( ( super.registers.read( this.bReg ).getData() < this.data ? 1 : 0 ) ) );
+						break;
+					case BEQ: // Branches to an address when content of B-reg = D-reg
+						this.cpu.setPC( this.registers.read( this.bReg ).getData() == this.registers.read( this.dReg )
+								.getData() ? this.data / 4 : this.cpu.getPC() );
+						break;
+					case BNE: // Branches to an address when content of B-reg <> D-reg
+						this.cpu.setPC( this.registers.read( this.bReg ).getData() != this.registers.read( this.dReg )
+								.getData() ? this.data / 4 : this.cpu.getPC() );
+						break;
+					case BEZ: // Branches to an address when content of B-reg = 0
+						this.cpu.setPC(
+								this.registers.read( this.bReg ).getData() == 0 ? this.data / 4 : this.cpu.getPC() );
+						break;
+					case BNZ: // Branches to an address when content of B-reg <> 0
+						this.cpu.setPC(
+								this.registers.read( this.bReg ).getData() != 0 ? this.data / 4 : this.cpu.getPC() );
+						break;
+					case BGZ: // Branches to an address when content of B-reg > 0
+						this.cpu.setPC(
+								this.registers.read( this.bReg ).getData() > 0 ? this.data / 4 : this.cpu.getPC() );
+						break;
+					case BLZ: // Branches to an address when content of B-reg < 0
+						this.cpu.setPC(
+								this.registers.read( this.bReg ).getData() < 0 ? this.data / 4 : this.cpu.getPC() );
+						break;
+					case NOP: // Does nothing and moves to next instruction
+						// Do nothing
+						break;
+				}
+			} catch ( MMU.PageFault pageFault ) {
+				System.err.println( "There really shouldn't be a page fault here, it's all going to the buffer..." );
+				pageFault.printStackTrace();
 			}
 		}
 
