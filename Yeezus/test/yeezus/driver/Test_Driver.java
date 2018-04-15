@@ -121,7 +121,7 @@ public class Test_Driver {
 				out.println( this.disk.read( i ) );
 			}
 		}
-		assertEquals( this.disk.read( 43 ).getData(), 228 );
+		assertEquals( 228, this.disk.read( 43 ).getData() );
 		// Check if any of them are not equal, indicating that some change has been made
 		for ( int i = 0; i < this.disk.getCapacity(); i++ ) {
 			if ( !this.controlDisk.read( i ).equals( this.disk.read( i ) ) ) {

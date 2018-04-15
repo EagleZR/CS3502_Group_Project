@@ -101,7 +101,7 @@ public class CPU implements Runnable {
 	 *
 	 * @return The Program Counter of the Process in this CPU.
 	 */
-	protected synchronized int getPC() {
+	public synchronized int getPC() {
 		return this.pc;
 	}
 
@@ -111,7 +111,7 @@ public class CPU implements Runnable {
 	 * @param pc <p>The new Program Counter for the Process in this CPU.</p><p>A negative value, or any value larger
 	 *           than the number of instructions for this process will be ignored.</p>
 	 */
-	protected synchronized void setPC( int pc ) {
+	public synchronized void setPC( int pc ) {
 		if ( pc >= 0 && pc < this.pcb.getInstructionsLength() ) {
 			this.pc = pc;
 		}
@@ -182,6 +182,9 @@ public class CPU implements Runnable {
 
 						// Decode
 						ExecutableInstruction executableInstruction = decode( instruction );
+						// Want this here in case there's an error in the execution of the process
+						this.previousInstruction = executableInstruction;
+						this.log.add( generateSimpleDump() );
 
 						// Execute
 						if ( executableInstruction.type == InstructionSet.HLT ) {
@@ -190,6 +193,7 @@ public class CPU implements Runnable {
 									PCB.Status.TERMINATED ); // Make sure this is the last call to getProcess() this loop
 							this.previousInstruction = null;
 							this.log.clear();
+							System.out.println( "Completed process " + this.pcb.getPID() );
 						} else {
 							if ( executableInstruction.getClass()
 									== ExecutableInstruction.IOExecutableInstruction.class ) {
@@ -209,8 +213,6 @@ public class CPU implements Runnable {
 								executableInstruction.run();
 								getProcess().incExecutionCount();
 							}
-							this.previousInstruction = executableInstruction;
-							this.log.add( generateSimpleDump() );
 						}
 					} catch ( MMU.PageFault pageFault ) {
 						getProcess().setStatus( PCB.Status.WAITING ); // Set to waiting so the Dispatcher will swap it

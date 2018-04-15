@@ -32,7 +32,7 @@ public enum TaskManager implements Iterable<PCB> {
 	INSTANCE; // https://stackoverflow.com/questions/70689/what-is-an-efficient-way-to-implement-a-singleton-pattern-in-java
 
 	private final List<PCB> PCBs = new ArrayList<>();
-	private final List<PCB> jobQueue = Collections.synchronizedList( new ArrayList<PCB>() );
+	private final List<PCB> jobQueue = Collections.synchronizedList( new ArrayList<>() );
 	private PriorityBlockingQueue<PCB> readyQueue = null;
 
 	/**
@@ -163,7 +163,7 @@ public enum TaskManager implements Iterable<PCB> {
 	public void reset() {
 		this.jobQueue.clear();
 		this.PCBs.clear();
-		this.readyQueue.clear();
+		this.readyQueue = null;
 	}
 
 	@Override public void forEach( Consumer<? super PCB> action ) {

@@ -1,7 +1,13 @@
 package yeezus.pcb;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import yeezus.cpu.CPU;
+import yeezus.memory.Cache;
+import yeezus.memory.MMU;
+import yeezus.memory.Memory;
+import yeezus.memory.Word;
 
 import static org.junit.Assert.*;
 
@@ -10,7 +16,7 @@ import static org.junit.Assert.*;
  * @version 1.0
  */
 public class Test_PCB {
-	// TODO Please feel free to make this more robust if you like. I don't even check to see if the addresses overlap or anything sensible like that
+	// Please feel free to make this more robust if you like. I don't even check to see if the addresses overlap or anything sensible like that
 
 	private PCB pcb;
 
@@ -23,7 +29,6 @@ public class Test_PCB {
 		this.pcb.incNumIO();
 		this.pcb.incNumIO();
 		assertEquals( 3, this.pcb.getNumIO() );
-
 	}
 
 	@Test public void getPid() {
@@ -105,4 +110,51 @@ public class Test_PCB {
 		assertNotEquals( timestamp, this.pcb.getElapsedRunTime() );
 	}
 
+	// Test that the cache values are correctly saved
+	@Test public void testSetCache() {
+		Memory disk = new Memory( 100 );
+		Memory RAM = new Memory( 52 );
+		MMU mmu = new MMU( disk, RAM );
+		Cache cache = new Cache( 20, mmu );
+		TaskManager.INSTANCE.addPCB( 1, 0, 12, 12, 12, 12, 2 );
+		TaskManager.INSTANCE.addPCB( 2, 48, 15, 12, 12, 12, 1 );
+		PCB one = TaskManager.INSTANCE.getPCB( 1 );
+		PCB two = TaskManager.INSTANCE.getPCB( 2 );
+		for ( int i = 0; i < one.getTempBufferLength(); i++ ) {
+			cache.write( one, one.getTempBufferLogicalAddress() + i, new Word( i ) );
+		}
+		one.setCache( cache );
+		for ( int i = 0; i < two.getTempBufferLength(); i++ ) {
+			cache.write( two, two.getTempBufferLogicalAddress() + i, new Word( i + 5 ) );
+		}
+		for ( int i = 0; i < one.getTempBufferLength(); i++ ) {
+			assertEquals( "Probably the second process's cache data corrupted the first one's saved data.", i,
+					one.getCache().read( i ).getData() );
+		}
+	}
+
+	// Test that the register values are correctly saved
+	@Test public void testSetRegisters() {
+		Memory registers = new Memory( 16 );
+		TaskManager.INSTANCE.addPCB( 1, 0, 12, 12, 12, 12, 2 );
+		TaskManager.INSTANCE.addPCB( 2, 48, 15, 12, 12, 12, 1 );
+		PCB one = TaskManager.INSTANCE.getPCB( 1 );
+		PCB two = TaskManager.INSTANCE.getPCB( 2 );
+		for ( int i = 0; i < one.getTempBufferLength(); i++ ) {
+			registers.write( i, new Word( i ) );
+		}
+		one.setRegisters( registers );
+		for ( int i = 0; i < two.getTempBufferLength(); i++ ) {
+			registers.write( i, new Word( i + 5 ) );
+		}
+		for ( int i = 0; i < one.getTempBufferLength(); i++ ) {
+			assertEquals( "Probably the second process's register data corrupted the first one's saved data.", i,
+					one.getRegisters().read( i ).getData() );
+		}
+	}
+
+	@After public void tearDown() {
+		CPU.reset();
+		TaskManager.INSTANCE.reset();
+	}
 }

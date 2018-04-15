@@ -30,29 +30,32 @@ public class Scheduler implements Runnable {
 	 */
 	@Override public void run() {
 		// Remove terminated processes from the RAM
-		for ( PCB pcb : this.inRAM ) {
+		for ( Iterator<PCB> pcbIterator = this.inRAM.iterator(); pcbIterator.hasNext(); ) {
+			PCB pcb = pcbIterator.next();
 			if ( pcb.getStatus() == PCB.Status.TERMINATED && this.mmu.processMapped( pcb ) ) {
 				PCB.PageTable pageTable = pcb.getPageTable();
 				int i = 0;
-				for ( Iterator<Integer> iterator = pageTable.iterator(); iterator.hasNext(); i++ ) {
-					int address = iterator.next();
+				for ( Iterator<Integer> integerIterator = pageTable.iterator(); integerIterator.hasNext(); i++ ) {
+					int address = integerIterator.next();
 					if ( address != -1 ) {
 						this.mmu.writePage( pcb, i );
 					}
 				}
 				this.mmu.terminateProcessMemory( pcb );
-				this.inRAM.remove( pcb );
+				pcbIterator.remove();
 			}
 		}
 
 		// Handle page faults
-		List<MMU.PageFault> pageFaults = this.mmu.getPageFaults();
-		for ( MMU.PageFault pageFault : pageFaults ) {
-			PCB pcb = pageFault.getPCB();
-			this.mmu.loadPage( pcb, pageFault.getPageNumber() );
-			pageFaults.remove( pageFault );
-			pcb.setStatus( PCB.Status.READY );
-			this.taskManager.getReadyQueue().add( pcb );
+		synchronized ( this.mmu.getPageFaults() ) {
+			for ( Iterator<MMU.PageFault> iterator = this.mmu.getPageFaults().iterator(); iterator.hasNext(); ) {
+				MMU.PageFault pageFault = iterator.next();
+				PCB pcb = pageFault.getPCB();
+				this.mmu.loadPage( pcb, pageFault.getPageNumber() );
+				iterator.remove();
+				pcb.setStatus( PCB.Status.READY );
+				this.taskManager.getReadyQueue().add( pcb );
+			}
 		}
 
 		// Limit the number of loaded processes to reduce chances of deadlock
@@ -73,9 +76,8 @@ public class Scheduler implements Runnable {
 				// Verify that the process's memory can be mapped
 				if ( this.mmu.mapMemory( next ) ) {
 					jobQueue.remove( next );
-					// TODO Write 4 pages to RAM (do in MMU.mapMemory?)
-					this.inRAM.add( next );
 					this.taskManager.getReadyQueue().add( next );
+					this.inRAM.add( next );
 					next.setStatus( PCB.Status.READY );
 				}
 			}

@@ -47,7 +47,7 @@ public class Test_Loader {
 		// Test last address of first job's data
 		assertEquals( "0x00000000", disk.read( 66 ).toString() );
 		// Test first first address of second job
-		assertEquals( "0xC0500070", disk.read( 67 ).toString() );
+		assertEquals( "0xC0500070", disk.read( 68 ).toString() );
 	}
 
 	// Test that the TaskManager is filled correctly by the Loader
@@ -80,5 +80,4 @@ public class Test_Loader {
 			assertEquals( PCB.Status.NEW, taskManager.getPCB( i ).getStatus() );
 		}
 	}
-
 }

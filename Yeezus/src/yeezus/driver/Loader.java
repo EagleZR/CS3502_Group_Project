@@ -3,36 +3,26 @@ package yeezus.driver;
  * The loader of the OS. Takes a txt file and grabs the PCB attributes, the info about the buffers, and sends
  * instructions to drive.
  * <p>
- * author: jessica brummel
+ * @author Jessica Brummel
  **/
 
 import yeezus.DuplicateIDException;
-import yeezus.memory.InvalidAddressException;
-import yeezus.memory.InvalidWordException;
-import yeezus.memory.Memory;
-import yeezus.memory.Word;
-import yeezus.pcb.PCB;
+import yeezus.memory.*;
 import yeezus.pcb.TaskManager;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
 
 public class Loader {
 
-	int pid, instructionsLength, priority, inputBuffSize, outputBuffSize, tempBuffSize;
-	ArrayList<Word> instructionList = new ArrayList<Word>();
-	ArrayList<Word> memoryList = new ArrayList<Word>();
-	ArrayList<PCB> PCBList = new ArrayList<PCB>();
-	int startInstructionAddress, startInputBufferAddress, startOutputBufferAddress, startTempBufferAddress;
-	int endInstructionAddress, endInputBufferAddress, endOutputBufferAddress;
-	int end;
-	int currAddress = 0;
-	Memory disk;
-	File programFile;
-	TaskManager processList;
+	private int pid, instructionsLength, priority, inputBuffSize, outputBuffSize, tempBuffSize;
+	private int startInstructionAddress;
+	private int currAddress = 0;
+	private Memory disk;
+	private File programFile;
+	private TaskManager processList;
 
 	Loader( TaskManager processList, File programFile, Memory disk )
 			throws InvalidAddressException, DuplicateIDException, InvalidWordException, IOException {
@@ -45,74 +35,62 @@ public class Loader {
 
 	public void scanFile() throws IOException, InvalidWordException, InvalidAddressException, DuplicateIDException {
 
-		BufferedReader buffReader = new BufferedReader( new FileReader( programFile ) );
+		BufferedReader buffReader = new BufferedReader( new FileReader( this.programFile ) );
 		String currentLine = buffReader.readLine();
 		String subLine;
 
 		while ( currentLine != null ) {
 			if ( currentLine.contains( "//" ) ) {
 				if ( currentLine.contains( "JOB" ) ) {
-					// System.out.println( "Grabbing the Job" );
+					// Skip to the beginning of a new page
+					while ( this.currAddress % MMU.FRAME_SIZE != 0 ) {
+						this.currAddress++; // Messy, but it works
+					}
 
 					subLine = currentLine.substring( 7 ); // grabs new substring
-					// System.out.println( "First split: " + subLine ); // prints the new substring for my eyeballs
+
 					int space = subLine.indexOf( ' ' );//finds the god damn space
-					pid = Integer.decode( "0x" + subLine.substring( 0, space ) ); //grabs teh first fuckin letter
+					this.pid = Integer.decode( "0x" + subLine.substring( 0, space ) ); //grabs teh first fuckin letter
 
 					subLine = subLine.substring( space + 1 ); // creates a new line
-					// System.out.println( "Second split: " + subLine ); //prints out this motherfucker
+
 					space = subLine.indexOf( ' ' ); //grabs the next spaceboy
-					instructionsLength = Integer
+					this.instructionsLength = Integer
 							.decode( "0x" + subLine.substring( 0, space ) ); //grabs the fuckin number
 
 					subLine = subLine.substring( space + 1 ); //grabs the line
-					// System.out.println( "Grab 3rd num: " + subLine ); //prints out the line
-					priority = Integer.decode( "0x" + subLine ); //grabs priority
 
-					startInstructionAddress = currAddress;
+					this.priority = Integer.decode( "0x" + subLine ); //grabs priority
+
+					this.startInstructionAddress = this.currAddress;
 
 				}
 				if ( currentLine.contains( "Data" ) ) {
-					// System.out.println( "Grabbing the data" );
 					subLine = currentLine.substring( 8 );
-					// 	System.out.println( "This is the first line:" + subLine );
+
 					int space = subLine.indexOf( ' ' );
-					inputBuffSize = Integer.decode( "0x" + subLine.substring( 0, space ) );
+					this.inputBuffSize = Integer.decode( "0x" + subLine.substring( 0, space ) );
 
 					subLine = subLine.substring( space + 1 );
-					// System.out.println( "This is the 2nd line:" + subLine );
 
 					space = subLine.indexOf( ' ' );
-					outputBuffSize = Integer.decode( "0x" + subLine.substring( 0, space ) );
+					this.outputBuffSize = Integer.decode( "0x" + subLine.substring( 0, space ) );
 
 					subLine = subLine.substring( space + 1 );
-					// System.out.println( "This is the third line:" + subLine );
-					tempBuffSize = Integer.decode( "0x" + subLine );
 
-					endInstructionAddress = currAddress - 1;
-					// System.out.println( "endInstructionAddress: " + endInstructionAddress );
-					startInputBufferAddress = currAddress;
-					// System.out.println( "StartInputBufferAddress: " + startInputBufferAddress );
-					endInputBufferAddress = currAddress + inputBuffSize - 1;
-					// System.out.println( "endInputBufferAddress: " + endInputBufferAddress );
-					startOutputBufferAddress = endInputBufferAddress + 1;
-					// System.out.println( "startOutputBufferAddress: " + startOutputBufferAddress );
-					endOutputBufferAddress = startOutputBufferAddress + outputBuffSize - 1;
-					// System.out.println( "endOutputBufferAddress: " + endOutputBufferAddress );
-					startTempBufferAddress = endOutputBufferAddress + 1;
-					// System.out.println( "startTempBufferAddress: " + startTempBufferAddress );
+					this.tempBuffSize = Integer.decode( "0x" + subLine );
 
 				}
 				if ( currentLine.contains( "END" ) ) {
-					processList.addPCB( pid, startInstructionAddress, instructionsLength, inputBuffSize, outputBuffSize,
-							tempBuffSize, priority );
+					this.processList.addPCB( this.pid, this.startInstructionAddress, this.instructionsLength,
+							this.inputBuffSize, this.outputBuffSize, this.tempBuffSize, this.priority );
 				}
 
 			} else {
 
 				if ( currentLine != null && !currentLine.equals( "" ) ) {
-					disk.write( currAddress, new Word( currentLine ) );
-					currAddress++;
+					this.disk.write( this.currAddress, new Word( currentLine ) );
+					this.currAddress++;
 				}
 
 			}

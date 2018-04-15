@@ -19,7 +19,7 @@ public enum CPUSchedulingPolicy {
 	FCFS( Comparator.comparingInt( PCB::getPID ) ), /**
 	 * The processes with the highest priority will be executed first.
 	 */
-	Priority( Comparator.comparingInt( PCB::getPriority ) ), /**
+	Priority( Comparator.comparingInt( PCB::getPriority ).reversed() ), /**
 	 * <p>Shortest Job First</p><p>The processes with the shortest burt times will be executed first.</p>
 	 */
 	SJF( Comparator.comparingInt( o -> ( o.getInstructionsLength() - o.getPC() ) ) );

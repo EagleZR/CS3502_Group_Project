@@ -2,10 +2,7 @@ package yeezus.memory;
 
 import yeezus.pcb.PCB;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * The MMU helps organize the RAM {@link Memory} in the {@link yeezus} Operating System. The MMU keeps track of which
@@ -19,8 +16,8 @@ public class MMU {
 
 	public static final int FRAME_SIZE = 4;
 	private final List<PageFault> pageFaults = Collections.synchronizedList( new LinkedList<>() );
-	private ArrayList<ArrayList<Integer>> frameMap;
-	private ArrayList<Integer> pool;
+	private final ArrayList<Integer> pool;
+	private final ArrayList<PCB> mappedProcesses;
 	private Memory RAM, disk;
 	private int numFaults = 0;
 
@@ -37,7 +34,7 @@ public class MMU {
 		for ( int i = 0; i < RAM.getCapacity(); i += FRAME_SIZE ) {
 			this.pool.add( i );
 		}
-		this.frameMap = new ArrayList<>();
+		this.mappedProcesses = new ArrayList<>();
 	}
 
 	private synchronized void incNumFaults() {
@@ -55,14 +52,19 @@ public class MMU {
 	 * @return {@code true} if the memory was successfully mapped for the process.
 	 */
 	public synchronized boolean mapMemory( PCB pcb ) {
-		// TODO Map the process disk addresses to pages
+		System.out.println( "Mapping process " + pcb.getPID() );
 		if ( this.pool.size() >= 4 ) {
-			PCB.PageTable pageTable = pcb.getPageTable();
 			if ( pcb.getPageTable() == null ) {
 				pcb.generatePageTable( FRAME_SIZE );
-				pageTable = pcb.getPageTable();
 			}
-
+			for ( int i = 0; i < 4; i++ ) {
+				if ( !loadPage( pcb, i ) ) {
+					terminateProcessMemory( pcb );
+					return false;
+				}
+			}
+			this.mappedProcesses.add( pcb );
+			return true;
 		}
 		return false;
 	}
@@ -74,11 +76,16 @@ public class MMU {
 	 * @return {@code true} if the Process ID is associated with any memory mappings in RAM.
 	 */
 	public synchronized boolean processMapped( PCB pcb ) {
-		try {
-			return this.frameMap.get( pcb.getPID() ) != null;
-		} catch ( Exception e ) {
+		PCB.PageTable pageTable = pcb.getPageTable();
+		if ( pageTable == null ) {
 			return false;
 		}
+		for ( Integer pageAddress : pageTable ) {
+			if ( pageAddress != -1 ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -105,16 +112,19 @@ public class MMU {
 	 */
 	public synchronized Word read( PCB pcb, int logicalAddress ) throws InvalidAddressException, PageFault {
 		int physicalAddress = pcb.getPageTable().getAddress( Memory.getPageNumber( logicalAddress, FRAME_SIZE ) );
-		if ( physicalAddress == -1 ) {
+		int offset = logicalAddress % FRAME_SIZE;
+		if ( physicalAddress != -1 ) {
 			try {
-				return this.RAM.read( physicalAddress );
+				return this.RAM.read( physicalAddress + offset );
 			} catch ( IndexOutOfBoundsException | NullPointerException e ) {
 				throw new InvalidAddressException(
 						"The given logical address, " + logicalAddress + ", is not mapped to a physical address." );
 			}
 		} else {
 			PageFault pageFault = new PageFault( pcb, Memory.getPageNumber( logicalAddress, FRAME_SIZE ) );
-			this.pageFaults.add( pageFault );
+			synchronized ( this.pageFaults ) {
+				this.pageFaults.add( pageFault );
+			}
 			incNumFaults();
 			throw pageFault;
 		}
@@ -143,16 +153,19 @@ public class MMU {
 	 */
 	public synchronized void write( PCB pcb, int logicalAddress, Word data ) throws InvalidAddressException, PageFault {
 		int physicalAddress = pcb.getPageTable().getAddress( Memory.getPageNumber( logicalAddress, FRAME_SIZE ) );
-		if ( physicalAddress == -1 ) {
+		int offset = logicalAddress % FRAME_SIZE;
+		if ( physicalAddress != -1 ) {
 			try {
-				this.RAM.write( physicalAddress, data );
+				this.RAM.write( physicalAddress + offset, data );
 			} catch ( IndexOutOfBoundsException | NullPointerException e ) {
 				throw new InvalidAddressException(
 						"The given logical address, " + logicalAddress + ", is not mapped to a physical address." );
 			}
 		} else {
 			PageFault pageFault = new PageFault( pcb, Memory.getPageNumber( logicalAddress, FRAME_SIZE ) );
-			this.pageFaults.add( pageFault );
+			synchronized ( this.pageFaults ) {
+				this.pageFaults.add( pageFault );
+			}
 			incNumFaults();
 			throw pageFault;
 		}
@@ -164,16 +177,24 @@ public class MMU {
 	 * @param pcb The PCB of the process whose memory is to be freed.
 	 */
 	public synchronized void terminateProcessMemory( PCB pcb ) {
-		if ( pcb == null ) {
+		if ( pcb == null || pcb.getPageTable() == null ) {
 			return;
 		}
-		int pid = pcb.getPID();
-		if ( this.frameMap.size() > pid && processMapped( pcb ) && this.frameMap.get( pid ) != null ) {
-			while ( !this.frameMap.get( pid ).isEmpty() ) {
-				this.pool.add( this.frameMap.get( pid ).remove( 0 ) );
+
+		int ramUsed = 0;
+
+		synchronized ( pcb.getPageTable() ) {
+			for ( Iterator<Integer> iterator = pcb.getPageTable().iterator(); iterator.hasNext(); ) {
+				int address = iterator.next();
+				if ( address != -1 ) {
+					this.pool.add( address );
+					ramUsed += FRAME_SIZE;
+				}
+				iterator.remove();
 			}
-			this.frameMap.set( pid, null );
 		}
+		this.mappedProcesses.remove( pcb );
+		pcb.setRAMUsed( ramUsed );
 	}
 
 	/**
@@ -201,15 +222,15 @@ public class MMU {
 	 * Saves a given page, identified by page number and PCB, from RAM back into the disk. <b>This removes the page from
 	 * RAM.</b>
 	 *
-	 * @param pcb            The PCB of the data to be saved to the disk.
-	 * @param logicalAddress The logical address of the data to be saved to the disk.
+	 * @param pcb        The PCB of the data to be saved to the disk.
+	 * @param pageNumber The page number of the data to be saved to the disk.
 	 */
-	public synchronized void writePage( PCB pcb, int logicalAddress ) {
-		int pageNumber = (int) Math.floor( (double) logicalAddress / FRAME_SIZE );
+	public synchronized void writePage( PCB pcb, int pageNumber ) {
 		PCB.PageTable pageTable = pcb.getPageTable();
 		int physicalDiskAddress = pcb.getStartDiskAddress() + pageNumber * FRAME_SIZE;
 		int physicalRAMAddress = pageTable.getAddress( pageNumber );
 		for ( int i = 0; i < FRAME_SIZE; i++ ) {
+			// this.RAM.write( physicalRAMAddress + i, this.disk.read( physicalDiskAddress + i ) );
 			this.disk.write( physicalDiskAddress + i, this.RAM.read( physicalRAMAddress + i ) );
 		}
 		this.pool.add( physicalRAMAddress );
@@ -221,7 +242,9 @@ public class MMU {
 		int startAddress = pcb.getPageTable().getAddress( pageNumber );
 		if ( startAddress == -1 ) {
 			PageFault pageFault = new PageFault( pcb, pageNumber );
-			this.pageFaults.add( pageFault );
+			synchronized ( this.pageFaults ) {
+				this.pageFaults.add( pageFault );
+			}
 			incNumFaults();
 			throw pageFault;
 		}

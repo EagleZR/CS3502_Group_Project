@@ -1,5 +1,6 @@
 package yeezus.cpu;
 
+import com.sun.istack.internal.NotNull;
 import yeezus.memory.MMU;
 import yeezus.memory.Memory;
 import yeezus.memory.Word;
@@ -47,7 +48,8 @@ public class DMAChannel implements Runnable {
 	 * @param pcb         The PCB of the process whose instruction is to be executed.
 	 * @param registers   The registers which contain the process's data.
 	 */
-	void handle( ExecutableInstruction.IOExecutableInstruction instruction, PCB pcb, Memory registers ) {
+	void handle( @NotNull ExecutableInstruction.IOExecutableInstruction instruction, @NotNull PCB pcb,
+			@NotNull Memory registers ) {
 		this.jobQueue.add( ( instruction.type == InstructionSet.RD ?
 				new IJob( pcb, instruction, registers ) :
 				new OJob( pcb, instruction, registers ) ) );
@@ -67,16 +69,8 @@ public class DMAChannel implements Runnable {
 		if ( instruction.type == InstructionSet.RD ) {
 			Word data = this.inputCache.read( pcb );
 			if ( data != null ) {
-				//reading address into reg1
-				if ( instruction.reg2 == 0 && instruction.address != 0 ) {
-					registers.write( instruction.reg1, data );
-					return true;
-				}
-				//reading reg2 into reg1
-				else {
-					registers.write( instruction.reg1, data );
-					return true;
-				}
+				registers.write( instruction.reg1, data );
+				return true;
 			}
 		}
 		return false;
@@ -96,36 +90,28 @@ public class DMAChannel implements Runnable {
 	@Override public void run() {
 		while ( KeepRunning() ) {
 			if ( !this.jobQueue.isEmpty() ) {
-				Job job = this.jobQueue.peek(); // Shouldn't be null cause we checked if it was empty, right?
+				Job job = this.jobQueue.remove(); // Shouldn't be null cause we checked if it was empty, right?
 				PCB pcb = job.pcb;
+				System.out.println( "Handling " + job.instruction.type + " instruction for process " + pcb.getPID() );
 				ExecutableInstruction.IOExecutableInstruction instruction = job.instruction;
 				boolean success = false;
 
 				try {
 					// RD Operation
-					if ( instruction.type == InstructionSet.RD ) {
+					if ( instruction.type == InstructionSet.RD && job.getClass() == IJob.class ) {
 						IJob iJob = (IJob) job;
-						//reading address into reg1
-						if ( instruction.reg2 == 0 && instruction.address != 0 ) {
-							success = this.inputCache.write( pcb, this.mmu.read( pcb, instruction.address / 4 ) );
-						}
-						//reading reg2 into reg1
-						else {
-							success = this.inputCache.write( pcb, this.mmu.read( pcb, iJob.offset ) );
-						}
+						success = this.inputCache.write( pcb, this.mmu.read( pcb,
+								( instruction.address == 0 ? iJob.offset : instruction.address / 4 ) ) );
 					}
 					//WR operation
-					else if ( instruction.type == InstructionSet.WR ) {
+					else if ( instruction.type == InstructionSet.WR && job.getClass() == OJob.class ) {
 						OJob oJob = (OJob) job;
-						//writing register 1 to address
-						if ( instruction.reg2 == 0 && instruction.address != 0 ) {
-							this.mmu.write( pcb, instruction.address / 4, oJob.data );
-						}
-						//writing register 1 to register 2
-						else {
-							this.mmu.write( pcb, oJob.offset, oJob.data );
-						}
+						this.mmu.write( pcb, ( instruction.address == 0 ? oJob.offset : instruction.address / 4 ),
+								oJob.data );
 						success = true;
+					} else {
+						System.err.println( "There was a class mismatch in the DMA Channel.\n\tInstruction type: "
+								+ instruction.type + "\n\tJob Type: " + job.getClass().getSimpleName() );
 					}
 				} catch ( MMU.PageFault pageFault ) {
 					// Do nothing? DMA Channel will register the fault to be handled later, and the process is already waiting
@@ -136,7 +122,6 @@ public class DMAChannel implements Runnable {
 					pcb.incNumIO();
 					pcb.setStatus( PCB.Status.READY );
 					TaskManager.INSTANCE.getReadyQueue().add( pcb );
-					this.jobQueue.remove( job );
 				}
 			}
 		}
@@ -146,14 +131,13 @@ public class DMAChannel implements Runnable {
 	 * A simple storage structure made to store data about input and output jobs.
 	 */
 	private abstract class Job {
-		final int offset;
+
 		private final PCB pcb;
 		private final ExecutableInstruction.IOExecutableInstruction instruction;
 
 		private Job( PCB pcb, ExecutableInstruction.IOExecutableInstruction instruction, Memory registers ) {
 			this.pcb = pcb;
 			this.instruction = instruction;
-			this.offset = (int) registers.read( instruction.reg2 ).getData() / 4;
 		}
 	}
 
@@ -161,11 +145,13 @@ public class DMAChannel implements Runnable {
 	 * An extension of the {@link Job} class, specifically made to store data about output jobs.
 	 */
 	private class OJob extends Job {
+		final int offset;
 		private final Word data;
 
 		private OJob( PCB pcb, ExecutableInstruction.IOExecutableInstruction instruction, Memory registers ) {
 			super( pcb, instruction, registers );
-			this.data = registers.read( instruction.reg1 );
+			this.data = registers.read( instruction.reg2 );
+			this.offset = (int) registers.read( instruction.reg2 ).getData() / 4;
 		}
 	}
 
@@ -173,9 +159,11 @@ public class DMAChannel implements Runnable {
 	 * An extension of the {@link Job} class, specifically made to store data about input jobs.
 	 */
 	private class IJob extends Job {
+		final int offset;
 
 		private IJob( PCB pcb, ExecutableInstruction.IOExecutableInstruction instruction, Memory registers ) {
 			super( pcb, instruction, registers );
+			this.offset = (int) registers.read( instruction.reg2 ).getData() / 4;
 		}
 	}
 

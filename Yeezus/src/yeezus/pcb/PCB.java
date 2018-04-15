@@ -2,6 +2,8 @@ package yeezus.pcb;
 
 import com.sun.istack.internal.NotNull;
 import com.sun.istack.internal.Nullable;
+import yeezus.memory.Cache;
+import yeezus.memory.MMU;
 import yeezus.memory.Memory;
 
 import java.util.Iterator;
@@ -18,12 +20,15 @@ import java.util.Iterator;
 public class PCB {
 
 	private final int pid, startDiskAddress, instructionsLength, inputBufferLength, outputBufferLength, tempBufferLength, priority;
-	private int cpuID = -1, pc, executionCount, numIO = 0;
+	private int cpuID = -1;
+	private int pc;
+	private int executionCount;
+	private int numIO = 0;
+	private int ramUsed;
 	private long clock, elapsedWaitTime, elapsedRunTime;
 	private Status status;
 	private Memory cache, registers;
 	private PageTable pageTable = null;
-
 	/**
 	 * Constructs a PCB with the given characteristics.
 	 *
@@ -48,6 +53,14 @@ public class PCB {
 		this.outputBufferLength = outputBufferLength;
 		this.tempBufferLength = tempBufferLength;
 		this.priority = priority;
+	}
+
+	public int getRAMUsed() {
+		return this.ramUsed;
+	}
+
+	public void setRAMUsed( int ramUsed ) {
+		this.ramUsed = ramUsed;
 	}
 
 	/**
@@ -82,8 +95,20 @@ public class PCB {
 	 *
 	 * @param cache The cache to be saved.
 	 */
-	public void setCache( @Nullable Memory cache ) {
-		this.cache = cache;
+	public void setCache( @Nullable Cache cache ) {
+		if ( cache == null ) {
+			this.cache = null;
+			return;
+		}
+		this.cache = new Memory( cache.getCapacity() - ( cache.getWritablePagesCount() * MMU.FRAME_SIZE ) );
+		for ( int i = 0; i < this.getTempBufferLength(); i++ ) {
+			try {
+				this.cache.write( i, cache.read( this, getTempBufferDiskAddress() - getStartDiskAddress() + i ) );
+			} catch ( MMU.PageFault pageFault ) {
+				System.err.println( "This shouldn't be happening when we're only accessing the temp data..." );
+				pageFault.printStackTrace();
+			}
+		}
 	}
 
 	/**
@@ -96,12 +121,21 @@ public class PCB {
 	}
 
 	/**
-	 * Saves the registers for this process. This is only to be used in swapping.
+	 * <p>Saves the registers for this process. This is only to be used in swapping.</p><p><b>NOTE:</b> This method
+	 * makes a copy of the given registers so the source registers can be changed without corrupting the saved
+	 * data.</p>
 	 *
 	 * @param registers The registers to be saved.
 	 */
 	public void setRegisters( @Nullable Memory registers ) {
-		this.registers = registers;
+		if ( registers == null ) {
+			this.registers = null;
+			return;
+		}
+		this.registers = new Memory( registers.getCapacity() );
+		for ( int i = 0; i < registers.getCapacity(); i++ ) {
+			this.registers.write( i, registers.read( i ) );
+		}
 	}
 
 	/**
@@ -209,6 +243,10 @@ public class PCB {
 	 */
 	public int getTempBufferDiskAddress() {
 		return getOutputBufferDiskAddress() + this.outputBufferLength;
+	}
+
+	public int getTempBufferLogicalAddress() {
+		return this.instructionsLength + this.inputBufferLength + this.outputBufferLength;
 	}
 
 	/**
@@ -364,6 +402,9 @@ public class PCB {
 
 		private PageTable( int size ) {
 			this.pages = new Page[size];
+			for ( int i = 0; i < size; i++ ) {
+				this.pages[i] = new Page();
+			}
 		}
 
 		public synchronized int getAddress( int pageNumber ) {
@@ -393,6 +434,10 @@ public class PCB {
 					return getAddress( this.index++ );
 				}
 
+				@Override public void remove() {
+					PageTable.this.pages[this.index - 1].isValid = false;
+				}
+
 				public int getIndex() {
 					return this.index;
 				}
@@ -400,7 +445,7 @@ public class PCB {
 		}
 	}
 
-	private class Page {
+	private static class Page {
 		private int physicalAddress;
 		private boolean isValid = false;
 	}
