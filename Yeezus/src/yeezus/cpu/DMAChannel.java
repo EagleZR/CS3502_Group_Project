@@ -50,6 +50,9 @@ public class DMAChannel implements Runnable {
 	 */
 	void handle( @NotNull ExecutableInstruction.IOExecutableInstruction instruction, @NotNull PCB pcb,
 			@NotNull Memory registers ) {
+		synchronized ( System.out ) {
+			System.out.println( "Registering I/O operation for process " + pcb.getPID() );
+		}
 		this.jobQueue.add( ( instruction.type == InstructionSet.RD ?
 				new IJob( pcb, instruction, registers ) :
 				new OJob( pcb, instruction, registers ) ) );
@@ -92,7 +95,10 @@ public class DMAChannel implements Runnable {
 			if ( !this.jobQueue.isEmpty() ) {
 				Job job = this.jobQueue.remove(); // Shouldn't be null cause we checked if it was empty, right?
 				PCB pcb = job.pcb;
-				System.out.println( "Handling " + job.instruction.type + " instruction for process " + pcb.getPID() );
+				synchronized ( System.out ) {
+					System.out
+							.println( "Handling " + job.instruction.type + " instruction for process " + pcb.getPID() );
+				}
 				ExecutableInstruction.IOExecutableInstruction instruction = job.instruction;
 				boolean success = false;
 
@@ -109,19 +115,32 @@ public class DMAChannel implements Runnable {
 						this.mmu.write( pcb, ( instruction.address == 0 ? oJob.offset : instruction.address / 4 ),
 								oJob.data );
 						success = true;
+						// The CPU/Instruction can't check if this has been completed, and doesn't need to get anything from it,
+						// we need to increment so it doesn't loop indefinitely
+						pcb.incExecutionCount();
+						pcb.setPC( pcb.getPC() + 1 );
 					} else {
 						System.err.println( "There was a class mismatch in the DMA Channel.\n\tInstruction type: "
 								+ instruction.type + "\n\tJob Type: " + job.getClass().getSimpleName() );
 					}
 				} catch ( MMU.PageFault pageFault ) {
 					// Do nothing? DMA Channel will register the fault to be handled later, and the process is already waiting
+					synchronized ( System.out ) {
+						System.out.println( "Page fault on I/O request for process " + pcb.getPID() );
+					}
 				}
 
 				// Remove jobs if they were successfully completed
 				if ( success ) {
+					synchronized ( System.out ) {
+						System.out.println( "I/O request for process " + pcb.getPID() + " successfully completed." );
+					}
 					pcb.incNumIO();
 					pcb.setStatus( PCB.Status.READY );
 					TaskManager.INSTANCE.getReadyQueue().add( pcb );
+					synchronized ( System.out ) {
+						System.out.println( "Waking up process " + pcb.getPID() + " for a I/O request completion" );
+					}
 				}
 			}
 		}

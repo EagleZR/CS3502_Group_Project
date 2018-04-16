@@ -76,6 +76,7 @@ public class Driver {
 		this.dispatcher = new Dispatcher( taskManager, this.cpus );
 		this.dmaChannel = new DMAChannel( mmu, 8, true );
 		this.dmaChannelThread = new Thread( this.dmaChannel );
+		this.dmaChannelThread.setName( "DMA Channel Thread" );
 
 		// Create threads
 		this.threads = new Thread[this.cpus.length];
@@ -85,6 +86,7 @@ public class Driver {
 			CPU cpu = new CPU( i, this.dmaChannel, mmu, registerSize, cacheSize );
 			this.cpus[i] = cpu;
 			this.threads[i] = new Thread( this.cpus[i] );
+			this.threads[i].setName( "CPU " + i + " Thread" );
 			this.threads[i].setUncaughtExceptionHandler( ( t, e ) -> {
 				e.printStackTrace();
 				cpu.printDump();

@@ -126,6 +126,11 @@ public class MMU {
 				this.pageFaults.add( pageFault );
 			}
 			incNumFaults();
+			synchronized ( System.out ) {
+				System.out.println(
+						"Throwing page fault from read() for page " + Memory.getPageNumber( logicalAddress, FRAME_SIZE )
+								+ " of process " + pcb.getPID() );
+			}
 			throw pageFault;
 		}
 	}
@@ -167,6 +172,10 @@ public class MMU {
 				this.pageFaults.add( pageFault );
 			}
 			incNumFaults();
+			synchronized ( System.out ) {
+				System.out.println( "Throwing page fault from write() for page " + Memory
+						.getPageNumber( logicalAddress, FRAME_SIZE ) + " of process " + pcb.getPID() );
+			}
 			throw pageFault;
 		}
 	}
@@ -237,7 +246,7 @@ public class MMU {
 		pageTable.clearAddress( pageNumber );
 	}
 
-	public synchronized Word[] getPage( PCB pcb, int pageNumber ) throws PageFault {
+	synchronized Word[] getPage( PCB pcb, int pageNumber ) throws PageFault {
 		Word[] page = new Word[FRAME_SIZE];
 		int startAddress = pcb.getPageTable().getAddress( pageNumber );
 		if ( startAddress == -1 ) {
@@ -246,6 +255,10 @@ public class MMU {
 				this.pageFaults.add( pageFault );
 			}
 			incNumFaults();
+			synchronized ( System.out ) {
+				System.out.println(
+						"Throwing page fault from getPage() for page " + pageNumber + " of process " + pcb.getPID() );
+			}
 			throw pageFault;
 		}
 		for ( int i = 0; i < FRAME_SIZE; i++ ) {

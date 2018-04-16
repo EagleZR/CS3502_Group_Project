@@ -6,6 +6,7 @@ import yeezus.memory.Cache;
 import yeezus.memory.MMU;
 import yeezus.memory.Memory;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 
 /**
@@ -29,6 +30,13 @@ public class PCB {
 	private Status status;
 	private Memory cache, registers;
 	private PageTable pageTable = null;
+
+	private final ArrayList<String> log = new ArrayList<>();
+
+	public ArrayList<String> getLog() {
+		return log;
+	}
+
 	/**
 	 * Constructs a PCB with the given characteristics.
 	 *

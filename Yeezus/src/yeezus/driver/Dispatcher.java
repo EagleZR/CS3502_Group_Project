@@ -3,6 +3,7 @@ package yeezus.driver;
 import yeezus.cpu.CPU;
 import yeezus.memory.Cache;
 import yeezus.memory.MMU;
+import yeezus.memory.Memory;
 import yeezus.pcb.PCB;
 import yeezus.pcb.TaskManager;
 
@@ -18,11 +19,11 @@ public class Dispatcher implements Runnable {
 
 	@Override public void run() {
 		for ( CPU cpu : this.cpus ) {
-			if ( ( cpu.getProcess() == null || PCB.Status.RUNNING != cpu.getProcess().getStatus() )
+			PCB oldProcess = cpu.getProcess();
+			if ( ( oldProcess == null || PCB.Status.RUNNING != oldProcess.getStatus() )
 					&& this.taskManager.getReadyQueue().size() > 0 ) {
-				if ( cpu.getProcess() != null && PCB.Status.TERMINATED != cpu.getProcess().getStatus() ) {
-					// Save old process data
-					PCB oldProcess = cpu.getProcess();
+				// Save old process data
+				if ( oldProcess != null && PCB.Status.TERMINATED != oldProcess.getStatus() ) {
 					oldProcess.setPC( cpu.getPC() );
 					oldProcess.setRegisters( cpu.getRegisters() );
 					oldProcess.setCache( cpu.getCache() );
@@ -30,14 +31,25 @@ public class Dispatcher implements Runnable {
 
 				PCB next = this.taskManager.getReadyQueue().remove(); // They're already in order
 				cpu.setProcess( next );
+				synchronized ( System.out ) {
+					System.out.println( "Setting process " + next.getPID() + " in the CPU." );
+				}
 
 				cpu.setPC( next.getPC() ); // If it's uninitialized, it should be 0 anyways, so no need to check
 
-				// Write the starting instructions to the cache. TODO Start with the saved PC in the PCB.
+				// Write the starting instructions to the cache.
 				Cache cache = cpu.getCache();
 				for ( int i = 0; i < cache.getWritablePagesCount(); i++ ) {
 					try {
-						cache.loadPage( next, i );
+						synchronized ( System.out ) {
+							System.out.println( "Writing page "
+									+ ( i + Memory.getPageNumber( next.getPC(), MMU.FRAME_SIZE ) ) % ( Memory
+									.getPageNumber( next.getInstructionsLength(), MMU.FRAME_SIZE ) ) + " for process "
+									+ next.getPID() + " to the cache" );
+						}
+						// Write the pages starting with the page that contains the instruction associated with the PC to the cache (loop to page 0 if it runs out of instruction pages)
+						cache.loadPage( next, ( i + Memory.getPageNumber( next.getPC(), MMU.FRAME_SIZE ) ) % ( Memory
+								.getPageNumber( next.getInstructionsLength(), MMU.FRAME_SIZE ) ) );
 					} catch ( MMU.PageFault pageFault ) {
 						// If they're not loaded, it's fine. The Cache can do demand paging if it needs... I hope :/
 						// TODO Test the above statement
@@ -46,6 +58,9 @@ public class Dispatcher implements Runnable {
 
 				// Write the saved registers back to the CPU registers
 				if ( next.getRegisters() != null ) {
+					synchronized ( System.out ) {
+						System.out.println( "Restoring process " + next.getPID() + " registers" );
+					}
 					for ( int i = 0; i < cpu.getRegisters().getCapacity(); i++ ) {
 						cpu.getRegisters().write( i, next.getRegisters().read( i ) );
 					}
@@ -53,6 +68,9 @@ public class Dispatcher implements Runnable {
 
 				// Write the temp cache data from the PCB to the CPU cache
 				if ( next.getCache() != null ) {
+					synchronized ( System.out ) {
+						System.out.println( "Restoring process " + next.getPID() + " cache" );
+					}
 					for ( int i = 0; i < next.getTempBufferLength(); i++ ) {
 						cpu.getCache().write( next, next.getTempBufferDiskAddress() - next.getStartDiskAddress() + i,
 								next.getCache().read( i ) );

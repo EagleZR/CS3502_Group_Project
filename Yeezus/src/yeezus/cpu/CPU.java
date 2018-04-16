@@ -25,7 +25,6 @@ public class CPU implements Runnable {
 	private PCB pcb;
 	private int pc;
 	private ExecutableInstruction previousInstruction;
-	private ArrayList<String> log;
 	private boolean shutdown = false;
 	private long idleTime = 0;
 	private long executeTime = 0;
@@ -51,7 +50,6 @@ public class CPU implements Runnable {
 		this.dmaChannel = dmaChannel;
 		this.registers = new Memory( registerSize );
 		this.cache = new Cache( cacheSize, mmu );
-		this.log = new ArrayList<>();
 	}
 
 	/**
@@ -168,7 +166,7 @@ public class CPU implements Runnable {
 	@Override public void run() {
 		long startExecuteTime = System.nanoTime();
 		while ( !isShutdown() ) {
-			while ( getProcess() != null && getProcess().getStatus() != PCB.Status.TERMINATED ) {
+			while ( getProcess() != null && getProcess().getStatus() == PCB.Status.RUNNING ) {
 				// Check if this process has had a pc error
 				if ( getPC() >= getProcess().getInstructionsLength() ) {
 					System.err.println( generateSimpleDump() );
@@ -178,21 +176,28 @@ public class CPU implements Runnable {
 					try {
 						// Fetch
 						Word instruction = this.cache.read( getProcess(), getPC() );
-						setPC( getPC() + 1 );
+						// Don't increment the PC until the instruction has been successfully executed
 
 						// Decode
 						ExecutableInstruction executableInstruction = decode( instruction );
 						// Want this here in case there's an error in the execution of the process
 						this.previousInstruction = executableInstruction;
-						this.log.add( generateSimpleDump() );
+						this.pcb.getLog().add( generateSimpleDump() );
+						//						synchronized ( System.out ) {
+						//							System.out.println( generateSimpleDump() );
+						//						}
 
 						// Execute
+						synchronized ( System.out ) {
+							System.out.println(
+									"Executing " + executableInstruction.type + " for process " + getProcess().getPID()
+											+ "\tPC: " + pc + "\tExecution count: " + pcb.getExecutionCount() );
+						}
 						if ( executableInstruction.type == InstructionSet.HLT ) {
 							getProcess().incExecutionCount();
 							getProcess().setStatus(
 									PCB.Status.TERMINATED ); // Make sure this is the last call to getProcess() this loop
 							this.previousInstruction = null;
-							this.log.clear();
 							System.out.println( "Completed process " + this.pcb.getPID() );
 						} else {
 							if ( executableInstruction.getClass()
@@ -205,16 +210,27 @@ public class CPU implements Runnable {
 									this.dmaChannel.handle(
 											(ExecutableInstruction.IOExecutableInstruction) executableInstruction,
 											getProcess(), this.registers );
-									getProcess().setStatus( PCB.Status.WAITING );
+									synchronized ( System.out ) {
+										System.out.println(
+												"Putting process " + getProcess().getPID() + " to sleep for I/O" );
+									}
+									getProcess().setStatus(
+											PCB.Status.WAITING ); // Set to waiting so the Dispatcher will swap it
 								} else {
 									getProcess().incExecutionCount();
+									setPC( getPC() + 1 );
 								}
 							} else {
 								executableInstruction.run();
 								getProcess().incExecutionCount();
+								setPC( getPC() + 1 );
 							}
 						}
 					} catch ( MMU.PageFault pageFault ) {
+						synchronized ( System.out ) {
+							System.out.println(
+									"Putting process " + getProcess().getPID() + " to sleep for a page fault" );
+						}
 						getProcess().setStatus( PCB.Status.WAITING ); // Set to waiting so the Dispatcher will swap it
 					}
 				}
@@ -333,8 +349,8 @@ public class CPU implements Runnable {
 	 * java.io.PrintStream}.
 	 */
 	public void printDump() {
-		while ( !this.log.isEmpty() ) {
-			System.out.println( this.log.remove( this.log.size() - 1 ) );
+		while ( !this.pcb.getLog().isEmpty() ) {
+			System.out.println( this.pcb.getLog().remove( this.pcb.getLog().size() - 1 ) );
 		}
 	}
 }

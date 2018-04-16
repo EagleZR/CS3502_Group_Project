@@ -59,7 +59,7 @@ public class Test_Driver {
 	@Test public void runFCFS() throws Exception {
 		CPUSchedulingPolicy schedulingPolicy = CPUSchedulingPolicy.FCFS;
 		TaskManager.INSTANCE.createReadyQueue( schedulingPolicy.getComparator() );
-		new Driver( 1, this.disk, 16, 20, 100, schedulingPolicy ).run();
+		new Driver( 1, this.disk, 16, 20, 150, schedulingPolicy ).run();
 		// Print the disk contents for manual verification
 		File output = new File( "output/FCFS_Output_Test_File.txt" );
 		output.getParentFile().mkdirs();
