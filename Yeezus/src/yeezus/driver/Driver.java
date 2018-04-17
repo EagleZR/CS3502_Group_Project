@@ -34,6 +34,7 @@ public class Driver {
 	private Thread dmaChannelThread;
 	private Memory disk;
 	private long[] idleTimes, executeTimes;
+	private CPUSchedulingPolicy policy;
 
 	/**
 	 * Constructs a new Driver instance from the given parameters.
@@ -66,6 +67,7 @@ public class Driver {
 		this.ramSize = ramSize;
 		this.registerSize = registerSize;
 		this.cacheSize = cacheSize;
+		this.policy = schedulingPolicy;
 
 		MMU mmu = new MMU( disk, new Memory( ramSize ) );
 
@@ -149,7 +151,8 @@ public class Driver {
 			}
 
 			for ( CPU cpu : this.cpus ) {
-				if ( cpu.isAsleep() && cpu.getProcess().getStatus() == PCB.Status.RUNNING ) {
+				if ( cpu.isAsleep() && cpu.getProcess() != null
+						&& cpu.getProcess().getStatus() == PCB.Status.RUNNING ) {
 					synchronized ( cpu ) {
 						cpu.notify();
 					}
@@ -238,7 +241,8 @@ public class Driver {
 		System.out.println(
 				"**System Info**\nNumber of CPUs: " + this.cpus.length + "Size of Disk: " + this.disk.getCapacity()
 						+ "\nSize of RAM: " + this.ramSize + "\nSize of Cache: " + this.cacheSize
-						+ "\nSize of Registers: " + this.registerSize + "\n\n**CPU Info**" );
+						+ "\nSize of Registers: " + this.registerSize + "\nScheduling Policy: " + this.policy
+						+ "\n**CPU Info**" );
 		for ( CPU cpu : this.cpus ) {
 			System.out.println( "CPU " + cpu.getCPUID() );
 			cpu.printDump();

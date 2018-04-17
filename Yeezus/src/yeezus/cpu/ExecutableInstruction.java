@@ -67,44 +67,53 @@ abstract class ExecutableInstruction implements Runnable {
 
 		// Executes the actions specified by this instruction
 		@Override public void run() throws InvalidAddressException, InvalidWordException {
-			// System.out.println("Executing: " + this.type + ", " + this.s1 + "(" + this.registers.read( s1 ).getData() + "), "+ this.s2 + "(" + this.registers.read( s2 ).getData() + "), " + this.d + "("+ this.registers.read( s1 ).getData() + ")" );
-			switch ( this.type ) { // Not the most efficient, but it will work for now
-				case MOV: // Transfers the content of one register into another
-					super.registers.write( this.d, super.registers.read( this.s1 ) );
-					break;
-				case ADD: // Adds content of two S-regs into D-reg
-					super.registers.write( this.d, new Word(
-							super.registers.read( this.s1 ).getData() + super.registers.read( this.s2 ).getData() ) );
-					break;
-				case SUB: // Subtracts content of two S-regs into D-reg
-					super.registers.write( this.d, new Word(
-							super.registers.read( this.s1 ).getData() - super.registers.read( this.s2 ).getData() ) );
-					break;
-				case MUL: // Multiplies content of two S-regs into D-reg
-					super.registers.write( this.d, new Word(
-							super.registers.read( this.s1 ).getData() * super.registers.read( this.s2 ).getData() ) );
-					break;
-				case DIV: // Divides content of two S-regs into D-reg
-					super.registers.write( this.d, new Word(
-							super.registers.read( this.s1 ).getData() + super.registers.read( this.s2 ).getData() ) );
-					break;
-				case AND: // Logical AND of two S-regs into D-reg
-					super.registers.write( this.d, new Word(
-							super.registers.read( this.s1 ).getData() & super.registers.read( this.s2 ).getData() ) );
-					break;
-				case OR: // Logical OR of two S-regs into D-reg
-					super.registers.write( this.d, new Word(
-							super.registers.read( this.s1 ).getData() | super.registers.read( this.s2 ).getData() ) );
-					break;
-				case SLT: // Sets the D-reg to 1 if  first S-reg is less than the B-reg; 0 otherwise
-					super.registers.write( this.d, new Word(
-							( super.registers.read( this.s1 ).getData() < super.registers.read( this.s2 ).getData() ?
-									1 :
-									0 ) ) );
-					break;
-				case NOP: // Does nothing and moves to next instruction
-					// Do nothing
-					break;
+			try {
+				switch ( this.type ) { // Not the most efficient, but it will work for now
+					case MOV: // Transfers the content of one register into another
+						super.registers.write( this.d, super.registers.read( this.s1 ) );
+						break;
+					case ADD: // Adds content of two S-regs into D-reg
+						super.registers.write( this.d, new Word(
+								super.registers.read( this.s1 ).getData() + super.registers.read( this.s2 )
+										.getData() ) );
+						break;
+					case SUB: // Subtracts content of two S-regs into D-reg
+						super.registers.write( this.d, new Word(
+								super.registers.read( this.s1 ).getData() - super.registers.read( this.s2 )
+										.getData() ) );
+						break;
+					case MUL: // Multiplies content of two S-regs into D-reg
+						super.registers.write( this.d, new Word(
+								super.registers.read( this.s1 ).getData() * super.registers.read( this.s2 )
+										.getData() ) );
+						break;
+					case DIV: // Divides content of two S-regs into D-reg
+						super.registers.write( this.d, new Word(
+								super.registers.read( this.s1 ).getData() + super.registers.read( this.s2 )
+										.getData() ) );
+						break;
+					case AND: // Logical AND of two S-regs into D-reg
+						super.registers.write( this.d, new Word(
+								super.registers.read( this.s1 ).getData() & super.registers.read( this.s2 )
+										.getData() ) );
+						break;
+					case OR: // Logical OR of two S-regs into D-reg
+						super.registers.write( this.d, new Word(
+								super.registers.read( this.s1 ).getData() | super.registers.read( this.s2 )
+										.getData() ) );
+						break;
+					case SLT: // Sets the D-reg to 1 if  first S-reg is less than the B-reg; 0 otherwise
+						super.registers.write( this.d, new Word(
+								( super.registers.read( this.s1 ).getData() < super.registers.read( this.s2 )
+										.getData() ? 1 : 0 ) ) );
+						break;
+					case NOP: // Does nothing and moves to next instruction
+						// Do nothing
+						break;
+				}
+			} catch ( InvalidAddressException | InvalidWordException e ) {
+				System.err.println( "Instruction in error: " + toString() );
+				throw e;
 			}
 		}
 

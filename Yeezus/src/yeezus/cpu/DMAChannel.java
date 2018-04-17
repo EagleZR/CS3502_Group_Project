@@ -50,9 +50,11 @@ public class DMAChannel implements Runnable {
 	 */
 	void handle( @NotNull ExecutableInstruction.IOExecutableInstruction instruction, @NotNull PCB pcb,
 			@NotNull Memory registers ) {
-		this.jobQueue.add( ( instruction.type == InstructionSet.RD ?
-				new IJob( pcb, instruction, registers ) :
-				new OJob( pcb, instruction, registers ) ) );
+		synchronized ( this.jobQueue ) {
+			this.jobQueue.add( ( instruction.type == InstructionSet.RD ?
+					new IJob( pcb, instruction, registers ) :
+					new OJob( pcb, instruction, registers ) ) );
+		}
 	}
 
 	/**
@@ -89,42 +91,46 @@ public class DMAChannel implements Runnable {
 
 	@Override public void run() {
 		while ( KeepRunning() ) {
-			if ( !this.jobQueue.isEmpty() ) {
-				Job job = this.jobQueue.remove(); // Shouldn't be null cause we checked if it was empty, right?
-				PCB pcb = job.pcb;
-				ExecutableInstruction.IOExecutableInstruction instruction = job.instruction;
-				boolean success = false;
+			synchronized ( this.jobQueue ) {
+				if ( !this.jobQueue.isEmpty() ) {
+					Job job = this.jobQueue.remove(); // Shouldn't be null cause we checked if it was empty, right?
+					PCB pcb = job.pcb;
+					ExecutableInstruction.IOExecutableInstruction instruction = job.instruction;
+					boolean success = false;
 
-				try {
-					// RD Operation
-					if ( instruction.type == InstructionSet.RD && job.getClass() == IJob.class ) {
-						IJob iJob = (IJob) job;
-						success = this.inputCache.write( pcb, this.mmu.read( pcb,
-								( instruction.address == 0 ? iJob.offset : instruction.address / 4 ) ) );
+					try {
+						// RD Operation
+						if ( instruction.type == InstructionSet.RD && job.getClass() == IJob.class ) {
+							IJob iJob = (IJob) job;
+							success = this.inputCache.write( pcb, this.mmu.read( pcb,
+									( instruction.address == 0 ? iJob.offset : instruction.address / 4 ) ) );
+						}
+						//WR operation
+						else if ( instruction.type == InstructionSet.WR && job.getClass() == OJob.class ) {
+							OJob oJob = (OJob) job;
+							this.mmu.write( pcb, ( instruction.address == 0 ? oJob.offset : instruction.address / 4 ),
+									oJob.data );
+							success = true;
+							// The CPU/Instruction can't check if this has been completed, and doesn't need to get anything from it,
+							// we need to increment so it doesn't loop indefinitely
+							pcb.incExecutionCount();
+							pcb.setPC( pcb.getPC() + 1 );
+						} else {
+							System.err.println( "There was a class mismatch in the DMA Channel.\n\tInstruction type: "
+									+ instruction.type + "\n\tJob Type: " + job.getClass().getSimpleName() );
+						}
+					} catch ( MMU.PageFault pageFault ) {
+						// Do nothing? DMA Channel will register the fault to be handled later, and the process is already waiting
 					}
-					//WR operation
-					else if ( instruction.type == InstructionSet.WR && job.getClass() == OJob.class ) {
-						OJob oJob = (OJob) job;
-						this.mmu.write( pcb, ( instruction.address == 0 ? oJob.offset : instruction.address / 4 ),
-								oJob.data );
-						success = true;
-						// The CPU/Instruction can't check if this has been completed, and doesn't need to get anything from it,
-						// we need to increment so it doesn't loop indefinitely
-						pcb.incExecutionCount();
-						pcb.setPC( pcb.getPC() + 1 );
-					} else {
-						System.err.println( "There was a class mismatch in the DMA Channel.\n\tInstruction type: "
-								+ instruction.type + "\n\tJob Type: " + job.getClass().getSimpleName() );
-					}
-				} catch ( MMU.PageFault pageFault ) {
-					// Do nothing? DMA Channel will register the fault to be handled later, and the process is already waiting
-				}
 
-				// Remove jobs if they were successfully completed
-				if ( success ) {
-					pcb.incNumIO();
-					pcb.setStatus( PCB.Status.READY );
-					TaskManager.INSTANCE.getReadyQueue().add( pcb );
+					// Remove jobs if they were successfully completed
+					if ( success ) {
+						synchronized ( pcb ) {
+							pcb.incNumIO();
+							pcb.setStatus( PCB.Status.READY );
+							TaskManager.INSTANCE.getReadyQueue().add( pcb );
+						}
+					}
 				}
 			}
 		}
