@@ -52,7 +52,6 @@ public class MMU {
 	 * @return {@code true} if the memory was successfully mapped for the process.
 	 */
 	public synchronized boolean mapMemory( PCB pcb ) {
-		System.out.println( "Mapping process " + pcb.getPID() );
 		if ( this.pool.size() >= 4 ) {
 			if ( pcb.getPageTable() == null ) {
 				pcb.generatePageTable( FRAME_SIZE );
@@ -126,11 +125,6 @@ public class MMU {
 				this.pageFaults.add( pageFault );
 			}
 			incNumFaults();
-			synchronized ( System.out ) {
-				System.out.println(
-						"Throwing page fault from read() for page " + Memory.getPageNumber( logicalAddress, FRAME_SIZE )
-								+ " of process " + pcb.getPID() );
-			}
 			throw pageFault;
 		}
 	}
@@ -168,14 +162,10 @@ public class MMU {
 			}
 		} else {
 			PageFault pageFault = new PageFault( pcb, Memory.getPageNumber( logicalAddress, FRAME_SIZE ) );
-			synchronized ( this.pageFaults ) {
-				this.pageFaults.add( pageFault );
-			}
+			//synchronized ( this.pageFaults ) {
+			this.pageFaults.add( pageFault );
+			//}
 			incNumFaults();
-			synchronized ( System.out ) {
-				System.out.println( "Throwing page fault from write() for page " + Memory
-						.getPageNumber( logicalAddress, FRAME_SIZE ) + " of process " + pcb.getPID() );
-			}
 			throw pageFault;
 		}
 	}
@@ -255,10 +245,6 @@ public class MMU {
 				this.pageFaults.add( pageFault );
 			}
 			incNumFaults();
-			synchronized ( System.out ) {
-				System.out.println(
-						"Throwing page fault from getPage() for page " + pageNumber + " of process " + pcb.getPID() );
-			}
 			throw pageFault;
 		}
 		for ( int i = 0; i < FRAME_SIZE; i++ ) {
@@ -267,7 +253,7 @@ public class MMU {
 		return page;
 	}
 
-	public List<PageFault> getPageFaults() {
+	public synchronized List<PageFault> getPageFaults() {
 		return this.pageFaults;
 	}
 
@@ -296,6 +282,7 @@ public class MMU {
 		private PageFault( PCB pcb, int pageNumber ) {
 			super( "Page #" + pageNumber + " for process " + pcb.getPID() + " is not in RAM." );
 			this.pcb = pcb;
+			pcb.setStatus( PCB.Status.WAITING );
 			this.pageNumber = pageNumber;
 		}
 

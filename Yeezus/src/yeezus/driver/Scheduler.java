@@ -47,22 +47,14 @@ public class Scheduler implements Runnable {
 		}
 
 		// Handle page faults
-		synchronized ( this.mmu.getPageFaults() ) {
+		synchronized ( this.mmu ) {
 			for ( Iterator<MMU.PageFault> iterator = this.mmu.getPageFaults().iterator(); iterator.hasNext(); ) {
 				MMU.PageFault pageFault = iterator.next();
-				synchronized ( System.out ) {
-					System.out.println(
-							"Resolving page fault for page " + pageFault.getPageNumber() + " of process " + pageFault
-									.getPCB().getPID() );
-				}
 				PCB pcb = pageFault.getPCB();
 				this.mmu.loadPage( pcb, pageFault.getPageNumber() );
 				iterator.remove();
 				pcb.setStatus( PCB.Status.READY );
 				this.taskManager.getReadyQueue().add( pcb );
-				synchronized ( System.out ) {
-					System.out.println( "Waking up process " + pcb.getPID() + " for a page fault resolution" );
-				}
 			}
 		}
 

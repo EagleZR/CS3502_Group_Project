@@ -29,6 +29,7 @@ public class CPU implements Runnable {
 	private long idleTime = 0;
 	private long executeTime = 0;
 	private int numProcesses = 0;
+	private boolean isAsleep = false;
 
 	/**
 	 * Constructs a new CPU from the given parameters.
@@ -57,6 +58,14 @@ public class CPU implements Runnable {
 	 */
 	public static void reset() {
 		cpuids.clear();
+	}
+
+	public synchronized boolean isAsleep() {
+		return this.isAsleep;
+	}
+
+	public synchronized void setAsleep( boolean asleep ) {
+		this.isAsleep = asleep;
 	}
 
 	/**
@@ -166,16 +175,17 @@ public class CPU implements Runnable {
 	@Override public void run() {
 		long startExecuteTime = System.nanoTime();
 		while ( !isShutdown() ) {
-			while ( getProcess() != null && getProcess().getStatus() == PCB.Status.RUNNING ) {
+			PCB process = getProcess();
+			while ( process != null && process.getStatus() == PCB.Status.RUNNING ) {
 				// Check if this process has had a pc error
-				if ( getPC() >= getProcess().getInstructionsLength() ) {
+				if ( getPC() >= process.getInstructionsLength() ) {
 					System.err.println( generateSimpleDump() );
 					printDump();
-					getProcess().setStatus( PCB.Status.TERMINATED );
+					process.setStatus( PCB.Status.TERMINATED );
 				} else {
 					try {
 						// Fetch
-						Word instruction = this.cache.read( getProcess(), getPC() );
+						Word instruction = this.cache.read( process, getPC() );
 						// Don't increment the PC until the instruction has been successfully executed
 
 						// Decode
@@ -188,50 +198,41 @@ public class CPU implements Runnable {
 						//						}
 
 						// Execute
-						synchronized ( System.out ) {
-							System.out.println(
-									"Executing " + executableInstruction.type + " for process " + getProcess().getPID()
-											+ "\tPC: " + pc + "\tExecution count: " + pcb.getExecutionCount() );
-						}
+
 						if ( executableInstruction.type == InstructionSet.HLT ) {
-							getProcess().incExecutionCount();
-							getProcess().setStatus(
+							process.incExecutionCount();
+							process.setStatus(
 									PCB.Status.TERMINATED ); // Make sure this is the last call to getProcess() this loop
 							this.previousInstruction = null;
-							System.out.println( "Completed process " + this.pcb.getPID() );
+							process.getLog().add( "***Program Complete***" );
 						} else {
 							if ( executableInstruction.getClass()
 									== ExecutableInstruction.IOExecutableInstruction.class ) {
 								// First try to retrieve input from the DMA Channel if there is any, and if not, schedule the input to be retrieved
 								if ( !this.dmaChannel.retrieveInput(
-										(ExecutableInstruction.IOExecutableInstruction) executableInstruction,
-										getProcess(), this.registers ) ) {
+										(ExecutableInstruction.IOExecutableInstruction) executableInstruction, process,
+										this.registers ) ) {
 									// Schedule the I/O with the DMA Channel and set the PCB status to WAITING
-									this.dmaChannel.handle(
-											(ExecutableInstruction.IOExecutableInstruction) executableInstruction,
-											getProcess(), this.registers );
-									synchronized ( System.out ) {
-										System.out.println(
-												"Putting process " + getProcess().getPID() + " to sleep for I/O" );
+									synchronized ( this.dmaChannel ) {
+										process.setStatus(
+												PCB.Status.WAITING ); // Set to waiting so the Dispatcher will swap it
+										process.getLog().add( "***I/O Block***" );
+										this.dmaChannel.handle(
+												(ExecutableInstruction.IOExecutableInstruction) executableInstruction,
+												process, this.registers );
 									}
-									getProcess().setStatus(
-											PCB.Status.WAITING ); // Set to waiting so the Dispatcher will swap it
 								} else {
-									getProcess().incExecutionCount();
+									process.incExecutionCount();
 									setPC( getPC() + 1 );
 								}
 							} else {
 								executableInstruction.run();
-								getProcess().incExecutionCount();
+								process.incExecutionCount();
 								setPC( getPC() + 1 );
 							}
 						}
 					} catch ( MMU.PageFault pageFault ) {
-						synchronized ( System.out ) {
-							System.out.println(
-									"Putting process " + getProcess().getPID() + " to sleep for a page fault" );
-						}
-						getProcess().setStatus( PCB.Status.WAITING ); // Set to waiting so the Dispatcher will swap it
+						process.getLog().add( "***Page Fault***" );
 					}
 				}
 			}
@@ -239,7 +240,9 @@ public class CPU implements Runnable {
 			this.executeTime += startSleepTime - startExecuteTime;
 			synchronized ( this ) {
 				try {
+					setAsleep( true );
 					this.wait();
+					setAsleep( false );
 				} catch ( InterruptedException e ) {
 					e.printStackTrace();
 				}

@@ -50,9 +50,6 @@ public class DMAChannel implements Runnable {
 	 */
 	void handle( @NotNull ExecutableInstruction.IOExecutableInstruction instruction, @NotNull PCB pcb,
 			@NotNull Memory registers ) {
-		synchronized ( System.out ) {
-			System.out.println( "Registering I/O operation for process " + pcb.getPID() );
-		}
 		this.jobQueue.add( ( instruction.type == InstructionSet.RD ?
 				new IJob( pcb, instruction, registers ) :
 				new OJob( pcb, instruction, registers ) ) );
@@ -95,10 +92,6 @@ public class DMAChannel implements Runnable {
 			if ( !this.jobQueue.isEmpty() ) {
 				Job job = this.jobQueue.remove(); // Shouldn't be null cause we checked if it was empty, right?
 				PCB pcb = job.pcb;
-				synchronized ( System.out ) {
-					System.out
-							.println( "Handling " + job.instruction.type + " instruction for process " + pcb.getPID() );
-				}
 				ExecutableInstruction.IOExecutableInstruction instruction = job.instruction;
 				boolean success = false;
 
@@ -125,22 +118,13 @@ public class DMAChannel implements Runnable {
 					}
 				} catch ( MMU.PageFault pageFault ) {
 					// Do nothing? DMA Channel will register the fault to be handled later, and the process is already waiting
-					synchronized ( System.out ) {
-						System.out.println( "Page fault on I/O request for process " + pcb.getPID() );
-					}
 				}
 
 				// Remove jobs if they were successfully completed
 				if ( success ) {
-					synchronized ( System.out ) {
-						System.out.println( "I/O request for process " + pcb.getPID() + " successfully completed." );
-					}
 					pcb.incNumIO();
 					pcb.setStatus( PCB.Status.READY );
 					TaskManager.INSTANCE.getReadyQueue().add( pcb );
-					synchronized ( System.out ) {
-						System.out.println( "Waking up process " + pcb.getPID() + " for a I/O request completion" );
-					}
 				}
 			}
 		}

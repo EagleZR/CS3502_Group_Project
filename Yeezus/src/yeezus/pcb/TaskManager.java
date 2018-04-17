@@ -47,8 +47,10 @@ public enum TaskManager implements Iterable<PCB> {
 	 * null, check if the queue has been created yet using {@link TaskManager#createReadyQueue(Comparator)}.</p>
 	 */
 	public PriorityBlockingQueue<PCB> getReadyQueue() {
+		if ( this.readyQueue == null ) {
+			System.err.println( "Someone attempted to access the Ready Queue before it had been created" );
+		}
 		return this.readyQueue;
-
 	}
 
 	/**

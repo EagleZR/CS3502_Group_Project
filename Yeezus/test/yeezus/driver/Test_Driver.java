@@ -21,8 +21,8 @@ public class Test_Driver {
 	private Memory disk;
 
 	@Before public void setUp() throws Exception {
-		this.disk = new Memory( 150 );
-		this.controlDisk = new Memory( 150 );
+		this.disk = new Memory( 152 );
+		this.controlDisk = new Memory( 152 );
 		File file = new File( ( URLDecoder.decode(
 				Objects.requireNonNull( this.getClass().getClassLoader().getResource( "Test-File.txt" ) ).getFile(),
 				"UTF-8" ) ) );
@@ -59,7 +59,14 @@ public class Test_Driver {
 	@Test public void runFCFS() throws Exception {
 		CPUSchedulingPolicy schedulingPolicy = CPUSchedulingPolicy.FCFS;
 		TaskManager.INSTANCE.createReadyQueue( schedulingPolicy.getComparator() );
-		new Driver( 1, this.disk, 16, 20, 150, schedulingPolicy ).run();
+		new Driver( 1, this.disk, 16, 20, 152, schedulingPolicy ).run();
+		//		for ( PCB pcb : TaskManager.INSTANCE ) {
+		//			List<String> log = pcb.getLog();
+		//			for ( String s : log ) {
+		//				System.out.println( s );
+		//			}
+		//			System.out.println();
+		//		}
 		// Print the disk contents for manual verification
 		File output = new File( "output/FCFS_Output_Test_File.txt" );
 		output.getParentFile().mkdirs();
@@ -69,7 +76,7 @@ public class Test_Driver {
 				out.println( this.disk.read( i ) );
 			}
 		}
-		assertEquals( this.disk.read( 43 ).getData(), 228 );
+		assertEquals( 228, this.disk.read( 43 ).getData() );
 		// Check if any of them are not equal, indicating that some change has been made
 		for ( int i = 0; i < this.disk.getCapacity(); i++ ) {
 			if ( !this.controlDisk.read( i ).equals( this.disk.read( i ) ) ) {
@@ -85,7 +92,7 @@ public class Test_Driver {
 	@Test public void runPriority() throws Exception {
 		CPUSchedulingPolicy schedulingPolicy = CPUSchedulingPolicy.Priority;
 		TaskManager.INSTANCE.createReadyQueue( schedulingPolicy.getComparator() );
-		new Driver( 1, this.disk, 16, 20, 100, schedulingPolicy ).run();
+		new Driver( 1, this.disk, 16, 20, 152, schedulingPolicy ).run();
 		// Print the disk contents for manual verification
 		File output = new File( "output/Priority_Output_Test_File.txt" );
 		output.getParentFile().mkdirs();
@@ -111,7 +118,7 @@ public class Test_Driver {
 	@Test public void runSJF() throws Exception {
 		CPUSchedulingPolicy schedulingPolicy = CPUSchedulingPolicy.SJF;
 		TaskManager.INSTANCE.createReadyQueue( schedulingPolicy.getComparator() );
-		new Driver( 1, this.disk, 16, 20, 100, schedulingPolicy ).run();
+		new Driver( 1, this.disk, 16, 20, 152, schedulingPolicy ).run();
 		// Print the disk contents for manual verification
 		File output = new File( "output/Priority_Output_Test_File.txt" );
 		output.getParentFile().mkdirs();

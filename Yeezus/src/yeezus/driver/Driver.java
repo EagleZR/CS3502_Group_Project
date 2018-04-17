@@ -148,6 +148,14 @@ public class Driver {
 				}
 			}
 
+			for ( CPU cpu : this.cpus ) {
+				if ( cpu.isAsleep() && cpu.getProcess().getStatus() == PCB.Status.RUNNING ) {
+					synchronized ( cpu ) {
+						cpu.notify();
+					}
+				}
+			}
+
 			boolean allDead = true;
 			for ( Thread thread : this.threads ) {
 				if ( thread.isAlive() ) {
