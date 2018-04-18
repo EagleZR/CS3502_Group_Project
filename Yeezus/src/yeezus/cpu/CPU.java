@@ -1,5 +1,6 @@
 package yeezus.cpu;
 
+import com.sun.istack.internal.NotNull;
 import yeezus.DuplicateIDException;
 import yeezus.memory.*;
 import yeezus.pcb.PCB;
@@ -10,35 +11,44 @@ import java.util.ArrayList;
  * This class emulates some of the CPU's actions in the {@link yeezus} Operating System. Once it has been assigned a
  * {@link PCB}, it runs until the associated process has been terminated. The CPU fetches instructions from the {@link
  * MMU}, decodes them, and executes them. Changes to the process data are reflected in the RAM.
+ *
+ * @author Mark Zeagler
+ * @version 1.0
  */
 public class CPU implements Runnable {
 
 	private static final ArrayList<Integer> cpuids = new ArrayList<>();
 	private final int cpuid;
-	private MMU mmu;
-	private Memory registers;
+	private final MMU mmu;
+	private final Memory registers;
 	private DMAChannel dmaChannel;
 	private PCB pcb;
 	private int pc;
+	private ExecutableInstruction previousInstruction;
+	private ArrayList<String> log;
+	private boolean shutdown = false;
+	private long idleTime = 0;
+	private long executeTime = 0;
+	private int numProcesses = 0;
 
 	/**
 	 * Constructs a new CPU from the given parameters.
 	 *
-	 * @param cpuid     The ID of the new CPU. <b>NOTE: This must be a unique value.</b>
-	 * @param mmu       The MMU that manages this system's RAM.
-	 * @param registers The registers to be used by this CPU.
+	 * @param cpuid The ID of the new CPU. <b>NOTE: This must be a unique value.</b>
+	 * @param mmu   The MMU that manages this system's RAM.
 	 * @throws DuplicateIDException Thrown if the given CPU ID is not unique.
 	 */
-	public CPU( int cpuid, MMU mmu, Memory registers ) throws DuplicateIDException {
+	public CPU( int cpuid, @NotNull MMU mmu, Memory registers ) throws DuplicateIDException, InvalidWordException {
 		if ( cpuids.contains( cpuid ) ) {
 			throw new DuplicateIDException( "The CPU ID " + cpuid + " already exists in this system." );
 		}
 		this.cpuid = cpuid;
 		cpuids.add( cpuid );
 
-		this.mmu = mmu;
 		this.registers = registers;
-		this.dmaChannel = new DMAChannel( mmu, registers );
+		this.mmu = mmu;
+		this.dmaChannel = new DMAChannel( mmu, this.registers );
+		this.log = new ArrayList<>();
 	}
 
 	/**
@@ -46,7 +56,66 @@ public class CPU implements Runnable {
 	 */
 	public static void reset() {
 		cpuids.clear();
-		// TODO Reset everything
+	}
+
+	/**
+	 * The amount of time this CPU has been executing processes.
+	 *
+	 * @return The amount of time in nanoseconds that this CPU has been busy.
+	 */
+	public long getExecuteTime() {
+		return this.executeTime;
+	}
+
+	/**
+	 * Retrieves the elapsed idle time for this CPU.
+	 *
+	 * @return The amount of time in nanoseconds that this CPU has been idling, without a process.
+	 */
+	public long getIdleTime() {
+		return this.idleTime;
+	}
+
+	/**
+	 * Checks if the shutdown signal has been sent to this CPU.
+	 *
+	 * @return {@code true} if this CPU has been signaled to shut down.
+	 */
+	private synchronized boolean isShutdown() {
+		return this.shutdown;
+	}
+
+	/**
+	 * Signals this CPU to shut down.
+	 */
+	public synchronized void signalShutdown() {
+		this.shutdown = true;
+
+	}
+
+	/**
+	 * Retrieves the Program Counter for the Process being executed by this CPU.
+	 *
+	 * @return The Program Counter of the Process in this CPU.
+	 */
+	protected synchronized int getPC() {
+		return this.pc;
+	}
+
+	/**
+	 * Sets the new Program Counter for the Process being executed by this CPU.
+	 *
+	 * @param pc <p>The new Program Counter for the Process in this CPU.</p><p>A negative value, or any value larger
+	 *           than the number of instructions for this process will be ignored.</p>
+	 */
+	protected synchronized void setPC( int pc ) {
+		if ( pc >= 0 && pc < this.pcb.getInstructionsLength() ) {
+			this.pc = pc;
+		}
+	}
+
+	public int getNumProcesses() {
+		return this.numProcesses;
 	}
 
 	/**
@@ -63,24 +132,28 @@ public class CPU implements Runnable {
 	 *
 	 * @return The {@link PCB} of the process associated with this CPU.
 	 */
-	public PCB getProcess() {
+	public synchronized PCB getProcess() {
 		return this.pcb;
 	}
 
 	/**
-	 * Sets a new process for this CPU.
+	 * <p>Sets a new process for this CPU.</p><p><b>NOTE:</b> It is imperative that {@link Object#notify()} be called on
+	 * this CPU instance after using this method, or the thread it runs on will continue to sleep.</p>
 	 *
 	 * @param pcb The {@link PCB} of the new process to be run by this CPU.
 	 */
-	public void setProcess( PCB pcb ) {
+	public synchronized void setProcess( @NotNull PCB pcb ) {
 		this.pcb = pcb;
+		this.pcb.setCPUID( this.cpuid );
 		this.pcb.setStatus( PCB.Status.RUNNING );
-		this.pc = 0;
+		setPC( 0 );
+		this.numProcesses++;
 	}
 
 	/**
-	 * Executes the process that is currently associated with this CPU. The process will continue to execute until it
-	 * has completed.
+	 * Executes any process that is loaded into this CPU. <p><b>NOTE:</b> If there is no currently-set process, this
+	 * method will cause its parent thread to sleep. To wake it up, use {@link CPU#setProcess(PCB)} to set a new
+	 * process, followed by {@link Object#notify()} to begin its execution again.</p>
 	 *
 	 * @throws InvalidInstructionException Thrown if the fetched Instruction could not be successfully decoded.
 	 * @throws InvalidWordException        Thrown if there was an issue with storing new data in the execution of the
@@ -89,57 +162,79 @@ public class CPU implements Runnable {
 	 *                                     should handle that).
 	 * @throws InvalidAddressException     Thrown if an instruction tries to access an invalid address in memory.
 	 */
-	public void run() {
-		if ( this.pcb == null || !this.mmu.processMapped( this.pcb.getPID() ) ) {
-			// Do nothing
-			return;
-		}
-		while ( true ) {
-			// Fetch
-			Word instruction = this.mmu.read( this.pcb.getPID(), this.pc++ );
-
-			// Decode
-			ExecutableInstruction executableInstruction = decode( instruction );
-
-			// Execute
-			this.pcb.setExecutionCount( this.pcb.getExecutionCount() + 1 );
-
-			if ( executableInstruction.type == InstructionSet.HLT ) {
-				this.pcb.setStatus( PCB.Status.TERMINATED );
-				return;
-			}
-
-			if ( executableInstruction.getClass() == ExecutableInstruction.IOExecutableInstruction.class ) {
-				this.dmaChannel
-						.handle( (ExecutableInstruction.IOExecutableInstruction) executableInstruction, this.pcb );
+	@Override public void run() {
+		while ( getProcess() != null && getProcess().getStatus() != PCB.Status.TERMINATED ) {
+			// Check if this process has had a pc error
+			if ( getPC() >= getProcess().getInstructionsLength() ) {
+				System.err.println( generateSimpleDump() );
+				printDump();
+				getProcess().setStatus( PCB.Status.TERMINATED );
 			} else {
-				executableInstruction.run();
+				// Fetch
+				Word instruction = this.mmu.read( getProcess().getPID(), getPC() );
+				setPC( getPC() + 1 );
+
+				// Decode
+				ExecutableInstruction executableInstruction = decode( instruction );
+
+				// Execute
+				getProcess().incExecutionCount();
+
+				if ( executableInstruction.type == InstructionSet.HLT ) {
+					getProcess().setStatus(
+							PCB.Status.TERMINATED ); // Make sure this is the last call to getProcess() this loop
+					this.previousInstruction = null;
+					this.log.clear();
+				} else {
+					if ( executableInstruction.getClass() == ExecutableInstruction.IOExecutableInstruction.class ) {
+						this.dmaChannel.handle( (ExecutableInstruction.IOExecutableInstruction) executableInstruction,
+								getProcess() );
+					} else {
+						executableInstruction.run();
+					}
+					this.previousInstruction = executableInstruction;
+					this.log.add( generateSimpleDump() );
+				}
 			}
 		}
 	}
 
+	/**
+	 * For testing use only. For regular execution, use {@link CPU#run()}.
+	 */
 	public void debugRun() {
-		if ( this.pcb == null ) {
+		if ( getProcess() == null ) {
 			// Do nothing
 			return;
 		}
 		// Fetch
-		Word instruction = this.mmu.read( this.pcb.getPID(), this.pc++ );
+		Word instruction = this.mmu.read( getProcess().getPID(), getPC() );
+		setPC( getPC() + 1 );
 
 		// Decode
 		ExecutableInstruction executableInstruction = decode( instruction );
 
 		// Execute
 		if ( executableInstruction.type == InstructionSet.HLT ) {
-			this.pcb.setStatus( PCB.Status.TERMINATED );
+			getProcess().setStatus( PCB.Status.TERMINATED );
 			return;
 		}
 
 		if ( executableInstruction.getClass() == ExecutableInstruction.IOExecutableInstruction.class ) {
-			this.dmaChannel.handle( (ExecutableInstruction.IOExecutableInstruction) executableInstruction, this.pcb );
+			this.dmaChannel
+					.handle( (ExecutableInstruction.IOExecutableInstruction) executableInstruction, getProcess() );
 		} else {
 			executableInstruction.run();
 		}
+	}
+
+	/**
+	 * Retrieves the registers used by this CPU.
+	 *
+	 * @return The registers used by this CPU.
+	 */
+	public Memory getRegisters() {
+		return this.registers;
 	}
 
 	/**
@@ -151,13 +246,13 @@ public class CPU implements Runnable {
 	 * @throws InvalidInstructionException Thrown if the given {@link Word} cannot be successfully decoded into a known
 	 *                                     instruction type.
 	 */
-	ExecutableInstruction decode( Word word ) throws InvalidInstructionException {
+	ExecutableInstruction decode( @NotNull Word word ) throws InvalidInstructionException {
 		long signature = word.getData() & 0xC0000000;
 		if ( signature == 0x00000000 ) {
 			return new ExecutableInstruction.ArithmeticExecutableInstruction( word, this.registers );
 		} else if ( signature == 0x40000000 ) {
 			return new ExecutableInstruction.ConditionalExecutableInstruction( word, this.registers, this.mmu,
-					this.pcb.getPID(), ( Integer value ) -> {
+					getProcess().getPID(), ( Integer value ) -> {
 				if ( value != -1 ) {
 					this.pc = value;
 				}
@@ -171,6 +266,32 @@ public class CPU implements Runnable {
 					} );
 		} else {
 			return new ExecutableInstruction.IOExecutableInstruction( word, this.registers );
+		}
+	}
+
+	/**
+	 * Generates a simple dump {@link String} containing the current process's information.
+	 *
+	 * @return A {@link String} that displays the current state of this process's execution.
+	 */
+	private String generateSimpleDump() {
+		StringBuilder dumpReport = new StringBuilder(
+				"CPU: " + this.cpuid + "\nPC: " + getPC() + "\nPID: " + getProcess().getPID() + "\nInstruction Count: "
+						+ getProcess().getExecutionCount() + "\nPrevious Instruction: " + this.previousInstruction
+						+ "\nRegisters(" + this.registers.getCapacity() + "): " );
+		for ( int i = 0; i < this.registers.getCapacity(); i++ ) {
+			dumpReport.append( "\n\t" ).append( this.registers.read( i ) );
+		}
+		return dumpReport.toString();
+	}
+
+	/**
+	 * Prints the dump log generated by this CPU for this process. This will print to the {@link System#out} {@link
+	 * java.io.PrintStream}.
+	 */
+	public void printDump() {
+		while ( !this.log.isEmpty() ) {
+			System.out.println( this.log.remove( this.log.size() - 1 ) );
 		}
 	}
 }

@@ -4,6 +4,7 @@ import yeezus.DuplicateIDException;
 import yeezus.cpu.CPU;
 import yeezus.memory.MMU;
 import yeezus.memory.Memory;
+import yeezus.pcb.PCB;
 import yeezus.pcb.TaskManager;
 
 import java.io.File;
@@ -13,14 +14,20 @@ import java.io.File;
  * indicate the presence of multiple logical CPUs. To initialize the class, the {@link Loader} must be called using the
  * static {@link Driver#loadFile(Memory, File)} method to load the contents of the Program-File.txt to the virtual
  * disk.
+ *
+ * @author Mark Zeagler
+ * @version 2.0
  */
-public class Driver implements Runnable {
+public class Driver {
 
 	private static Loader loader;
 	private static TaskManager taskManager;
 	private Scheduler scheduler;
 	private Dispatcher dispatcher;
 	private CPU cpu;
+	private Thread[] threads;
+	private Memory disk;
+	private long[] idleTimes, executeTimes;
 
 	/**
 	 * Constructs a new Driver instance from the given parameters.
@@ -55,6 +62,7 @@ public class Driver implements Runnable {
 	 *
 	 * @param disk        The disk onto which the contents of the programFile will be loaded.
 	 * @param programFile The file whose contents will be loaded onto the disk.
+	 * @throws Exception Thrown if there is an issue while loading the file.
 	 */
 	public static void loadFile( Memory disk, File programFile ) throws Exception {
 		taskManager = TaskManager.INSTANCE;
@@ -68,11 +76,19 @@ public class Driver implements Runnable {
 		loader = null;
 	}
 
+	public long[] getIdleTimes() {
+		return idleTimes;
+	}
+
+	public long[] getExecuteTimes() {
+		return executeTimes;
+	}
+
 	/**
 	 * Executes the main loop of the driver. This loop will run until all processes have been completed, and the process
 	 * data has been written back to the disk.
 	 */
-	@Override public void run() {
+	public void run() {
 		while ( !taskManager.getJobQueue().isEmpty() ) {
 			this.scheduler.run();
 			this.dispatcher.run();
@@ -85,4 +101,30 @@ public class Driver implements Runnable {
 		this.scheduler.run();
 	}
 
+	public String getProcPerCPU() {
+		return "CPU: " + this.cpu.getCPUID() + " received " + this.cpu.getNumProcesses();
+	}
+
+	/**
+	 * Prints a dump of the data that contains the current state of the system. This will print to the {@link
+	 * System#out} {@link java.io.PrintStream}.
+	 */
+	public void dumpData() {
+
+		System.out.println( "**Process Info**" );
+		for ( PCB pcb : TaskManager.INSTANCE.getPCBs() ) {
+			StringBuilder pcbDump = new StringBuilder();
+			pcbDump.append( "Process: " ).append( pcb.getPID() ).append( "\nStatus: " ).append( pcb.getStatus() )
+					.append( "\nOutput Buffer: " );
+			for ( int i = 0; i < pcb.getOutputBufferLength(); i++ ) {
+				pcbDump.append( "\n" ).append( this.disk.read( pcb.getOutputBufferDiskAddress() + i ) );
+			}
+			pcbDump.append( "\nTempBuffer: " );
+			for ( int i = 0; i < pcb.getTempBufferLength(); i++ ) {
+				pcbDump.append( "\n" ).append( this.disk.read( pcb.getTempBufferDiskAddress() + i ) );
+			}
+			pcbDump.append( "\n" );
+			System.out.println( pcbDump );
+		}
+	}
 }
