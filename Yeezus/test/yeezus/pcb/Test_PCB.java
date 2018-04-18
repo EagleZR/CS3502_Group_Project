@@ -111,7 +111,7 @@ public class Test_PCB {
 	}
 
 	// Test that the cache values are correctly saved
-	@Test public void testSetCache() {
+	@Test public void testSetCache() throws MMU.PageFault {
 		Memory disk = new Memory( 100 );
 		Memory RAM = new Memory( 52 );
 		MMU mmu = new MMU( disk, RAM );
@@ -120,16 +120,18 @@ public class Test_PCB {
 		TaskManager.INSTANCE.addPCB( 2, 48, 15, 12, 12, 12, 1 );
 		PCB one = TaskManager.INSTANCE.getPCB( 1 );
 		PCB two = TaskManager.INSTANCE.getPCB( 2 );
-		for ( int i = 0; i < one.getTempBufferLength(); i++ ) {
-			cache.write( one, one.getTempBufferLogicalAddress() + i, new Word( i ) );
+		for ( int i = one.getTempBufferLogicalAddress(); i < one.getTotalSize(); i++ ) {
+			cache.write( one, i, new Word( i ) );
 		}
 		one.setCache( cache );
-		for ( int i = 0; i < two.getTempBufferLength(); i++ ) {
-			cache.write( two, two.getTempBufferLogicalAddress() + i, new Word( i + 5 ) );
+		for ( int i = two.getTempBufferLogicalAddress(); i < two.getTotalSize(); i++ ) {
+			cache.write( two, i, new Word( i + 5 ) );
 		}
-		for ( int i = 0; i < one.getTempBufferLength(); i++ ) {
+		Cache newCache = new Cache( cache.getCapacity(), mmu );
+		one.restoreCache( newCache );
+		for ( int i = one.getTempBufferLogicalAddress(); i < one.getTotalSize(); i++ ) {
 			assertEquals( "Probably the second process's cache data corrupted the first one's saved data.", i,
-					one.getCache().read( i ).getData() );
+					newCache.read( one, i ).getData() );
 		}
 	}
 
@@ -147,9 +149,11 @@ public class Test_PCB {
 		for ( int i = 0; i < two.getTempBufferLength(); i++ ) {
 			registers.write( i, new Word( i + 5 ) );
 		}
+		Memory newRegisters = new Memory( registers.getCapacity() );
+		one.restoreRegisters( newRegisters );
 		for ( int i = 0; i < one.getTempBufferLength(); i++ ) {
 			assertEquals( "Probably the second process's register data corrupted the first one's saved data.", i,
-					one.getRegisters().read( i ).getData() );
+					newRegisters.read( i ).getData() );
 		}
 	}
 

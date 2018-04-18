@@ -243,8 +243,8 @@ public class Main {
 			executeCell.setCellValue( TaskManager.INSTANCE.getPCB( i ).getExecutionCount() );
 			ioCell.setCellValue( TaskManager.INSTANCE.getPCB( i ).getNumIO() );
 			cpuCell.setCellValue( TaskManager.INSTANCE.getPCB( i ).getCPUID() );
-			cacheCell.setCellValue( ( (double) TaskManager.INSTANCE.getPCB( i ).getTotalSize() ) / this.cacheSize );
-			ramCell.setCellValue( ( (double) TaskManager.INSTANCE.getPCB( i ).getTotalSize() ) / this.ramSize );
+			cacheCell.setCellValue( 1 );
+			ramCell.setCellValue( ( (double) TaskManager.INSTANCE.getPCB( i ).getRAMUsed() ) / this.ramSize );
 		}
 
 		// Write average rows

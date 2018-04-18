@@ -120,4 +120,22 @@ public class Test_Cache {
 					this.mmu.read( this.pcb, i ), this.cache.read( this.pcb, i ) );
 		}
 	}
+
+	@Test public void testPCBStorage() throws MMU.PageFault {
+		for ( int i = this.pcb.getTempBufferLogicalAddress(); i < this.pcb.getTotalSize(); i++ ) {
+			this.cache.write( this.pcb, i, new Word( i ) );
+		}
+
+		this.pcb.setCache( this.cache );
+
+		for ( int i = this.pcb.getTempBufferLogicalAddress(); i < this.pcb.getTotalSize(); i++ ) {
+			this.cache.write( this.pcb, i, new Word( i * i + 7 ) );
+		}
+
+		this.pcb.restoreCache( this.cache );
+
+		for ( int i = this.pcb.getTempBufferLogicalAddress(); i < this.pcb.getTotalSize(); i++ ) {
+			assertEquals( i, this.cache.read( this.pcb, i ).getData() );
+		}
+	}
 }

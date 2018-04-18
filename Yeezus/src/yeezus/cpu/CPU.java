@@ -30,7 +30,7 @@ public class CPU implements Runnable {
 	private long idleTime = 0;
 	private long executeTime = 0;
 	private int numProcesses = 0;
-	private boolean isAsleep = false;
+	private volatile boolean isAsleep = false;
 
 	/**
 	 * Constructs a new CPU from the given parameters.
@@ -61,11 +61,11 @@ public class CPU implements Runnable {
 		cpuids.clear();
 	}
 
-	public synchronized boolean isAsleep() {
+	public boolean isAsleep() {
 		return this.isAsleep;
 	}
 
-	public synchronized void setAsleep( boolean asleep ) {
+	public void setAsleep( boolean asleep ) {
 		this.isAsleep = asleep;
 	}
 
@@ -187,60 +187,67 @@ public class CPU implements Runnable {
 					printDump();
 					process.setStatus( PCB.Status.TERMINATED );
 				} else {
-					try {
-						// Fetch
-						Word instruction = this.cache.read( process, getPC() );
-						setPC( getPC() + 1 );
-
-						// Decode
-						ExecutableInstruction executableInstruction = decode( instruction );
-						// Want this here in case there's an error in the execution of the process
-						this.previousInstruction = executableInstruction;
-						this.pcb.getLog().add( generateSimpleDump() );
-
-						// Execute
-						if ( executableInstruction.type == InstructionSet.HLT ) {
-							process.incExecutionCount();
-							process.setStatus(
-									PCB.Status.TERMINATED ); // Make sure this is the last call to getProcess() this loop
-							this.previousInstruction = null;
-							process.getLog().add( "***Program Complete***" );
-						} else {
-							if ( executableInstruction.getClass()
-									== ExecutableInstruction.IOExecutableInstruction.class ) {
-								// First try to retrieve input from the DMA Channel if there is any, and if not, schedule the input to be retrieved
-								if ( !this.dmaChannel.retrieveInput(
-										(ExecutableInstruction.IOExecutableInstruction) executableInstruction, process,
-										this.registers ) ) {
-									// Schedule the I/O with the DMA Channel and set the PCB status to WAITING
-									synchronized ( this.dmaChannel ) {
-										process.setStatus(
-												PCB.Status.WAITING ); // Set to waiting so the Dispatcher will swap it
-										setPC( getPC() - 1 );
-										process.getLog().add( "***I/O Block***" );
-										this.dmaChannel.handle(
-												(ExecutableInstruction.IOExecutableInstruction) executableInstruction,
-												process, this.registers );
-									}
-								} else {
-									process.incExecutionCount();
-								}
-							} else {
+					synchronized ( this ) {
+						synchronized ( this.cache ) {
+							synchronized ( this.registers ) {
 								try {
-									executableInstruction.run();
-								} catch ( Exception e ) {
-									synchronized ( System.out ) {
-										System.err.println( "There was an exception while running an instruction." );
-										e.printStackTrace();
-										printDump();
+									// Fetch
+									Word instruction = this.cache.read( process, getPC() );
+									setPC( getPC() + 1 );
+
+									// Decode
+									ExecutableInstruction executableInstruction = decode( instruction );
+									// Want this here in case there's an error in the execution of the process
+									this.previousInstruction = executableInstruction;
+									this.pcb.getLog().add( generateSimpleDump() );
+
+									// Execute
+									if ( executableInstruction.type == InstructionSet.HLT ) {
+										process.incExecutionCount();
+										process.setStatus(
+												PCB.Status.TERMINATED ); // Make sure this is the last call to getProcess() this loop
+										this.previousInstruction = null;
+										process.getLog().add( "***Program Complete***" );
+									} else {
+										if ( executableInstruction.getClass()
+												== ExecutableInstruction.IOExecutableInstruction.class ) {
+											// First try to retrieve input from the DMA Channel if there is any, and if not, schedule the input to be retrieved
+											if ( !this.dmaChannel.retrieveInput(
+													(ExecutableInstruction.IOExecutableInstruction) executableInstruction,
+													process, this.registers ) ) {
+												// Schedule the I/O with the DMA Channel and set the PCB status to WAITING
+												synchronized ( this.dmaChannel ) {
+													process.setStatus(
+															PCB.Status.WAITING ); // Set to waiting so the Dispatcher will swap it
+													setPC( getPC() - 1 );
+													process.getLog().add( "***I/O Block***" );
+													this.dmaChannel.handle(
+															(ExecutableInstruction.IOExecutableInstruction) executableInstruction,
+															process, this.registers );
+												}
+											} else {
+												process.incExecutionCount();
+											}
+										} else {
+											try {
+												executableInstruction.run();
+											} catch ( Exception e ) {
+												synchronized ( System.out ) {
+													System.err.println(
+															"There was an exception while running an instruction." );
+													e.printStackTrace();
+													printDump();
+												}
+											}
+											process.incExecutionCount();
+										}
 									}
+								} catch ( MMU.PageFault pageFault ) {
+									process.getLog().add( "***Page Fault***" );
+									setPC( getPC() - 1 );
 								}
-								process.incExecutionCount();
 							}
 						}
-					} catch ( MMU.PageFault pageFault ) {
-						process.getLog().add( "***Page Fault***" );
-						setPC( getPC() - 1 );
 					}
 				}
 			} else {
@@ -354,13 +361,6 @@ public class CPU implements Runnable {
 			dumpReport.append( "\n\t" ).append( this.registers.read( i ) );
 		}
 		return dumpReport.toString();
-	}
-
-	private synchronized void resetProcess() {
-		this.pcb.setPC( 0 );
-		this.pcb.setRegisters( null );
-		this.pcb.setCache( null );
-
 	}
 
 	/**

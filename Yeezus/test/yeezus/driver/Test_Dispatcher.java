@@ -43,6 +43,7 @@ public class Test_Dispatcher {
 
 		// Test that the dispatcher loads the next process into an empty CPU
 		assertEquals( null, this.cpus[0].getProcess() );
+		this.cpus[0].setAsleep( true );
 		this.dispatcher.run();
 	}
 
@@ -112,7 +113,9 @@ public class Test_Dispatcher {
 		assertEquals( 0, this.taskManager.getReadyQueue().size() );
 
 		// Check that old data has been saved
-		checkMemory( oldRegisters, oldProcess.getRegisters() );
+		Memory newMemory = new Memory( oldRegisters.getCapacity() );
+		oldProcess.restoreRegisters( newMemory );
+		checkMemory( oldRegisters, newMemory );
 		// checkMemory( oldCache, oldProcess.getCache() );
 		assertEquals( 4, oldProcess.getPC() );
 

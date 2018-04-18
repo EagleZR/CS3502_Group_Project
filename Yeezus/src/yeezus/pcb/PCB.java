@@ -5,6 +5,7 @@ import com.sun.istack.internal.Nullable;
 import yeezus.memory.Cache;
 import yeezus.memory.MMU;
 import yeezus.memory.Memory;
+import yeezus.memory.Word;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -21,6 +22,7 @@ import java.util.Iterator;
 public class PCB {
 
 	private final int pid, startDiskAddress, instructionsLength, inputBufferLength, outputBufferLength, tempBufferLength, priority;
+	private final ArrayList<String> log = new ArrayList<>();
 	private int cpuID = -1;
 	private int pc;
 	private int executionCount;
@@ -30,12 +32,6 @@ public class PCB {
 	private Status status;
 	private Memory cache, registers;
 	private PageTable pageTable = null;
-
-	private final ArrayList<String> log = new ArrayList<>();
-
-	public ArrayList<String> getLog() {
-		return log;
-	}
 
 	/**
 	 * Constructs a PCB with the given characteristics.
@@ -61,6 +57,10 @@ public class PCB {
 		this.outputBufferLength = outputBufferLength;
 		this.tempBufferLength = tempBufferLength;
 		this.priority = priority;
+	}
+
+	public ArrayList<String> getLog() {
+		return log;
 	}
 
 	public int getRAMUsed() {
@@ -91,11 +91,17 @@ public class PCB {
 
 	/**
 	 * Retrieves the saved cache of this process. This is only to be used in swapping.
-	 *
-	 * @return The saved cache for this process.
 	 */
-	public Memory getCache() {
-		return this.cache;
+	public void restoreCache( @NotNull Cache cache ) {
+		if ( this.cache != null ) {
+			for ( int i = 0; i < this.getTempBufferLength(); i++ ) {
+				cache.write( this, getTempBufferLogicalAddress() + i, this.cache.read( i ) );
+			}
+		} else {
+			for ( int i = 0; i < this.getTempBufferLength(); i++ ) {
+				cache.write( this, getTempBufferLogicalAddress() + i, new Word( 0 ) );
+			}
+		}
 	}
 
 	/**
@@ -111,7 +117,7 @@ public class PCB {
 		this.cache = new Memory( cache.getCapacity() - ( cache.getWritablePagesCount() * MMU.FRAME_SIZE ) );
 		for ( int i = 0; i < this.getTempBufferLength(); i++ ) {
 			try {
-				this.cache.write( i, cache.read( this, getTempBufferDiskAddress() - getStartDiskAddress() + i ) );
+				this.cache.write( i, cache.read( this, getTempBufferLogicalAddress() + i ) );
 			} catch ( MMU.PageFault pageFault ) {
 				System.err.println( "This shouldn't be happening when we're only accessing the temp data..." );
 				pageFault.printStackTrace();
@@ -121,11 +127,17 @@ public class PCB {
 
 	/**
 	 * Retrieves the saved Registers of this process. This is only to be used in swapping.
-	 *
-	 * @return The saved Registers for this process.
 	 */
-	public Memory getRegisters() {
-		return this.registers;
+	public void restoreRegisters( @NotNull Memory registers ) {
+		if ( this.registers != null ) {
+			for ( int i = 0; i < registers.getCapacity(); i++ ) {
+				registers.write( i, this.registers.read( i ) );
+			}
+		} else {
+			for ( int i = 0; i < registers.getCapacity(); i++ ) {
+				registers.write( i, new Word( 0 ) );
+			}
+		}
 	}
 
 	/**
