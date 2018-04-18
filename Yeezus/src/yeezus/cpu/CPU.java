@@ -1,6 +1,7 @@
 package yeezus.cpu;
 
 import com.sun.istack.internal.NotNull;
+import com.sun.istack.internal.Nullable;
 import yeezus.DuplicateIDException;
 import yeezus.memory.*;
 import yeezus.pcb.PCB;
@@ -151,12 +152,14 @@ public class CPU implements Runnable {
 	 *
 	 * @param pcb The {@link PCB} of the new process to be run by this CPU.
 	 */
-	public synchronized void setProcess( @NotNull PCB pcb ) {
+	public synchronized void setProcess( @Nullable PCB pcb ) {
 		this.pcb = pcb;
-		this.pcb.setCPUID( this.cpuid );
-		this.pcb.setStatus( PCB.Status.RUNNING );
-		setPC( 0 );
-		this.numProcesses++;
+		if ( pcb != null ) {
+			this.pcb.setCPUID( this.cpuid );
+			this.pcb.setStatus( PCB.Status.RUNNING );
+			setPC( 0 );
+			this.numProcesses++;
+		}
 	}
 
 	/**
@@ -187,19 +190,15 @@ public class CPU implements Runnable {
 					try {
 						// Fetch
 						Word instruction = this.cache.read( process, getPC() );
-						// Don't increment the PC until the instruction has been successfully executed
+						setPC( getPC() + 1 );
 
 						// Decode
 						ExecutableInstruction executableInstruction = decode( instruction );
 						// Want this here in case there's an error in the execution of the process
 						this.previousInstruction = executableInstruction;
 						this.pcb.getLog().add( generateSimpleDump() );
-						//						synchronized ( System.out ) {
-						//							System.out.println( generateSimpleDump() );
-						//						}
 
 						// Execute
-
 						if ( executableInstruction.type == InstructionSet.HLT ) {
 							process.incExecutionCount();
 							process.setStatus(
@@ -217,6 +216,7 @@ public class CPU implements Runnable {
 									synchronized ( this.dmaChannel ) {
 										process.setStatus(
 												PCB.Status.WAITING ); // Set to waiting so the Dispatcher will swap it
+										setPC( getPC() - 1 );
 										process.getLog().add( "***I/O Block***" );
 										this.dmaChannel.handle(
 												(ExecutableInstruction.IOExecutableInstruction) executableInstruction,
@@ -224,7 +224,6 @@ public class CPU implements Runnable {
 									}
 								} else {
 									process.incExecutionCount();
-									setPC( getPC() + 1 );
 								}
 							} else {
 								try {
@@ -234,15 +233,14 @@ public class CPU implements Runnable {
 										System.err.println( "There was an exception while running an instruction." );
 										e.printStackTrace();
 										printDump();
-										resetProcess();
 									}
 								}
 								process.incExecutionCount();
-								setPC( getPC() + 1 );
 							}
 						}
 					} catch ( MMU.PageFault pageFault ) {
 						process.getLog().add( "***Page Fault***" );
+						setPC( getPC() - 1 );
 					}
 				}
 			} else {

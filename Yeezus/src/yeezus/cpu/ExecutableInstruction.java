@@ -195,31 +195,27 @@ abstract class ExecutableInstruction implements Runnable {
 						break;
 					case BEQ: // Branches to an address when content of B-reg = D-reg
 						this.cpu.setPC( this.registers.read( this.bReg ).getData() == this.registers.read( this.dReg )
-								.getData() ? ( this.data / 4 ) - 1 : this.cpu.getPC() );
+								.getData() ? this.data / 4 : this.cpu.getPC() );
 						break;
 					case BNE: // Branches to an address when content of B-reg <> D-reg
 						this.cpu.setPC( this.registers.read( this.bReg ).getData() != this.registers.read( this.dReg )
-								.getData() ? ( this.data / 4 ) - 1 : this.cpu.getPC() );
+								.getData() ? this.data / 4 : this.cpu.getPC() );
 						break;
 					case BEZ: // Branches to an address when content of B-reg = 0
-						this.cpu.setPC( this.registers.read( this.bReg ).getData() == 0 ?
-								( this.data / 4 ) - 1 :
-								this.cpu.getPC() );
+						this.cpu.setPC(
+								this.registers.read( this.bReg ).getData() == 0 ? this.data / 4 : this.cpu.getPC() );
 						break;
 					case BNZ: // Branches to an address when content of B-reg <> 0
-						this.cpu.setPC( this.registers.read( this.bReg ).getData() != 0 ?
-								( this.data / 4 ) - 1 :
-								this.cpu.getPC() );
+						this.cpu.setPC(
+								this.registers.read( this.bReg ).getData() != 0 ? this.data / 4 : this.cpu.getPC() );
 						break;
 					case BGZ: // Branches to an address when content of B-reg > 0
-						this.cpu.setPC( this.registers.read( this.bReg ).getData() > 0 ?
-								( this.data / 4 ) - 1 :
-								this.cpu.getPC() );
+						this.cpu.setPC(
+								this.registers.read( this.bReg ).getData() > 0 ? this.data / 4 : this.cpu.getPC() );
 						break;
 					case BLZ: // Branches to an address when content of B-reg < 0
-						this.cpu.setPC( this.registers.read( this.bReg ).getData() < 0 ?
-								( this.data / 4 ) - 1 :
-								this.cpu.getPC() );
+						this.cpu.setPC(
+								this.registers.read( this.bReg ).getData() < 0 ? this.data / 4 : this.cpu.getPC() );
 						break;
 					case NOP: // Does nothing and moves to next instruction
 						// Do nothing

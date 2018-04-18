@@ -76,7 +76,7 @@ public class Driver {
 		TaskManager.INSTANCE.createReadyQueue( schedulingPolicy.getComparator() );
 		this.scheduler = new Scheduler( mmu, taskManager, schedulingPolicy, numCPUs );
 		this.dispatcher = new Dispatcher( taskManager, this.cpus );
-		this.dmaChannel = new DMAChannel( mmu, 8, true );
+		this.dmaChannel = new DMAChannel( mmu, cacheSize, true );
 		this.dmaChannelThread = new Thread( this.dmaChannel );
 		this.dmaChannelThread.setName( "DMA Channel Thread" );
 

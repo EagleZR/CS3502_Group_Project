@@ -41,8 +41,7 @@ public class Dispatcher implements Runnable {
 							try {
 								// Write the pages starting with the page that contains the instruction associated with the PC to the cache (loop to page 0 if it runs out of instruction pages)
 								cache.loadPage( next,
-										( i + Memory.getPageNumber( next.getPC(), MMU.FRAME_SIZE ) ) % ( Memory
-												.getPageNumber( next.getInstructionsLength(), MMU.FRAME_SIZE ) ) );
+										( i + Memory.getPageNumber( next.getPC(), MMU.FRAME_SIZE ) ) % ( Memory.getPageNumber( next.getInstructionsLength(), MMU.FRAME_SIZE ) ) );
 							} catch ( MMU.PageFault pageFault ) {
 								// If they're not loaded, it's fine. The Cache can do demand paging if it needs... I hope :/
 								// TODO Test the above statement
@@ -73,6 +72,8 @@ public class Dispatcher implements Runnable {
 						synchronized ( cpu ) {
 							cpu.notify();
 						}
+					} else {
+						cpu.setProcess( null );
 					}
 				}
 			}
