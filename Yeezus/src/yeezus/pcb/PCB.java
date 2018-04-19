@@ -9,6 +9,7 @@ import yeezus.memory.Word;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 
 /**
  * A class to hold various information relating to the processes run by the Yeezus Operating System. The data held by
@@ -23,6 +24,7 @@ public class PCB {
 
 	private final int pid, startDiskAddress, instructionsLength, inputBufferLength, outputBufferLength, tempBufferLength, priority;
 	private final ArrayList<String> log = new ArrayList<>();
+	private final LinkedList<Long> pageFaultServicingTimes;
 	private int cpuID = -1;
 	private int pc;
 	private int executionCount;
@@ -57,10 +59,27 @@ public class PCB {
 		this.outputBufferLength = outputBufferLength;
 		this.tempBufferLength = tempBufferLength;
 		this.priority = priority;
+		this.pageFaultServicingTimes = new LinkedList<>();
 	}
 
 	public ArrayList<String> getLog() {
-		return log;
+		return this.log;
+	}
+
+	public void addPageFaultServicingTime( long time ) {
+		this.pageFaultServicingTimes.add( time );
+	}
+
+	public double getAveragePageFaultServicingTime() {
+		long totalTime = 0;
+		for ( long time : this.pageFaultServicingTimes ) {
+			totalTime += time;
+		}
+		return (double) totalTime / getNumPageFaults();
+	}
+
+	public int getNumPageFaults() {
+		return this.pageFaultServicingTimes.size();
 	}
 
 	public int getRAMUsed() {

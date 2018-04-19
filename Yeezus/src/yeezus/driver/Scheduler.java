@@ -55,6 +55,7 @@ public class Scheduler implements Runnable {
 				iterator.remove();
 				pcb.setStatus( PCB.Status.READY );
 				this.taskManager.getReadyQueue().add( pcb );
+				pcb.addPageFaultServicingTime( System.nanoTime() - pageFault.getCreationTime() );
 			}
 		}
 

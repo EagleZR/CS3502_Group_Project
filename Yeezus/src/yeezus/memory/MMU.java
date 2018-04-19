@@ -273,6 +273,8 @@ public class MMU {
 		private final PCB pcb;
 		private final int pageNumber;
 
+		private final long creationTime;
+
 		/**
 		 * Thrown to the CPU to indicate that a page does not exist in RAM.
 		 *
@@ -284,6 +286,11 @@ public class MMU {
 			this.pcb = pcb;
 			pcb.setStatus( PCB.Status.WAITING );
 			this.pageNumber = pageNumber;
+			this.creationTime = System.nanoTime();
+		}
+
+		public long getCreationTime() {
+			return this.creationTime;
 		}
 
 		public PCB getPCB() {
