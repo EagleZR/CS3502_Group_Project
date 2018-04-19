@@ -27,7 +27,7 @@ public class Test_Cache {
 		}
 		this.mmu = new MMU( disk, new Memory( 56 ) );
 		assertTrue( this.mmu.mapMemory( this.pcb ) );
-		this.cache = new Cache( 20, this.mmu );
+		this.cache = new Cache( 20, 12, this.mmu );
 		for ( int i = 0; i < this.cache.getWritablePagesCount(); i++ ) {
 			try {
 				this.cache.loadPage( this.pcb, i );

@@ -41,7 +41,8 @@ public class CPU implements Runnable {
 	 * @param cacheSize    The size of the cache to be used by this CPU.
 	 * @throws DuplicateIDException Thrown if the given CPU ID is not unique.
 	 */
-	public CPU( int cpuid, @NotNull DMAChannel dmaChannel, @NotNull MMU mmu, int registerSize, int cacheSize )
+	public CPU( int cpuid, @NotNull DMAChannel dmaChannel, @NotNull MMU mmu, int registerSize, int cacheSize,
+			int tempBufferSize )
 			throws DuplicateIDException, InvalidWordException {
 		if ( cpuids.contains( cpuid ) ) {
 			throw new DuplicateIDException( "The CPU ID " + cpuid + " already exists in this system." );
@@ -51,7 +52,7 @@ public class CPU implements Runnable {
 
 		this.dmaChannel = dmaChannel;
 		this.registers = new Memory( registerSize );
-		this.cache = new Cache( cacheSize, mmu );
+		this.cache = new Cache( cacheSize, tempBufferSize, mmu );
 	}
 
 	/**
@@ -231,6 +232,7 @@ public class CPU implements Runnable {
 										} else {
 											try {
 												executableInstruction.run();
+												process.incExecutionCount();
 											} catch ( Exception e ) {
 												synchronized ( System.out ) {
 													System.err.println(
@@ -239,7 +241,6 @@ public class CPU implements Runnable {
 													printDump();
 												}
 											}
-											process.incExecutionCount();
 										}
 									}
 								} catch ( MMU.PageFault pageFault ) {

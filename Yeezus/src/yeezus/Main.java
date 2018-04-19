@@ -10,6 +10,7 @@ import org.apache.poi.xssf.usermodel.*;
 import yeezus.cpu.CPU;
 import yeezus.driver.CPUSchedulingPolicy;
 import yeezus.driver.Driver;
+import yeezus.memory.MMU;
 import yeezus.memory.Memory;
 import yeezus.pcb.PCB;
 import yeezus.pcb.TaskManager;
@@ -28,12 +29,10 @@ public class Main {
 
 	// System Variables
 	private final static int NUM_CPUS = 1;
-	private final static CPUSchedulingPolicy POLICY = CPUSchedulingPolicy.Priority;
 
 	// Memory Data
 	private final static int DISK_SIZE = 2048;
 	private final static int RAM_SIZE = 1024;
-	private final static int CACHE_SIZE = 20;
 	private final static int REGISTER_SIZE = 16;
 
 	// Instance variables
@@ -41,15 +40,13 @@ public class Main {
 	private final CPUSchedulingPolicy policy;
 	private final int diskSize;
 	private final int ramSize;
-	private final int cacheSize;
 	private final int registerSize;
 
-	public Main( int numCPUs, CPUSchedulingPolicy policy, int diskSize, int ramSize, int cacheSize, int registerSize ) {
+	public Main( int numCPUs, CPUSchedulingPolicy policy, int diskSize, int ramSize, int registerSize ) {
 		this.numCPUs = numCPUs;
 		this.policy = policy;
 		this.diskSize = diskSize;
 		this.ramSize = ramSize;
-		this.cacheSize = cacheSize;
 		this.registerSize = registerSize;
 
 		Memory disk;
@@ -63,7 +60,7 @@ public class Main {
 			Driver.loadFile( disk, new File( ( URLDecoder.decode(
 					Objects.requireNonNull( Main.class.getClassLoader().getResource( "Program-File.txt" ) ).getFile(),
 					"UTF-8" ) ) ) );
-			driver = new Driver( this.numCPUs, disk, this.registerSize, this.cacheSize, this.ramSize, this.policy );
+			driver = new Driver( this.numCPUs, disk, this.registerSize, this.ramSize, this.policy );
 		} catch ( Exception e ) {
 			System.err.println( "An exception occurred in system initialization." );
 			e.printStackTrace();
@@ -141,7 +138,7 @@ public class Main {
 		int[] cpuSet = { 1, 4 };
 		for ( CPUSchedulingPolicy policy : CPUSchedulingPolicy.values() ) {
 			for ( int numCPUs : cpuSet ) {
-				new Main( numCPUs, policy, DISK_SIZE, RAM_SIZE, CACHE_SIZE, REGISTER_SIZE );
+				new Main( numCPUs, policy, DISK_SIZE, RAM_SIZE, REGISTER_SIZE );
 				CPU.reset();
 				TaskManager.INSTANCE.reset();
 				Driver.reset();
@@ -245,7 +242,9 @@ public class Main {
 			executeCell.setCellValue( TaskManager.INSTANCE.getPCB( i ).getExecutionCount() );
 			ioCell.setCellValue( TaskManager.INSTANCE.getPCB( i ).getNumIO() );
 			cpuCell.setCellValue( TaskManager.INSTANCE.getPCB( i ).getCPUID() );
-			cacheCell.setCellValue( 1 );
+			cacheCell.setCellValue(
+					( (double) driver.getCacheSize() ) / ( MMU.FRAME_SIZE * 2 + TaskManager.INSTANCE.getPCB( i )
+							.getTempBufferLength() ) );
 			ramCell.setCellValue( ( (double) TaskManager.INSTANCE.getPCB( i ).getRAMUsed() ) / this.ramSize );
 			numPageFaultCell.setCellValue( TaskManager.INSTANCE.getPCB( i ).getNumPageFaults() );
 			pageFaultTimeCell.setCellValue( TaskManager.INSTANCE.getPCB( i ).getAveragePageFaultServicingTime() );

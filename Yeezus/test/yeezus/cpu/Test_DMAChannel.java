@@ -42,7 +42,7 @@ public class Test_DMAChannel {
 		} catch ( MMU.PageFault pageFault ) {
 			fail( "The correct page was not loaded." );
 		}
-		CPU cpu = new CPU( 1, this.dmaChannel, this.mmu, 16, 20 );
+		CPU cpu = new CPU( 1, this.dmaChannel, this.mmu, 16, 20, 12 );
 		ExecutableInstruction.IOExecutableInstruction instruction = (ExecutableInstruction.IOExecutableInstruction) cpu
 				.decode( new Word( "0xC050005C" ) );
 		this.dmaChannel.handle( instruction, this.pcb, cpu.getRegisters() );
@@ -59,7 +59,7 @@ public class Test_DMAChannel {
 	// Check that the correct value is written to the correct RAM address without errors
 	@Test public void testHandleIOWrite() {
 		assertTrue( this.mmu.loadPage( this.pcb, 10 ) ); // To eliminate page fault
-		CPU cpu = new CPU( 1, this.dmaChannel, this.mmu, 16, 20 );
+		CPU cpu = new CPU( 1, this.dmaChannel, this.mmu, 16, 20, 12 );
 		cpu.getRegisters().write( 0, new Word( "0x000000E4" ) );
 		ExecutableInstruction.IOExecutableInstruction instruction = (ExecutableInstruction.IOExecutableInstruction) cpu
 				.decode( new Word( "0xC10000AC" ) );
@@ -86,7 +86,7 @@ public class Test_DMAChannel {
 		} catch ( MMU.PageFault pageFault ) {
 			// Do nothing
 		}
-		CPU cpu = new CPU( 1, this.dmaChannel, this.mmu, 16, 20 );
+		CPU cpu = new CPU( 1, this.dmaChannel, this.mmu, 16, 20, 12 );
 		ExecutableInstruction.IOExecutableInstruction instruction = (ExecutableInstruction.IOExecutableInstruction) cpu
 				.decode( new Word( "0xC050005C" ) );
 		this.dmaChannel.handle( instruction, this.pcb, cpu.getRegisters() );
@@ -105,7 +105,7 @@ public class Test_DMAChannel {
 	@Test public void testPageFaultWrite() {
 		assertEquals( 0, this.mmu.getPageFaults().size() );
 		// assertTrue( this.mmu.loadPage( this.pcb, 10 ) ); // To eliminate page fault
-		CPU cpu = new CPU( 1, this.dmaChannel, this.mmu, 16, 20 );
+		CPU cpu = new CPU( 1, this.dmaChannel, this.mmu, 16, 20, 12 );
 		cpu.getRegisters().write( 0, new Word( "0x000000E4" ) );
 		ExecutableInstruction.IOExecutableInstruction instruction = (ExecutableInstruction.IOExecutableInstruction) cpu
 				.decode( new Word( "0xC10000AC" ) );
@@ -156,10 +156,10 @@ public class Test_DMAChannel {
 			fail( "The correct page was not loaded." );
 		}
 
-		CPU cpu1 = new CPU( 1, this.dmaChannel, this.mmu, 16, 20 );
-		CPU cpu2 = new CPU( 2, this.dmaChannel, this.mmu, 16, 20 );
-		CPU cpu3 = new CPU( 3, this.dmaChannel, this.mmu, 16, 20 );
-		CPU cpu4 = new CPU( 4, this.dmaChannel, this.mmu, 16, 20 );
+		CPU cpu1 = new CPU( 1, this.dmaChannel, this.mmu, 16, 20, 12 );
+		CPU cpu2 = new CPU( 2, this.dmaChannel, this.mmu, 16, 20, 12 );
+		CPU cpu3 = new CPU( 3, this.dmaChannel, this.mmu, 16, 20, 12 );
+		CPU cpu4 = new CPU( 4, this.dmaChannel, this.mmu, 16, 20, 12 );
 
 		ExecutableInstruction.IOExecutableInstruction instruction1 = (ExecutableInstruction.IOExecutableInstruction) cpu1
 				.decode( new Word( "0xC050005C" ) );

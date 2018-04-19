@@ -13,7 +13,7 @@ import yeezus.pcb.PCB;
  */
 public class Cache {
 
-	private final int TEMP_BUFF_SIZE = 12; // The last 12 words of memory are the Temp Buffer
+	private final int TEMP_BUFF_SIZE; // The last 12 words of memory are the Temp Buffer
 	private final MMU mmu;
 	private final int[] containedPages;
 	private Memory storage;
@@ -24,8 +24,9 @@ public class Cache {
 	 *
 	 * @param capacity The size of the memory to be created.
 	 */
-	public Cache( int capacity, MMU mmu ) throws InvalidWordException {
+	public Cache( int capacity, int tempBufferSize, MMU mmu ) throws InvalidWordException {
 		this.storage = new Memory( capacity );
+		this.TEMP_BUFF_SIZE = tempBufferSize;
 		this.mmu = mmu;
 		this.containedPages = new int[(int) Math.ceil( ( (double) capacity - this.TEMP_BUFF_SIZE ) / MMU.FRAME_SIZE )];
 		for ( int i = 0; i < this.containedPages.length; i++ ) {

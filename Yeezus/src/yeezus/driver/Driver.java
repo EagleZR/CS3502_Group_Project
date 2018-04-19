@@ -25,7 +25,9 @@ public class Driver {
 
 	private static Loader loader;
 	private static TaskManager taskManager;
-	private final int registerSize, cacheSize, ramSize;
+	private final int registerSize;
+	private final int cacheSize;
+	private final int ramSize;
 	private DMAChannel dmaChannel;
 	private Scheduler scheduler;
 	private Dispatcher dispatcher;
@@ -35,14 +37,12 @@ public class Driver {
 	private Memory disk;
 	private long[] idleTimes, executeTimes;
 	private CPUSchedulingPolicy policy;
-
 	/**
 	 * Constructs a new Driver instance from the given parameters.
 	 *
 	 * @param numCPUs          The number of CPUs to be used in this system.
 	 * @param disk             The disk that stores all of the programs to be run by the system.
 	 * @param registerSize     The the amount of registers that are associated with this driver's CPU.
-	 * @param cacheSize        The size of the cache to be used by the associated CPU.
 	 * @param ramSize          The size of the cache to be used by the OS.
 	 * @param schedulingPolicy The process scheduling policy that this system will adhere to.
 	 * @throws UninitializedDriverException Thrown if a driver instance is created before the loader has been run. This
@@ -50,7 +50,7 @@ public class Driver {
 	 *                                      creating a Driver instance.
 	 * @throws DuplicateIDException         Thrown if the given CPU ID already exists with another CPU.
 	 */
-	public Driver( int numCPUs, @NotNull Memory disk, int registerSize, int cacheSize, int ramSize,
+	public Driver( int numCPUs, @NotNull Memory disk, int registerSize, int ramSize,
 			@NotNull CPUSchedulingPolicy schedulingPolicy )
 			throws UninitializedDriverException, DuplicateIDException, InvalidWordException {
 		if ( loader == null ) {
@@ -59,24 +59,31 @@ public class Driver {
 					"Please use the loadFile static method before creating an instance of this class." );
 		}
 
-		if ( numCPUs <= 0 || registerSize <= 0 || cacheSize <= 0 || ramSize <= 0 ) {
+		if ( numCPUs <= 0 || registerSize <= 0 || ramSize <= 0 ) {
 			throw new IllegalArgumentException( "Cannot have a zero or negative parameter in the Driver constructor." );
 		}
 
 		this.disk = disk;
 		this.ramSize = ramSize;
 		this.registerSize = registerSize;
-		this.cacheSize = cacheSize;
 		this.policy = schedulingPolicy;
 
 		MMU mmu = new MMU( disk, new Memory( ramSize ) );
 
 		this.cpus = new CPU[numCPUs];
 
+		int largestTempBuffer = 0;
+		for ( PCB pcb : taskManager ) {
+			if ( pcb.getTempBufferLength() > largestTempBuffer ) {
+				largestTempBuffer = pcb.getTempBufferLength();
+			}
+		}
+		this.cacheSize = 2 * MMU.FRAME_SIZE + largestTempBuffer;
+
 		TaskManager.INSTANCE.createReadyQueue( schedulingPolicy.getComparator() );
 		this.scheduler = new Scheduler( mmu, taskManager, schedulingPolicy, numCPUs );
 		this.dispatcher = new Dispatcher( taskManager, this.cpus );
-		this.dmaChannel = new DMAChannel( mmu, cacheSize, true );
+		this.dmaChannel = new DMAChannel( mmu, this.cacheSize, true );
 		this.dmaChannelThread = new Thread( this.dmaChannel );
 		this.dmaChannelThread.setName( "DMA Channel Thread" );
 
@@ -85,7 +92,7 @@ public class Driver {
 
 		// Create CPUs
 		for ( int i = 0; i < this.cpus.length; i++ ) {
-			CPU cpu = new CPU( i, this.dmaChannel, mmu, registerSize, cacheSize );
+			CPU cpu = new CPU( i, this.dmaChannel, mmu, registerSize, this.cacheSize, largestTempBuffer );
 			this.cpus[i] = cpu;
 			this.threads[i] = new Thread( this.cpus[i] );
 			this.threads[i].setName( "CPU " + i + " Thread" );
@@ -114,6 +121,10 @@ public class Driver {
 	 */
 	public static void reset() {
 		loader = null;
+	}
+
+	public int getCacheSize() {
+		return this.cacheSize;
 	}
 
 	public long[] getIdleTimes() {

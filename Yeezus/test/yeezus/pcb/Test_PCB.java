@@ -115,7 +115,7 @@ public class Test_PCB {
 		Memory disk = new Memory( 100 );
 		Memory RAM = new Memory( 52 );
 		MMU mmu = new MMU( disk, RAM );
-		Cache cache = new Cache( 20, mmu );
+		Cache cache = new Cache( 20, 12, mmu );
 		TaskManager.INSTANCE.addPCB( 1, 0, 12, 12, 12, 12, 2 );
 		TaskManager.INSTANCE.addPCB( 2, 48, 15, 12, 12, 12, 1 );
 		PCB one = TaskManager.INSTANCE.getPCB( 1 );
@@ -127,7 +127,7 @@ public class Test_PCB {
 		for ( int i = two.getTempBufferLogicalAddress(); i < two.getTotalSize(); i++ ) {
 			cache.write( two, i, new Word( i + 5 ) );
 		}
-		Cache newCache = new Cache( cache.getCapacity(), mmu );
+		Cache newCache = new Cache( cache.getCapacity(), 12, mmu );
 		one.restoreCache( newCache );
 		for ( int i = one.getTempBufferLogicalAddress(); i < one.getTotalSize(); i++ ) {
 			assertEquals( "Probably the second process's cache data corrupted the first one's saved data.", i,

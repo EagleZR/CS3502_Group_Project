@@ -44,11 +44,11 @@ public class Test_Driver {
 	}
 
 	@Test public void loadFile() {
-		new Driver( 1, this.disk, 16, 20, 100, CPUSchedulingPolicy.FCFS );
+		new Driver( 1, this.disk, 16, 100, CPUSchedulingPolicy.FCFS );
 		// Should be no exception here
 		Driver.reset();
 		try {
-			new Driver( 1, this.disk, 16, 20, 100, CPUSchedulingPolicy.FCFS );
+			new Driver( 1, this.disk, 16, 100, CPUSchedulingPolicy.FCFS );
 		} catch ( UninitializedDriverException e ) {
 			// Correct exception thrown
 			return;
@@ -59,7 +59,7 @@ public class Test_Driver {
 	@Test public void runFCFS() throws Exception {
 		CPUSchedulingPolicy schedulingPolicy = CPUSchedulingPolicy.FCFS;
 		TaskManager.INSTANCE.createReadyQueue( schedulingPolicy.getComparator() );
-		new Driver( 1, this.disk, 16, 20, 152, schedulingPolicy ).run();
+		new Driver( 1, this.disk, 16, 152, schedulingPolicy ).run();
 		//		for ( PCB pcb : TaskManager.INSTANCE ) {
 		//			List<String> log = pcb.getLog();
 		//			for ( String s : log ) {
@@ -92,7 +92,7 @@ public class Test_Driver {
 	@Test public void runPriority() throws Exception {
 		CPUSchedulingPolicy schedulingPolicy = CPUSchedulingPolicy.Priority;
 		TaskManager.INSTANCE.createReadyQueue( schedulingPolicy.getComparator() );
-		new Driver( 1, this.disk, 16, 20, 152, schedulingPolicy ).run();
+		new Driver( 1, this.disk, 16, 152, schedulingPolicy ).run();
 		// Print the disk contents for manual verification
 		File output = new File( "output/Priority_Output_Test_File.txt" );
 		output.getParentFile().mkdirs();
@@ -118,7 +118,7 @@ public class Test_Driver {
 	@Test public void runSJF() throws Exception {
 		CPUSchedulingPolicy schedulingPolicy = CPUSchedulingPolicy.SJF;
 		TaskManager.INSTANCE.createReadyQueue( schedulingPolicy.getComparator() );
-		new Driver( 1, this.disk, 16, 20, 152, schedulingPolicy ).run();
+		new Driver( 1, this.disk, 16, 152, schedulingPolicy ).run();
 		// Print the disk contents for manual verification
 		File output = new File( "output/Priority_Output_Test_File.txt" );
 		output.getParentFile().mkdirs();

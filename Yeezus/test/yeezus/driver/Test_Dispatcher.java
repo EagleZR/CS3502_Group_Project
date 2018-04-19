@@ -26,7 +26,7 @@ public class Test_Dispatcher {
 		this.mmu = new MMU( new Memory( 2048 ), new Memory( 1024 ) );
 		this.cpus = new CPU[1];
 		DMAChannel dmaChannel = new DMAChannel( this.mmu, 8, true );
-		this.cpus[0] = new CPU( 0, dmaChannel, this.mmu, 16, 20 );
+		this.cpus[0] = new CPU( 0, dmaChannel, this.mmu, 16, 20, 12 );
 		this.dispatcher = new Dispatcher( this.taskManager, this.cpus );
 		this.taskManager.addPCB( 1, 0, 10, 14, 20, 10, 1 );
 		PCB pcb = this.taskManager.getPCB( 1 );
